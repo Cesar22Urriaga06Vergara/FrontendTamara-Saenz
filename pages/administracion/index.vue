@@ -15,10 +15,9 @@ const {
   cargando: cargandoUsuarios,
   error: errorUsuarios,
   cargar: cargarUsuarios,
-} = useListadoPaginado<any>(
-  ({ page, limit }) => useApiFetch<any>('/usuarios', { params: { page, limit } }),
-  { mensajeError: 'No fue posible cargar los usuarios.' },
-)
+} = useListadoPaginado<any>(({ page, limit }) => useApiFetch<any>('/usuarios', { params: { page, limit } }), {
+  mensajeError: 'No fue posible cargar los usuarios.',
+})
 
 const columnasUsuarios = [
   { key: 'nombreCompleto', label: 'Nombre' },
@@ -116,7 +115,6 @@ async function confirmarResetPassword() {
     restableciendoPassword.value = false
   }
 }
-
 </script>
 
 <template>
@@ -146,23 +144,12 @@ async function confirmarResetPassword() {
           <SharedStatusBadge domain="rol" :value="row.rol" />
         </template>
         <template #activo-data="{ row }">
-          <UButton
-            size="xs"
-            :color="row.activo ? 'emerald' : 'gray'"
-            variant="soft"
-            @click="alternarActivo(row)"
-          >
+          <UButton size="xs" :color="row.activo ? 'emerald' : 'gray'" variant="soft" @click="alternarActivo(row)">
             {{ row.activo ? 'Activo' : 'Inactivo' }}
           </UButton>
         </template>
         <template #acciones-data="{ row }">
-          <UButton
-            size="xs"
-            color="gray"
-            variant="ghost"
-            icon="i-heroicons-key"
-            @click="abrirResetPassword(row)"
-          >
+          <UButton size="xs" color="gray" variant="ghost" icon="i-heroicons-key" @click="abrirResetPassword(row)">
             Restablecer contraseña
           </UButton>
         </template>

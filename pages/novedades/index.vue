@@ -117,15 +117,23 @@ onMounted(cargarBarrios)
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-xl font-semibold text-slate-900">Novedades</h1>
-      <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva">
-        Registrar novedad
-      </UButton>
+      <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva"> Registrar novedad </UButton>
     </div>
 
     <UCard class="mb-4">
       <div class="flex flex-wrap gap-3">
-        <USelectMenu v-model="filtros.barrio" :options="['', ...barrios]" placeholder="Barrio del inmueble" class="w-52" />
-        <USelectMenu v-model="filtros.estado" :options="['', 'ABIERTA', 'EN_SEGUIMIENTO', 'CERRADA', 'ANULADA']" placeholder="Estado" class="w-48" />
+        <USelectMenu
+          v-model="filtros.barrio"
+          :options="['', ...barrios]"
+          placeholder="Barrio del inmueble"
+          class="w-52"
+        />
+        <USelectMenu
+          v-model="filtros.estado"
+          :options="['', 'ABIERTA', 'EN_SEGUIMIENTO', 'CERRADA', 'ANULADA']"
+          placeholder="Estado"
+          class="w-48"
+        />
         <UInput v-model="filtros.fechaDesde" type="date" class="w-40" />
         <UInput v-model="filtros.fechaHasta" type="date" class="w-40" />
       </div>
@@ -206,15 +214,21 @@ onMounted(cargarBarrios)
       <UCard>
         <template #header>
           <p class="font-semibold text-slate-900">
-            {{ tipoAprobacion === 'CARGO_ARRENDATARIO' ? 'Aprobar cargo a arrendatario' : 'Aprobar gasto de la inmobiliaria' }}
+            {{
+              tipoAprobacion === 'CARGO_ARRENDATARIO'
+                ? 'Aprobar cargo a arrendatario'
+                : 'Aprobar gasto de la inmobiliaria'
+            }}
           </p>
         </template>
 
         <div class="space-y-3">
           <p class="text-sm text-slate-500">
-            {{ tipoAprobacion === 'CARGO_ARRENDATARIO'
-              ? 'Se generará una obligación tipo NOVEDAD, cobrable en el próximo recaudo del contrato.'
-              : 'El gasto quedará asumido por la inmobiliaria y pendiente de pago. Todavía NO se mueve dinero: el movimiento de caja se genera aparte, al registrar el pago real.' }}
+            {{
+              tipoAprobacion === 'CARGO_ARRENDATARIO'
+                ? 'Se generará una obligación tipo NOVEDAD, cobrable en el próximo recaudo del contrato.'
+                : 'El gasto quedará asumido por la inmobiliaria y pendiente de pago. Todavía NO se mueve dinero: el movimiento de caja se genera aparte, al registrar el pago real.'
+            }}
           </p>
           <UFormGroup label="Concepto">
             <UInput v-model="conceptoAprobacion" />
@@ -246,10 +260,15 @@ onMounted(cargarBarrios)
         <div class="space-y-3">
           <p class="text-sm text-slate-500">
             Se generará el movimiento de caja tipo EGRESO por
-            <strong>{{ moneda(novedadPagando?.montoAprobado) }}</strong>. Este es el único paso que mueve dinero.
+            <strong>{{ moneda(novedadPagando?.montoAprobado) }}</strong
+            >. Este es el único paso que mueve dinero.
           </p>
           <UFormGroup label="Medio de pago">
-            <USelectMenu v-model="medioPago" :options="['EFECTIVO', 'TRANSFERENCIA']" placeholder="Selecciona el medio" />
+            <USelectMenu
+              v-model="medioPago"
+              :options="['EFECTIVO', 'TRANSFERENCIA']"
+              placeholder="Selecciona el medio"
+            />
           </UFormGroup>
           <UFormGroup v-if="medioPago === 'TRANSFERENCIA'" label="Referencia / número de transacción">
             <UInput v-model="referenciaPago" placeholder="Opcional" />

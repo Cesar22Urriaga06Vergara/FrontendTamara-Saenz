@@ -38,14 +38,18 @@ const {
   cargando: cargandoArqueos,
   error: errorArqueos,
   cargar: cargarArqueos,
-} = useListadoPaginado<any>(
-  ({ page, limit }) => useApiFetch<any>('/caja/arqueos', { params: { page, limit } }),
-  { mensajeError: 'No fue posible cargar el historial de arqueos.' },
-)
+} = useListadoPaginado<any>(({ page, limit }) => useApiFetch<any>('/caja/arqueos', { params: { page, limit } }), {
+  mensajeError: 'No fue posible cargar el historial de arqueos.',
+})
 
 // `error` cubre saldo/arqueo; `errorArqueos` es el propio de la composable de listado — se
 // muestran juntos porque comparten el mismo `SharedErrorState` en esta página.
 const errorVisible = computed(() => error.value || errorArqueos.value)
+
+function reintentar() {
+  cargarSaldo()
+  cargarArqueos()
+}
 
 const columnas = [
   { key: 'creadoEn', label: 'Fecha' },
@@ -103,7 +107,7 @@ onMounted(cargarSaldo)
       </UButton>
     </div>
 
-    <SharedErrorState v-if="errorVisible" :message="errorVisible" class="mb-4" @retry="() => { cargarSaldo(); cargarArqueos() }" />
+    <SharedErrorState v-if="errorVisible" :message="errorVisible" class="mb-4" @retry="reintentar" />
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <UCard>
@@ -162,14 +166,20 @@ onMounted(cargarSaldo)
         </template>
         <div class="space-y-3">
           <p class="text-sm text-slate-600">
-            Saldo esperado según el sistema: <span class="font-semibold text-slate-900">{{ moneda(saldo?.saldoEsperado) }}</span>
+            Saldo esperado según el sistema:
+            <span class="font-semibold text-slate-900">{{ moneda(saldo?.saldoEsperado) }}</span>
           </p>
           <UFormGroup label="Saldo contado (conteo físico real)">
             <UInput v-model.number="formArqueo.saldoContado" type="number" min="0" />
           </UFormGroup>
           <p class="text-sm">
             Diferencia:
-            <span :class="diferenciaPreview === 0 ? 'text-slate-600' : diferenciaPreview > 0 ? 'text-emerald-600' : 'text-red-600'" class="font-semibold">
+            <span
+              :class="
+                diferenciaPreview === 0 ? 'text-slate-600' : diferenciaPreview > 0 ? 'text-emerald-600' : 'text-red-600'
+              "
+              class="font-semibold"
+            >
               {{ diferenciaPreview > 0 ? '+' : '' }}{{ moneda(diferenciaPreview) }}
             </span>
             <span v-if="diferenciaPreview > 0" class="text-slate-500"> (sobrante)</span>

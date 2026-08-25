@@ -44,6 +44,11 @@ async function seleccionarInmueble(inmueble: any) {
   }
 }
 
+function quitarInmuebleSeleccionado() {
+  inmuebleSeleccionado.value = null
+  contratoSeleccionado.value = null
+}
+
 const puedeGuardar = computed(() => !!inmuebleSeleccionado.value && !!descripcion.value && !!fecha.value)
 
 async function guardar() {
@@ -81,7 +86,12 @@ async function guardar() {
         <div>
           <p class="text-sm font-medium text-slate-700 mb-1">Inmueble</p>
           <div v-if="!inmuebleSeleccionado" class="flex gap-2">
-            <UInput v-model="busquedaInmueble" placeholder="Buscar por dirección o barrio…" class="flex-1" @keyup.enter="buscarInmueble" />
+            <UInput
+              v-model="busquedaInmueble"
+              placeholder="Buscar por dirección o barrio…"
+              class="flex-1"
+              @keyup.enter="buscarInmueble"
+            />
             <UButton color="amber" @click="buscarInmueble">Buscar</UButton>
           </div>
           <div v-else class="flex items-center justify-between bg-slate-50 rounded-lg p-3">
@@ -89,7 +99,7 @@ async function guardar() {
               <p class="font-medium text-slate-900">{{ inmuebleSeleccionado.direccion }}</p>
               <p class="text-xs text-slate-500">{{ inmuebleSeleccionado.barrio }}</p>
             </div>
-            <UButton size="xs" color="gray" variant="ghost" @click="inmuebleSeleccionado = null; contratoSeleccionado = null">Cambiar</UButton>
+            <UButton size="xs" color="gray" variant="ghost" @click="quitarInmuebleSeleccionado">Cambiar</UButton>
           </div>
           <div v-if="resultadosInmueble.length" class="mt-2 divide-y border rounded-lg">
             <button
@@ -104,7 +114,12 @@ async function guardar() {
         </div>
 
         <UFormGroup v-if="contratosDelInmueble.length" label="Contrato relacionado (opcional)">
-          <USelectMenu v-model="contratoSeleccionado" :options="contratosDelInmueble" option-attribute="id" placeholder="Sin contrato específico">
+          <USelectMenu
+            v-model="contratoSeleccionado"
+            :options="contratosDelInmueble"
+            option-attribute="id"
+            placeholder="Sin contrato específico"
+          >
             <template #option="{ option }">{{ option.cliente?.nombreCompleto }}</template>
           </USelectMenu>
         </UFormGroup>
@@ -127,8 +142,8 @@ async function guardar() {
         </UFormGroup>
 
         <p class="text-xs text-slate-400">
-          Este registro NO genera ningún impacto financiero. Solo el Administrador puede
-          aprobar el cargo al arrendatario o el gasto de la inmobiliaria desde el tablero de novedades.
+          Este registro NO genera ningún impacto financiero. Solo el Administrador puede aprobar el cargo al
+          arrendatario o el gasto de la inmobiliaria desde el tablero de novedades.
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 import { useAuthStore } from '~/stores/auth.store'
 
 const auth = useAuthStore()
-const { moneda, fecha } = useFormatoCO()
+const { fecha } = useFormatoCO()
 
 const barrios = ref<string[]>([])
 
@@ -15,13 +15,13 @@ const {
   cargando,
   error,
   cargar,
-} = useListadoPaginado<any, { busqueda: string; barrio: string; fechaDesde: string; fechaHasta: string; estado: string }>(
-  ({ page, limit, filtros }) => useApiFetch<any>('/contratos', { params: { ...filtros, page, limit } }),
-  {
-    filtrosIniciales: { busqueda: '', barrio: '', fechaDesde: '', fechaHasta: '', estado: '' },
-    mensajeError: 'No fue posible cargar los contratos.',
-  },
-)
+} = useListadoPaginado<
+  any,
+  { busqueda: string; barrio: string; fechaDesde: string; fechaHasta: string; estado: string }
+>(({ page, limit, filtros }) => useApiFetch<any>('/contratos', { params: { ...filtros, page, limit } }), {
+  filtrosIniciales: { busqueda: '', barrio: '', fechaDesde: '', fechaHasta: '', estado: '' },
+  mensajeError: 'No fue posible cargar los contratos.',
+})
 
 const columnas = [
   { key: 'cliente', label: 'Arrendatario' },
@@ -106,18 +106,31 @@ onMounted(cargarBarrios)
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-xl font-semibold text-slate-900">Contratos</h1>
-      <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo">
-        Nuevo contrato
-      </UButton>
+      <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo"> Nuevo contrato </UButton>
     </div>
 
     <UCard class="mb-4">
       <div class="flex flex-wrap gap-3">
-        <UInput v-model="filtros.busqueda" placeholder="Cédula o nombre del arrendatario…" icon="i-heroicons-magnifying-glass" class="w-64" />
-        <USelectMenu v-model="filtros.barrio" :options="['', ...barrios]" placeholder="Barrio del inmueble" class="w-52" />
+        <UInput
+          v-model="filtros.busqueda"
+          placeholder="Cédula o nombre del arrendatario…"
+          icon="i-heroicons-magnifying-glass"
+          class="w-64"
+        />
+        <USelectMenu
+          v-model="filtros.barrio"
+          :options="['', ...barrios]"
+          placeholder="Barrio del inmueble"
+          class="w-52"
+        />
         <UInput v-model="filtros.fechaDesde" type="date" class="w-40" />
         <UInput v-model="filtros.fechaHasta" type="date" class="w-40" />
-        <USelectMenu v-model="filtros.estado" :options="['', 'ACTIVO', 'TERMINADO']" placeholder="Estado" class="w-44" />
+        <USelectMenu
+          v-model="filtros.estado"
+          :options="['', 'ACTIVO', 'TERMINADO']"
+          placeholder="Estado"
+          class="w-44"
+        />
       </div>
     </UCard>
 
@@ -227,7 +240,12 @@ onMounted(cargarBarrios)
         <template #footer>
           <div class="flex justify-end gap-2">
             <UButton color="gray" variant="ghost" @click="modalReactivar = false">Cancelar</UButton>
-            <UButton color="emerald" :loading="reactivando" :disabled="!formReactivar.motivo" @click="confirmarReactivar">
+            <UButton
+              color="emerald"
+              :loading="reactivando"
+              :disabled="!formReactivar.motivo"
+              @click="confirmarReactivar"
+            >
               Reactivar contrato
             </UButton>
           </div>

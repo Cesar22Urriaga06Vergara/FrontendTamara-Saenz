@@ -37,7 +37,9 @@ function validar(): boolean {
       ? 'Debe tener al menos 8 caracteres.'
       : ''
   erroresCampo.confirmarPassword = confirmarPassword.value !== password.value ? 'Las contraseñas no coinciden.' : ''
-  return !erroresCampo.nombreCompleto && !erroresCampo.email && !erroresCampo.password && !erroresCampo.confirmarPassword
+  return (
+    !erroresCampo.nombreCompleto && !erroresCampo.email && !erroresCampo.password && !erroresCampo.confirmarPassword
+  )
 }
 
 async function registrar() {
@@ -70,7 +72,9 @@ async function registrar() {
           Configura la cuenta de Administrador con la que operarás el sistema por primera vez.
         </p>
       </div>
-      <p class="relative z-10 text-xs text-[#6B6F75]">© {{ new Date().getFullYear() }} — Todos los derechos reservados.</p>
+      <p class="relative z-10 text-xs text-[#6B6F75]">
+        © {{ new Date().getFullYear() }} — Todos los derechos reservados.
+      </p>
     </div>
 
     <div class="flex-1 flex items-center justify-center bg-slate-50 p-8">
@@ -92,7 +96,7 @@ async function registrar() {
           class="mb-4"
         />
 
-        <form v-else class="space-y-4" @submit.prevent="registrar" novalidate>
+        <form v-else class="space-y-4" novalidate @submit.prevent="registrar">
           <UFormGroup label="Nombre completo" :error="erroresCampo.nombreCompleto">
             <UInput
               v-model="nombreCompleto"

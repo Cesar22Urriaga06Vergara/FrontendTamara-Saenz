@@ -17,50 +17,52 @@ watch(
  * CONSULTA Y CONTROL, ADMINISTRACIÓN. Los ítems marcados soloAdmin se ocultan
  * completamente para el rol Recepcionista (no solo se deshabilitan).
  */
-const secciones = computed(() => [
-  {
-    titulo: 'GENERAL',
-    items: [{ label: 'Dashboard', icon: 'i-heroicons-squares-2x2', to: '/dashboard' }],
-  },
-  {
-    titulo: 'OPERACIÓN',
-    items: [
-      { label: 'Contratos', icon: 'i-heroicons-document-text', to: '/contratos' },
-      { label: 'Recaudo', icon: 'i-heroicons-banknotes', to: '/recaudo', soloAdmin: true },
-      { label: 'Novedades', icon: 'i-heroicons-wrench-screwdriver', to: '/novedades' },
-    ],
-  },
-  {
-    titulo: 'DIRECTORIOS',
-    items: [
-      { label: 'Clientes', icon: 'i-heroicons-user-group', to: '/clientes' },
-      { label: 'Codeudores', icon: 'i-heroicons-user-plus', to: '/codeudores' },
-      { label: 'Inmuebles', icon: 'i-heroicons-building-office-2', to: '/inmuebles' },
-    ],
-  },
-  {
-    titulo: 'FINANZAS',
-    items: [
-      { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos', soloAdmin: true },
-      { label: 'Caja', icon: 'i-heroicons-calculator', to: '/caja', soloAdmin: true },
-    ],
-  },
-  {
-    titulo: 'CONSULTA Y CONTROL',
-    items: [
-      { label: 'Movimientos', icon: 'i-heroicons-arrows-right-left', to: '/movimientos', soloAdmin: true },
-      { label: 'Reportes', icon: 'i-heroicons-chart-bar', to: '/reportes', soloAdmin: true },
-      { label: 'Auditoría', icon: 'i-heroicons-shield-check', to: '/auditoria', soloAdmin: true },
-    ],
-  },
-  {
-    titulo: 'ADMINISTRACIÓN',
-    items: [
-      { label: 'Usuarios', icon: 'i-heroicons-cog-6-tooth', to: '/administracion', soloAdmin: true },
-      { label: 'Configuración', icon: 'i-heroicons-cog-6-tooth', to: '/configuracion', soloAdmin: true },
-    ],
-  },
-].map((s) => ({ ...s, items: s.items.filter((i) => !i.soloAdmin || auth.esAdministrador) })))
+const secciones = computed(() =>
+  [
+    {
+      titulo: 'GENERAL',
+      items: [{ label: 'Dashboard', icon: 'i-heroicons-squares-2x2', to: '/dashboard' }],
+    },
+    {
+      titulo: 'OPERACIÓN',
+      items: [
+        { label: 'Contratos', icon: 'i-heroicons-document-text', to: '/contratos' },
+        { label: 'Recaudo', icon: 'i-heroicons-banknotes', to: '/recaudo', soloAdmin: true },
+        { label: 'Novedades', icon: 'i-heroicons-wrench-screwdriver', to: '/novedades' },
+      ],
+    },
+    {
+      titulo: 'DIRECTORIOS',
+      items: [
+        { label: 'Clientes', icon: 'i-heroicons-user-group', to: '/clientes' },
+        { label: 'Codeudores', icon: 'i-heroicons-user-plus', to: '/codeudores' },
+        { label: 'Inmuebles', icon: 'i-heroicons-building-office-2', to: '/inmuebles' },
+      ],
+    },
+    {
+      titulo: 'FINANZAS',
+      items: [
+        { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos', soloAdmin: true },
+        { label: 'Caja', icon: 'i-heroicons-calculator', to: '/caja', soloAdmin: true },
+      ],
+    },
+    {
+      titulo: 'CONSULTA Y CONTROL',
+      items: [
+        { label: 'Movimientos', icon: 'i-heroicons-arrows-right-left', to: '/movimientos', soloAdmin: true },
+        { label: 'Reportes', icon: 'i-heroicons-chart-bar', to: '/reportes', soloAdmin: true },
+        { label: 'Auditoría', icon: 'i-heroicons-shield-check', to: '/auditoria', soloAdmin: true },
+      ],
+    },
+    {
+      titulo: 'ADMINISTRACIÓN',
+      items: [
+        { label: 'Usuarios', icon: 'i-heroicons-cog-6-tooth', to: '/administracion', soloAdmin: true },
+        { label: 'Configuración', icon: 'i-heroicons-cog-6-tooth', to: '/configuracion', soloAdmin: true },
+      ],
+    },
+  ].map((s) => ({ ...s, items: s.items.filter((i) => !i.soloAdmin || auth.esAdministrador) })),
+)
 </script>
 
 <template>
@@ -78,7 +80,12 @@ const secciones = computed(() => [
     :class="abierto ? 'translate-x-0' : '-translate-x-full'"
   >
     <div class="px-5 py-6 border-b border-slate-600/60 flex items-center gap-3">
-      <img v-if="marca.logoSrc.value" :src="marca.logoSrc.value" alt="Logo" class="h-9 w-9 object-contain rounded shrink-0" />
+      <img
+        v-if="marca.logoSrc.value"
+        :src="marca.logoSrc.value"
+        alt="Logo"
+        class="h-9 w-9 object-contain rounded shrink-0"
+      />
       <div class="min-w-0 flex-1">
         <p class="font-bold text-lg leading-tight text-white truncate">{{ marca.nombre.value }}</p>
         <p class="text-xs text-amber-500 italic mt-0.5 truncate">{{ marca.slogan.value }}</p>
@@ -95,7 +102,7 @@ const secciones = computed(() => [
     </div>
 
     <nav class="flex-1 overflow-y-auto py-4 space-y-6">
-      <div v-for="seccion in secciones" :key="seccion.titulo" v-show="seccion.items.length">
+      <div v-for="seccion in secciones" v-show="seccion.items.length" :key="seccion.titulo">
         <p class="px-5 mb-2 text-[11px] font-semibold tracking-wider text-slate-400">{{ seccion.titulo }}</p>
         <NuxtLink
           v-for="item in seccion.items"

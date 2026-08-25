@@ -15,13 +15,13 @@ const {
   cargando,
   error,
   cargar,
-} = useListadoPaginado<any, { busqueda: string; estado: string; medioPago: string; fechaDesde: string; fechaHasta: string }>(
-  ({ page, limit, filtros }) => useApiFetch<any>('/recaudo/recibos', { params: { ...filtros, page, limit } }),
-  {
-    filtrosIniciales: { busqueda: '', estado: '', medioPago: '', fechaDesde: '', fechaHasta: '' },
-    mensajeError: 'No fue posible cargar los recibos.',
-  },
-)
+} = useListadoPaginado<
+  any,
+  { busqueda: string; estado: string; medioPago: string; fechaDesde: string; fechaHasta: string }
+>(({ page, limit, filtros }) => useApiFetch<any>('/recaudo/recibos', { params: { ...filtros, page, limit } }), {
+  filtrosIniciales: { busqueda: '', estado: '', medioPago: '', fechaDesde: '', fechaHasta: '' },
+  mensajeError: 'No fue posible cargar los recibos.',
+})
 
 const columnas = [
   { key: 'consecutivo', label: 'Número' },
@@ -52,7 +52,6 @@ async function descargar(row: any, formato: 'CARTA' | 'MEDIA_CARTA') {
     descargando.value = null
   }
 }
-
 </script>
 
 <template>
@@ -63,9 +62,19 @@ async function descargar(row: any, formato: 'CARTA' | 'MEDIA_CARTA') {
 
     <UCard class="mb-4">
       <div class="flex flex-wrap gap-3">
-        <UInput v-model="filtros.busqueda" placeholder="Cédula, nombre del cliente o número de recibo…" icon="i-heroicons-magnifying-glass" class="w-72" />
+        <UInput
+          v-model="filtros.busqueda"
+          placeholder="Cédula, nombre del cliente o número de recibo…"
+          icon="i-heroicons-magnifying-glass"
+          class="w-72"
+        />
         <USelectMenu v-model="filtros.estado" :options="['', 'EMITIDO', 'ANULADO']" placeholder="Estado" class="w-40" />
-        <USelectMenu v-model="filtros.medioPago" :options="['', 'EFECTIVO', 'TRANSFERENCIA']" placeholder="Medio de pago" class="w-44" />
+        <USelectMenu
+          v-model="filtros.medioPago"
+          :options="['', 'EFECTIVO', 'TRANSFERENCIA']"
+          placeholder="Medio de pago"
+          class="w-44"
+        />
         <UInput v-model="filtros.fechaDesde" type="date" class="w-40" />
         <UInput v-model="filtros.fechaHasta" type="date" class="w-40" />
       </div>
@@ -100,12 +109,20 @@ async function descargar(row: any, formato: 'CARTA' | 'MEDIA_CARTA') {
               Ver
             </UButton>
             <UDropdown
-              :items="[[
-                { label: 'PDF Carta', click: () => descargar(row, 'CARTA') },
-                { label: 'PDF Media Carta', click: () => descargar(row, 'MEDIA_CARTA') },
-              ]]"
+              :items="[
+                [
+                  { label: 'PDF Carta', click: () => descargar(row, 'CARTA') },
+                  { label: 'PDF Media Carta', click: () => descargar(row, 'MEDIA_CARTA') },
+                ],
+              ]"
             >
-              <UButton size="xs" color="gray" variant="soft" icon="i-heroicons-arrow-down-tray" :loading="descargando === row.id" />
+              <UButton
+                size="xs"
+                color="gray"
+                variant="soft"
+                icon="i-heroicons-arrow-down-tray"
+                :loading="descargando === row.id"
+              />
             </UDropdown>
           </div>
         </template>

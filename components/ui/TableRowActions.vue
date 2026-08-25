@@ -16,7 +16,13 @@ const props = withDefaults(
     puedeEditar?: boolean
     puedeCambiarEstado?: boolean
   }>(),
-  { editLabel: 'Editar', bajaLabel: 'Dar de baja', reactivarLabel: 'Reactivar', puedeEditar: true, puedeCambiarEstado: true },
+  {
+    editLabel: 'Editar',
+    bajaLabel: 'Dar de baja',
+    reactivarLabel: 'Reactivar',
+    puedeEditar: true,
+    puedeCambiarEstado: true,
+  },
 )
 
 const emit = defineEmits<{
@@ -43,12 +49,6 @@ const items = computed(() => {
 
 <template>
   <UDropdown :items="items" :disabled="disabled">
-    <UButton
-      icon="i-heroicons-ellipsis-horizontal"
-      color="gray"
-      variant="ghost"
-      size="sm"
-      :disabled="disabled"
-    />
+    <UButton icon="i-heroicons-ellipsis-horizontal" color="gray" variant="ghost" size="sm" :disabled="disabled" />
   </UDropdown>
 </template>

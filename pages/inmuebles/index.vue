@@ -157,16 +157,19 @@ onMounted(cargarBarrios)
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-xl font-semibold text-slate-900">Inmuebles</h1>
-      <UButton color="amber" icon="i-heroicons-plus" @click="abrirCreacion">
-        Nuevo inmueble
-      </UButton>
+      <UButton color="amber" icon="i-heroicons-plus" @click="abrirCreacion"> Nuevo inmueble </UButton>
     </div>
 
     <SharedErrorState v-if="error && !modalAbierto" :message="error" class="mb-4" @retry="cargar" />
 
     <UCard class="mb-4">
       <div class="flex flex-wrap gap-3">
-        <UInput v-model="filtros.busqueda" placeholder="Buscar por dirección o barrio…" icon="i-heroicons-magnifying-glass" class="w-64" />
+        <UInput
+          v-model="filtros.busqueda"
+          placeholder="Buscar por dirección o barrio…"
+          icon="i-heroicons-magnifying-glass"
+          class="w-64"
+        />
         <USelectMenu v-model="filtros.barrio" :options="['', ...barrios]" placeholder="Barrio" class="w-48" />
         <USelectMenu
           v-model="filtros.estado"
@@ -181,18 +184,14 @@ onMounted(cargarBarrios)
       <UTable :rows="inmuebles" :columns="columnas" :loading="cargando">
         <template #consecutivo-data="{ row }">{{ row.consecutivo || '—' }}</template>
         <template #canonValor-data="{ row }">{{ moneda(row.canonValor) }}</template>
-        <template #depositoValor-data="{ row }">{{ row.depositoValor != null ? moneda(row.depositoValor) : '—' }}</template>
+        <template #depositoValor-data="{ row }">{{
+          row.depositoValor != null ? moneda(row.depositoValor) : '—'
+        }}</template>
         <template #estado-data="{ row }">
           <SharedStatusBadge domain="inmueble" :value="row.estado" />
         </template>
         <template #acciones-data="{ row }">
-          <UButton
-            icon="i-heroicons-pencil-square"
-            color="gray"
-            variant="ghost"
-            size="sm"
-            @click="abrirEdicion(row)"
-          />
+          <UButton icon="i-heroicons-pencil-square" color="gray" variant="ghost" size="sm" @click="abrirEdicion(row)" />
         </template>
         <template #empty-state>
           <div class="text-center py-10 text-slate-400">

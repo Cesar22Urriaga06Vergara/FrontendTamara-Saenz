@@ -186,8 +186,8 @@ onBeforeUnmount(() => {
         <p class="text-sm text-slate-500">
           El canon mensual se genera automáticamente cada día (CRON), respetando el horizonte de
           {{ empresa.horizonteMesesCanon }} {{ empresa.horizonteMesesCanon === 1 ? 'mes' : 'meses' }}
-          configurado arriba. Este botón dispara la misma generación manualmente, por si se necesita
-          adelantar el proceso sin esperar al CRON.
+          configurado arriba. Este botón dispara la misma generación manualmente, por si se necesita adelantar el
+          proceso sin esperar al CRON.
         </p>
         <UAlert
           v-if="resultadoCanon"
@@ -215,12 +215,23 @@ onBeforeUnmount(() => {
           <div
             class="w-24 h-24 rounded-lg border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0"
           >
-            <img v-if="logoPreviewSrc" :src="logoPreviewSrc" alt="Logo de la empresa" class="w-full h-full object-contain" />
+            <img
+              v-if="logoPreviewSrc"
+              :src="logoPreviewSrc"
+              alt="Logo de la empresa"
+              class="w-full h-full object-contain"
+            />
             <UIcon v-else name="i-heroicons-building-office-2" class="w-8 h-8 text-slate-300" />
           </div>
 
           <div class="space-y-2">
-            <input ref="inputLogoRef" type="file" accept="image/png,image/jpeg,image/svg+xml" class="hidden" @change="seleccionarLogo" />
+            <input
+              ref="inputLogoRef"
+              type="file"
+              accept="image/png,image/jpeg,image/svg+xml"
+              class="hidden"
+              @change="seleccionarLogo"
+            />
             <div class="flex gap-2">
               <UButton color="gray" variant="soft" size="sm" @click="abrirSelectorLogo">
                 {{ archivoLogo ? 'Cambiar selección' : 'Seleccionar imagen' }}
@@ -228,7 +239,14 @@ onBeforeUnmount(() => {
               <UButton v-if="archivoLogo" color="amber" size="sm" :loading="subiendoLogo" @click="subirLogo">
                 Subir logo
               </UButton>
-              <UButton v-if="archivoLogo" color="gray" variant="ghost" size="sm" :disabled="subiendoLogo" @click="cancelarLogo">
+              <UButton
+                v-if="archivoLogo"
+                color="gray"
+                variant="ghost"
+                size="sm"
+                :disabled="subiendoLogo"
+                @click="cancelarLogo"
+              >
                 Cancelar
               </UButton>
             </div>

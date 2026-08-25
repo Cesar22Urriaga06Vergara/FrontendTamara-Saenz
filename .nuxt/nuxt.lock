@@ -1,9 +1,0 @@
-{
-  "pid": 11860,
-  "startedAt": 1787378915632,
-  "command": "dev",
-  "cwd": "C:/Users/urria/Downloads/FrontendTamara-Saenz",
-  "port": 3001,
-  "hostname": "::1",
-  "url": "http://[::1]:3001"
-}

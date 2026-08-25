@@ -82,14 +82,22 @@ async function confirmarReversar() {
 async function cargarSaldoPorMedio() {
   cargandoSaldo.value = true
   try {
-    saldoPorMedio.value = await useApiFetch<{ efectivo: number; transferencia: number; sinMedio: number; total: number }>(
-      '/movimientos/saldo-por-medio',
-    )
+    saldoPorMedio.value = await useApiFetch<{
+      efectivo: number
+      transferencia: number
+      sinMedio: number
+      total: number
+    }>('/movimientos/saldo-por-medio')
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible cargar el saldo por medio.'
   } finally {
     cargandoSaldo.value = false
   }
+}
+
+function reintentar() {
+  cargar()
+  cargarSaldoPorMedio()
 }
 
 onMounted(cargarSaldoPorMedio)
@@ -103,25 +111,37 @@ onMounted(cargarSaldoPorMedio)
         <UCard :ui="{ body: { padding: 'px-4 py-2' } }">
           <p class="text-xs text-slate-500">Caja física (efectivo)</p>
           <p v-if="cargandoSaldo" class="text-sm text-slate-400">Cargando…</p>
-          <p v-else class="text-xl font-bold" :class="Number(saldoPorMedio?.efectivo) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+          <p
+            v-else
+            class="text-xl font-bold"
+            :class="Number(saldoPorMedio?.efectivo) >= 0 ? 'text-emerald-600' : 'text-red-600'"
+          >
             {{ moneda(saldoPorMedio?.efectivo ?? 0) }}
           </p>
         </UCard>
         <UCard :ui="{ body: { padding: 'px-4 py-2' } }">
           <p class="text-xs text-slate-500">Transferencias (banco)</p>
           <p v-if="cargandoSaldo" class="text-sm text-slate-400">Cargando…</p>
-          <p v-else class="text-xl font-bold" :class="Number(saldoPorMedio?.transferencia) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+          <p
+            v-else
+            class="text-xl font-bold"
+            :class="Number(saldoPorMedio?.transferencia) >= 0 ? 'text-emerald-600' : 'text-red-600'"
+          >
             {{ moneda(saldoPorMedio?.transferencia ?? 0) }}
           </p>
         </UCard>
-        <UCard v-if="!cargandoSaldo && saldoPorMedio?.sinMedio" :ui="{ body: { padding: 'px-4 py-2' } }" class="border-amber-300">
+        <UCard
+          v-if="!cargandoSaldo && saldoPorMedio?.sinMedio"
+          :ui="{ body: { padding: 'px-4 py-2' } }"
+          class="border-amber-300"
+        >
           <p class="text-xs text-amber-600">Sin medio identificado</p>
           <p class="text-xl font-bold text-amber-600">{{ moneda(saldoPorMedio.sinMedio) }}</p>
         </UCard>
       </div>
     </div>
 
-    <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="() => { cargar(); cargarSaldoPorMedio() }" />
+    <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="reintentar" />
     <UAlert
       v-if="!cargandoSaldo && saldoPorMedio?.sinMedio"
       color="amber"
@@ -134,8 +154,18 @@ onMounted(cargarSaldoPorMedio)
     <UCard class="mb-4">
       <div class="flex flex-wrap gap-3">
         <USelectMenu v-model="filtros.tipo" :options="['', 'INGRESO', 'EGRESO']" placeholder="Tipo" class="w-40" />
-        <USelectMenu v-model="filtros.origen" :options="['', 'RECAUDO', 'NOVEDAD', 'DEPOSITO', 'MANUAL']" placeholder="Origen" class="w-44" />
-        <USelectMenu v-model="filtros.medioPago" :options="['', 'EFECTIVO', 'TRANSFERENCIA']" placeholder="Medio" class="w-40" />
+        <USelectMenu
+          v-model="filtros.origen"
+          :options="['', 'RECAUDO', 'NOVEDAD', 'DEPOSITO', 'MANUAL']"
+          placeholder="Origen"
+          class="w-44"
+        />
+        <USelectMenu
+          v-model="filtros.medioPago"
+          :options="['', 'EFECTIVO', 'TRANSFERENCIA']"
+          placeholder="Medio"
+          class="w-40"
+        />
         <UInput v-model="filtros.desde" type="date" class="w-40" />
         <UInput v-model="filtros.hasta" type="date" class="w-40" />
       </div>
@@ -191,8 +221,8 @@ onMounted(cargarSaldoPorMedio)
         </template>
         <p class="text-sm text-slate-500 mb-3">
           Se creará un movimiento de signo contrario referenciando a
-          <strong>{{ movimientoReversando?.consecutivo || movimientoReversando?.concepto }}</strong>.
-          El movimiento original no se elimina.
+          <strong>{{ movimientoReversando?.consecutivo || movimientoReversando?.concepto }}</strong
+          >. El movimiento original no se elimina.
         </p>
         <UFormGroup label="Motivo del reverso">
           <UTextarea v-model="motivoReverso" placeholder="Ej: error en el monto registrado" />

@@ -24,7 +24,9 @@ async function salir() {
 </script>
 
 <template>
-  <header class="h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-10">
+  <header
+    class="h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-10"
+  >
     <div class="min-w-0 flex items-center gap-2">
       <UButton
         icon="i-heroicons-bars-3"
@@ -49,7 +51,13 @@ async function salir() {
       <UBadge :color="auth.esAdministrador ? 'amber' : 'gray'" variant="subtle">
         {{ auth.rol }}
       </UBadge>
-      <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-right-on-rectangle" :loading="cerrandoSesion" @click="salir">
+      <UButton
+        color="gray"
+        variant="ghost"
+        icon="i-heroicons-arrow-right-on-rectangle"
+        :loading="cerrandoSesion"
+        @click="salir"
+      >
         Salir
       </UButton>
     </div>

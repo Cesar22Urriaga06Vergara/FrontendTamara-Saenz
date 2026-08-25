@@ -26,7 +26,16 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/dashboard')
   }
 
-  const rutasSoloAdmin = ['/recaudo', '/reportes', '/administracion', '/configuracion', '/movimientos', '/auditoria', '/recibos', '/caja']
+  const rutasSoloAdmin = [
+    '/recaudo',
+    '/reportes',
+    '/administracion',
+    '/configuracion',
+    '/movimientos',
+    '/auditoria',
+    '/recibos',
+    '/caja',
+  ]
   const esRutaAdmin = rutasSoloAdmin.some((r) => to.path.startsWith(r))
   if (esRutaAdmin && auth.rol !== 'ADMINISTRADOR') {
     return navigateTo('/dashboard')

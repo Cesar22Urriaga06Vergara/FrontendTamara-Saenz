@@ -47,6 +47,11 @@ const modalAnular = ref(false)
 const anulando = ref(false)
 const motivoAnulacion = ref('')
 
+function abrirAnular() {
+  motivoAnulacion.value = ''
+  modalAnular.value = true
+}
+
 async function confirmarAnular() {
   anulando.value = true
   try {
@@ -73,22 +78,24 @@ onMounted(cargar)
         <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/recibos">Volver</UButton>
         <h1 class="text-xl font-semibold text-slate-900">Recibo {{ recibo?.consecutivo }}</h1>
       </div>
-      <div class="flex gap-2" v-if="recibo">
+      <div v-if="recibo" class="flex gap-2">
         <UButton
           v-if="recibo.estado === 'EMITIDO'"
           size="sm"
           color="red"
           variant="soft"
           icon="i-heroicons-no-symbol"
-          @click="motivoAnulacion = ''; modalAnular = true"
+          @click="abrirAnular"
         >
           Anular
         </UButton>
         <UDropdown
-          :items="[[
-            { label: 'PDF Carta', click: () => descargar('CARTA') },
-            { label: 'PDF Media Carta', click: () => descargar('MEDIA_CARTA') },
-          ]]"
+          :items="[
+            [
+              { label: 'PDF Carta', click: () => descargar('CARTA') },
+              { label: 'PDF Media Carta', click: () => descargar('MEDIA_CARTA') },
+            ],
+          ]"
         >
           <UButton size="sm" color="amber" icon="i-heroicons-arrow-down-tray" :loading="descargando">
             Descargar PDF
@@ -115,12 +122,22 @@ onMounted(cargar)
         <div class="grid grid-cols-2 gap-3 text-sm">
           <p><span class="text-slate-500">Número:</span> {{ recibo.consecutivo }}</p>
           <p><span class="text-slate-500">Fecha:</span> {{ fecha(recibo.creadoEn) }}</p>
-          <p><span class="text-slate-500">Cliente:</span> {{ recibo.contrato?.cliente?.nombreCompleto }} ({{ recibo.contrato?.cliente?.numeroDocumento }})</p>
+          <p>
+            <span class="text-slate-500">Cliente:</span> {{ recibo.contrato?.cliente?.nombreCompleto }} ({{
+              recibo.contrato?.cliente?.numeroDocumento
+            }})
+          </p>
           <p>
             <span class="text-slate-500">Contrato:</span>
-            <NuxtLink :to="`/recaudo?contratoId=${recibo.contrato?.id}`" class="text-amber-600 hover:underline">Ver ficha del contrato</NuxtLink>
+            <NuxtLink :to="`/recaudo?contratoId=${recibo.contrato?.id}`" class="text-amber-600 hover:underline"
+              >Ver ficha del contrato</NuxtLink
+            >
           </p>
-          <p class="col-span-2"><span class="text-slate-500">Inmueble:</span> {{ recibo.contrato?.inmueble?.direccion }} ({{ recibo.contrato?.inmueble?.barrio }})</p>
+          <p class="col-span-2">
+            <span class="text-slate-500">Inmueble:</span> {{ recibo.contrato?.inmueble?.direccion }} ({{
+              recibo.contrato?.inmueble?.barrio
+            }})
+          </p>
           <p>
             <span class="text-slate-500">Estado:</span>
             <SharedStatusBadge domain="recibo" :value="recibo.estado" class="ml-1" />
@@ -144,13 +161,16 @@ onMounted(cargar)
           <span class="font-semibold text-slate-900">{{ moneda(recibo.valorTotal) }}</span>
         </div>
         <p v-if="Number(recibo.excedente) > 0" class="text-xs text-amber-600 mt-1">
-          {{ recibo.excedenteComoSaldoFavor ? 'Excedente aplicado a saldo a favor' : 'Cambio entregado' }}: {{ moneda(recibo.excedente) }}
+          {{ recibo.excedenteComoSaldoFavor ? 'Excedente aplicado a saldo a favor' : 'Cambio entregado' }}:
+          {{ moneda(recibo.excedente) }}
         </p>
       </UCard>
 
       <UCard>
         <template #header><p class="font-semibold text-slate-900">Aplicación del dinero</p></template>
-        <p v-if="!recibo.aplicaciones?.length" class="text-sm text-slate-400">Sin desglose disponible para este recibo.</p>
+        <p v-if="!recibo.aplicaciones?.length" class="text-sm text-slate-400">
+          Sin desglose disponible para este recibo.
+        </p>
         <table v-else class="w-full text-sm">
           <thead>
             <tr class="text-left text-slate-500 border-b">
@@ -164,12 +184,18 @@ onMounted(cargar)
           <tbody>
             <tr v-for="a in recibo.aplicaciones" :key="a.id" class="border-b last:border-0">
               <td class="py-1.5 pr-2 text-slate-900">{{ a.obligacion?.concepto }}</td>
-              <td class="py-1.5 pr-2 text-slate-600">{{ a.obligacion?.periodo ? fecha(a.obligacion.periodo) : '—' }}</td>
+              <td class="py-1.5 pr-2 text-slate-600">
+                {{ a.obligacion?.periodo ? fecha(a.obligacion.periodo) : '—' }}
+              </td>
               <td class="py-1.5 pr-2">
-                <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{ etiquetaConcepto(a) }}</UBadge>
+                <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{
+                  etiquetaConcepto(a)
+                }}</UBadge>
               </td>
               <td class="py-1.5 pr-2 text-right text-slate-900">{{ moneda(a.montoAplicado) }}</td>
-              <td class="py-1.5 text-right text-slate-600">{{ a.saldoPosterior != null ? moneda(a.saldoPosterior) : '—' }}</td>
+              <td class="py-1.5 text-right text-slate-600">
+                {{ a.saldoPosterior != null ? moneda(a.saldoPosterior) : '—' }}
+              </td>
             </tr>
           </tbody>
         </table>

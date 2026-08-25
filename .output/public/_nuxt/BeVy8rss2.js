@@ -1,1 +1,0 @@
-function e(e){typeof queueMicrotask==`function`?queueMicrotask(e):Promise.resolve().then(e).catch(e=>setTimeout(()=>{throw e}))}export{e as t};

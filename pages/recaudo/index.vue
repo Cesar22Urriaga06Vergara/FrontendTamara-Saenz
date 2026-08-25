@@ -133,7 +133,10 @@ async function descargarPdf(formato: 'CARTA' | 'MEDIA_CARTA') {
   error.value = ''
   descargando.value = true
   try {
-    await usePdfDownload(`/documentos/recibos/${ultimoRecibo.value.id}/pdf?formato=${formato}`, ultimoRecibo.value.consecutivo)
+    await usePdfDownload(
+      `/documentos/recibos/${ultimoRecibo.value.id}/pdf?formato=${formato}`,
+      ultimoRecibo.value.consecutivo,
+    )
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible descargar el PDF.'
   } finally {
@@ -180,9 +183,7 @@ const liquidando = ref(false)
 const descuentosDeposito = reactive([{ concepto: '', valor: 0 }])
 const formLiquidar = reactive({ medioPago: 'EFECTIVO', referencia: '', observaciones: '' })
 
-const totalDescuentosDeposito = computed(() =>
-  descuentosDeposito.reduce((acc, d) => acc + Number(d.valor || 0), 0),
-)
+const totalDescuentosDeposito = computed(() => descuentosDeposito.reduce((acc, d) => acc + Number(d.valor || 0), 0))
 const valorADevolver = computed(() =>
   Math.max(0, Number(ficha.value?.depositoCustodia || 0) - totalDescuentosDeposito.value),
 )
@@ -263,7 +264,9 @@ onMounted(() => {
           class="w-full text-left px-4 py-2 hover:bg-slate-50"
           @click="seleccionarContrato(c)"
         >
-          <p class="text-sm font-medium text-slate-900">{{ c.cliente?.nombreCompleto }} — {{ c.cliente?.numeroDocumento }}</p>
+          <p class="text-sm font-medium text-slate-900">
+            {{ c.cliente?.nombreCompleto }} — {{ c.cliente?.numeroDocumento }}
+          </p>
           <p class="text-xs text-slate-500">{{ c.inmueble?.direccion }} ({{ c.inmueble?.barrio }})</p>
         </button>
       </div>
@@ -279,11 +282,17 @@ onMounted(() => {
           <p><span class="text-slate-600">Arrendatario:</span> {{ ficha.arrendatario?.nombreCompleto }}</p>
           <p><span class="text-slate-600">Inmueble:</span> {{ ficha.inmueble?.direccion }}</p>
           <p><span class="text-slate-600">Barrio:</span> {{ ficha.barrio }}</p>
-          <p><span class="text-slate-600">Saldo a favor:</span> <span class="text-emerald-600 font-medium">{{ moneda(ficha.saldoAFavor) }}</span></p>
+          <p>
+            <span class="text-slate-600">Saldo a favor:</span>
+            <span class="text-emerald-600 font-medium">{{ moneda(ficha.saldoAFavor) }}</span>
+          </p>
           <p><span class="text-slate-600">Depósito en custodia:</span> {{ moneda(ficha.depositoCustodia) }}</p>
         </div>
 
-        <div v-if="ficha.contrato?.estado === 'TERMINADO' && Number(ficha.depositoCustodia) > 0" class="mt-3 pt-3 border-t">
+        <div
+          v-if="ficha.contrato?.estado === 'TERMINADO' && Number(ficha.depositoCustodia) > 0"
+          class="mt-3 pt-3 border-t"
+        >
           <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-banknotes" @click="abrirLiquidarDeposito">
             Liquidar depósito
           </UButton>
@@ -291,16 +300,16 @@ onMounted(() => {
 
         <div class="mt-4 pt-3 border-t">
           <p class="text-sm font-medium text-slate-900 mb-2">Obligaciones pendientes</p>
-          <p v-if="!ficha.obligacionesPendientes?.length" class="text-sm text-slate-400">Sin obligaciones pendientes.</p>
+          <p v-if="!ficha.obligacionesPendientes?.length" class="text-sm text-slate-400">
+            Sin obligaciones pendientes.
+          </p>
           <div v-else class="space-y-2">
-            <div
-              v-for="o in ficha.obligacionesPendientes"
-              :key="o.id"
-              class="text-xs border rounded-md px-2 py-1.5"
-            >
+            <div v-for="o in ficha.obligacionesPendientes" :key="o.id" class="text-xs border rounded-md px-2 py-1.5">
               <div class="flex justify-between">
                 <span class="text-slate-700">{{ o.concepto }}</span>
-                <span class="font-medium text-slate-900">{{ moneda(Number(o.valorOriginal) - Number(o.valorAbonado)) }}</span>
+                <span class="font-medium text-slate-900">{{
+                  moneda(Number(o.valorOriginal) - Number(o.valorAbonado))
+                }}</span>
               </div>
               <div class="flex justify-between text-slate-500">
                 <span>Vence: {{ fecha(o.fechaVencimiento) }}</span>
@@ -346,7 +355,9 @@ onMounted(() => {
         />
 
         <div class="flex items-center justify-between border-t pt-3">
-          <p class="text-sm text-slate-600">Total a registrar: <span class="font-semibold text-slate-900">{{ moneda(totalPago) }}</span></p>
+          <p class="text-sm text-slate-600">
+            Total a registrar: <span class="font-semibold text-slate-900">{{ moneda(totalPago) }}</span>
+          </p>
           <UButton color="amber" :loading="registrandoPago" :disabled="totalPago <= 0" @click="abrirConfirmarPago">
             Confirmar y emitir recibo
           </UButton>
@@ -364,13 +375,26 @@ onMounted(() => {
               <span v-if="ultimoRecibo.excedenteComoSaldoFavor">
                 {{ moneda(ultimoRecibo.excedente) }} quedaron como saldo a favor del contrato.
               </span>
-              <span v-else class="font-medium">
-                Cambio a entregar: {{ moneda(ultimoRecibo.excedente) }}
-              </span>
+              <span v-else class="font-medium"> Cambio a entregar: {{ moneda(ultimoRecibo.excedente) }} </span>
             </p>
             <div class="flex gap-2 mt-2">
-              <UButton size="xs" color="amber" icon="i-heroicons-document-arrow-down" :disabled="descargando" @click="descargarPdf('CARTA')">PDF Carta</UButton>
-              <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-document-arrow-down" :disabled="descargando" @click="descargarPdf('MEDIA_CARTA')">PDF Media Carta</UButton>
+              <UButton
+                size="xs"
+                color="amber"
+                icon="i-heroicons-document-arrow-down"
+                :disabled="descargando"
+                @click="descargarPdf('CARTA')"
+                >PDF Carta</UButton
+              >
+              <UButton
+                size="xs"
+                color="amber"
+                variant="soft"
+                icon="i-heroicons-document-arrow-down"
+                :disabled="descargando"
+                @click="descargarPdf('MEDIA_CARTA')"
+                >PDF Media Carta</UButton
+              >
             </div>
           </template>
         </UAlert>
@@ -433,10 +457,17 @@ onMounted(() => {
           <div class="grid grid-cols-2 gap-2 text-sm">
             <p><span class="text-slate-500">Cliente:</span> {{ previsualizacion.contrato?.cliente?.nombreCompleto }}</p>
             <p><span class="text-slate-500">Inmueble:</span> {{ previsualizacion.contrato?.inmueble?.direccion }}</p>
-            <p><span class="text-slate-500">Monto recibido:</span> <span class="font-semibold text-slate-900">{{ moneda(previsualizacion.valorTotalPago) }}</span></p>
+            <p>
+              <span class="text-slate-500">Monto recibido:</span>
+              <span class="font-semibold text-slate-900">{{ moneda(previsualizacion.valorTotalPago) }}</span>
+            </p>
             <p>
               <span class="text-slate-500">Medio de pago:</span>
-              {{ previsualizacion.detallesPago.map((d: any) => d.medioPago === 'EFECTIVO' ? 'Efectivo' : 'Transferencia').join(' + ') }}
+              {{
+                previsualizacion.detallesPago
+                  .map((d: any) => (d.medioPago === 'EFECTIVO' ? 'Efectivo' : 'Transferencia'))
+                  .join(' + ')
+              }}
             </p>
           </div>
 
@@ -458,7 +489,9 @@ onMounted(() => {
                 <tr v-for="(a, i) in previsualizacion.aplicaciones" :key="i" class="border-b last:border-0">
                   <td class="py-1.5 pr-2 text-slate-900">{{ a.obligacion?.concepto }}</td>
                   <td class="py-1.5 pr-2">
-                    <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{ etiquetaConcepto(a) }}</UBadge>
+                    <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{
+                      etiquetaConcepto(a)
+                    }}</UBadge>
                   </td>
                   <td class="py-1.5 pr-2 text-right text-slate-900">{{ moneda(a.monto) }}</td>
                   <td class="py-1.5 text-right text-slate-600">{{ moneda(a.saldoPosterior) }}</td>
@@ -471,9 +504,11 @@ onMounted(() => {
             v-if="Number(previsualizacion.excedente) > 0"
             color="amber"
             variant="subtle"
-            :title="dejarExcedenteComoSaldoFavor
-              ? `${moneda(previsualizacion.excedente)} quedarán como saldo a favor del contrato`
-              : `Cambio a entregar: ${moneda(previsualizacion.excedente)}`"
+            :title="
+              dejarExcedenteComoSaldoFavor
+                ? `${moneda(previsualizacion.excedente)} quedarán como saldo a favor del contrato`
+                : `Cambio a entregar: ${moneda(previsualizacion.excedente)}`
+            "
           />
         </div>
 

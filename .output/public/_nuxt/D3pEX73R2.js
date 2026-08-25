@@ -1,1 +1,0 @@
-import{L as e,p as t,x as n}from"./DuOjtHr8.js";var r=n({__name:`index`,setup(n){return(n,r)=>(e(),t(`div`))}});export{r as default};

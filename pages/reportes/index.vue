@@ -27,7 +27,8 @@ const reportes = [
   {
     clave: 'cartera',
     titulo: 'Cartera consolidada',
-    descripcion: 'Obligaciones pendientes y parciales de todos los contratos, con saldo y mora acumulada, incluye fila de totales.',
+    descripcion:
+      'Obligaciones pendientes y parciales de todos los contratos, con saldo y mora acumulada, incluye fila de totales.',
     icon: 'i-heroicons-banknotes',
     path: '/documentos/reportes/cartera.xlsx',
     archivo: 'reporte-cartera.xlsx',
@@ -35,7 +36,8 @@ const reportes = [
   {
     clave: 'recaudo',
     titulo: 'Recaudo (recibos de caja)',
-    descripcion: 'Todos los recibos de caja emitidos y anulados (efectivo y transferencias), con arrendatario, inmueble y excedente.',
+    descripcion:
+      'Todos los recibos de caja emitidos y anulados (efectivo y transferencias), con arrendatario, inmueble y excedente.',
     icon: 'i-heroicons-currency-dollar',
     path: '/documentos/reportes/recaudo.xlsx',
     archivo: 'reporte-recaudo.xlsx',
@@ -82,8 +84,8 @@ const reportes = [
     </div>
 
     <p class="text-xs text-slate-400 mt-6">
-      Los reportes se generan en el servidor a partir de los datos actuales — el archivo
-      descargado siempre refleja el estado más reciente del sistema.
+      Los reportes se generan en el servidor a partir de los datos actuales — el archivo descargado siempre refleja el
+      estado más reciente del sistema.
     </p>
   </div>
 </template>

@@ -53,7 +53,9 @@ onMounted(cargar)
       <UCard v-if="auth.esAdministrador">
         <template #header><p class="text-sm text-slate-500">Cartera total</p></template>
         <p class="text-3xl font-bold text-amber-600">{{ moneda(metricas.carteraTotal) }}</p>
-        <p class="text-xs text-slate-400 mt-1">Saldo de capital pendiente, sin mora. Ver reporte de cartera para el detalle con mora.</p>
+        <p class="text-xs text-slate-400 mt-1">
+          Saldo de capital pendiente, sin mora. Ver reporte de cartera para el detalle con mora.
+        </p>
       </UCard>
 
       <UCard v-if="auth.esAdministrador">
@@ -67,8 +69,6 @@ onMounted(cargar)
       </UCard>
     </div>
 
-    <p class="text-xs text-slate-400 mt-6">
-      Bienvenido/a, {{ auth.usuario?.email }} — Rol: {{ auth.rol }}
-    </p>
+    <p class="text-xs text-slate-400 mt-6">Bienvenido/a, {{ auth.usuario?.email }} — Rol: {{ auth.rol }}</p>
   </div>
 </template>

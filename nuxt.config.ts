@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   // @nuxt/ui v2 ya incluye y gestiona su propio pipeline de Tailwind (v3) internamente
   // via @nuxtjs/tailwindcss. Declarar ese módulo aparte aquí genera un conflicto de
   // resolución del import virtual '#tailwind-config/theme/colors' en tiempo de build.
-  modules: ['@nuxt/ui', '@pinia/nuxt'],
+  modules: ['@nuxt/ui', '@pinia/nuxt', '@nuxt/eslint'],
 
   css: ['~/assets/css/main.css'],
 

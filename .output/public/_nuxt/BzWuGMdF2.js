@@ -1,1 +1,0 @@
-import{o as e}from"./tmG1nNBw.js";import{t}from"./BU3J2aa4.js";import{t as n}from"./DS8pbWio.js";async function r(r,i){let a=e(),o=n(),s=await t(r,{baseURL:a.public.apiBaseUrl,headers:{Authorization:`Bearer ${o.accessToken}`},responseType:`blob`}),c=window.URL.createObjectURL(s);window.open(c,`_blank`)}export{r as t};

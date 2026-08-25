@@ -51,25 +51,29 @@ async function ingresar() {
         <p class="text-2xl font-bold tracking-tight">{{ config.public.appName }}</p>
       </div>
       <div class="relative z-10">
-        <p class="text-4xl font-serif italic text-[#CFA052] leading-tight">
-          "{{ config.public.appSlogan }}"
-        </p>
+        <p class="text-4xl font-serif italic text-[#CFA052] leading-tight">"{{ config.public.appSlogan }}"</p>
         <p class="mt-4 text-[#9AA0A8] text-sm max-w-sm">
           Control centralizado de recaudo, contratos y novedades operativas de todo el portafolio inmobiliario.
         </p>
       </div>
-      <p class="relative z-10 text-xs text-[#6B6F75]">© {{ new Date().getFullYear() }} — Todos los derechos reservados.</p>
+      <p class="relative z-10 text-xs text-[#6B6F75]">
+        © {{ new Date().getFullYear() }} — Todos los derechos reservados.
+      </p>
     </div>
 
     <!-- Franja derecha: formulario -->
     <div class="flex-1 flex items-center justify-center bg-slate-50 p-8">
       <div class="w-full max-w-sm">
-        <img :src="marca.logoSrc.value || '/Logo.png'" alt="Inversiones Tamara & Saenz" class="h-20 w-auto mx-auto mb-8" />
+        <img
+          :src="marca.logoSrc.value || '/Logo.png'"
+          alt="Inversiones Tamara & Saenz"
+          class="h-20 w-auto mx-auto mb-8"
+        />
 
         <h2 class="text-2xl font-semibold text-slate-900 mb-1 text-center">Iniciar sesión</h2>
         <p class="text-sm text-slate-600 mb-6 text-center">Ingresa tus credenciales para continuar.</p>
 
-        <form class="space-y-4" @submit.prevent="ingresar" novalidate>
+        <form class="space-y-4" novalidate @submit.prevent="ingresar">
           <UFormGroup label="Correo electrónico" :error="erroresCampo.email">
             <UInput
               v-model="email"
@@ -116,7 +120,9 @@ async function ingresar() {
 
           <p class="text-center text-sm text-slate-500">
             ¿Primera vez que usas el sistema?
-            <NuxtLink to="/registro" class="font-medium text-[#B98D42] hover:underline">Crear cuenta de Administrador</NuxtLink>
+            <NuxtLink to="/registro" class="font-medium text-[#B98D42] hover:underline"
+              >Crear cuenta de Administrador</NuxtLink
+            >
           </p>
         </form>
       </div>
