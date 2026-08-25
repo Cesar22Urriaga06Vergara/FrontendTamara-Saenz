@@ -122,6 +122,7 @@ async function descargar(row: any, formato: 'CARTA' | 'MEDIA_CARTA') {
                 variant="soft"
                 icon="i-heroicons-arrow-down-tray"
                 :loading="descargando === row.id"
+                aria-label="Descargar PDF"
               />
             </UDropdown>
           </div>

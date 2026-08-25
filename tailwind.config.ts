@@ -12,6 +12,7 @@ export default <Partial<Config>>{
       colors: {
         marca: {
           dorado: '#CFA052',
+          'dorado-oscuro': '#B98D42',
           grafito: '#4A4D52',
           antracita: '#1A1A1A',
         },

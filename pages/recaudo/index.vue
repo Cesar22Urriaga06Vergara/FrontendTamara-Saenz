@@ -340,6 +340,7 @@ onMounted(() => {
             color="red"
             variant="ghost"
             icon="i-heroicons-trash"
+            aria-label="Quitar medio de pago"
             @click="quitarDetalle(i)"
           />
         </div>
@@ -548,6 +549,7 @@ onMounted(() => {
               color="red"
               variant="ghost"
               icon="i-heroicons-trash"
+              aria-label="Quitar descuento"
               @click="quitarDescuentoDeposito(i)"
             />
           </div>

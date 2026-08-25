@@ -45,18 +45,20 @@ async function ingresar() {
 <template>
   <div class="min-h-screen flex">
     <!-- Franja izquierda: marca (split-screen) -->
-    <div class="hidden lg:flex w-1/2 bg-[#1A1A1A] text-white flex-col justify-between p-12 relative overflow-hidden">
-      <div class="absolute inset-0 opacity-10 bg-gradient-to-br from-[#CFA052] to-transparent"></div>
+    <div
+      class="hidden lg:flex w-1/2 bg-marca-antracita text-white flex-col justify-between p-12 relative overflow-hidden"
+    >
+      <div class="absolute inset-0 opacity-10 bg-gradient-to-br from-marca-dorado to-transparent"></div>
       <div class="relative z-10">
         <p class="text-2xl font-bold tracking-tight">{{ config.public.appName }}</p>
       </div>
       <div class="relative z-10">
-        <p class="text-4xl font-serif italic text-[#CFA052] leading-tight">"{{ config.public.appSlogan }}"</p>
-        <p class="mt-4 text-[#9AA0A8] text-sm max-w-sm">
+        <p class="text-4xl font-serif italic text-marca-dorado leading-tight">"{{ config.public.appSlogan }}"</p>
+        <p class="mt-4 text-slate-400 text-sm max-w-sm">
           Control centralizado de recaudo, contratos y novedades operativas de todo el portafolio inmobiliario.
         </p>
       </div>
-      <p class="relative z-10 text-xs text-[#6B6F75]">
+      <p class="relative z-10 text-xs text-slate-500">
         © {{ new Date().getFullYear() }} — Todos los derechos reservados.
       </p>
     </div>
@@ -113,14 +115,14 @@ async function ingresar() {
             block
             size="lg"
             :loading="cargando"
-            class="!bg-[#CFA052] hover:!bg-[#B98D42] !text-[#1A1A1A] font-semibold focus-visible:!ring-[#CFA052]"
+            class="!bg-marca-dorado hover:!bg-marca-dorado-oscuro !text-marca-antracita font-semibold focus-visible:!ring-marca-dorado"
           >
             Ingresar
           </UButton>
 
           <p class="text-center text-sm text-slate-500">
             ¿Primera vez que usas el sistema?
-            <NuxtLink to="/registro" class="font-medium text-[#B98D42] hover:underline"
+            <NuxtLink to="/registro" class="font-medium text-marca-dorado-oscuro hover:underline"
               >Crear cuenta de Administrador</NuxtLink
             >
           </p>

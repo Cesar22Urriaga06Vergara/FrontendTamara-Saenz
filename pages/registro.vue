@@ -61,18 +61,20 @@ async function registrar() {
 
 <template>
   <div class="min-h-screen flex">
-    <div class="hidden lg:flex w-1/2 bg-[#1A1A1A] text-white flex-col justify-between p-12 relative overflow-hidden">
-      <div class="absolute inset-0 opacity-10 bg-gradient-to-br from-[#CFA052] to-transparent"></div>
+    <div
+      class="hidden lg:flex w-1/2 bg-marca-antracita text-white flex-col justify-between p-12 relative overflow-hidden"
+    >
+      <div class="absolute inset-0 opacity-10 bg-gradient-to-br from-marca-dorado to-transparent"></div>
       <div class="relative z-10">
         <p class="text-2xl font-bold tracking-tight">{{ marca.nombre.value }}</p>
       </div>
       <div class="relative z-10">
-        <p class="text-4xl font-serif italic text-[#CFA052] leading-tight">"{{ marca.slogan.value }}"</p>
-        <p class="mt-4 text-[#9AA0A8] text-sm max-w-sm">
+        <p class="text-4xl font-serif italic text-marca-dorado leading-tight">"{{ marca.slogan.value }}"</p>
+        <p class="mt-4 text-slate-400 text-sm max-w-sm">
           Configura la cuenta de Administrador con la que operarás el sistema por primera vez.
         </p>
       </div>
-      <p class="relative z-10 text-xs text-[#6B6F75]">
+      <p class="relative z-10 text-xs text-slate-500">
         © {{ new Date().getFullYear() }} — Todos los derechos reservados.
       </p>
     </div>
@@ -155,14 +157,14 @@ async function registrar() {
             block
             size="lg"
             :loading="cargando"
-            class="!bg-[#CFA052] hover:!bg-[#B98D42] !text-[#1A1A1A] font-semibold focus-visible:!ring-[#CFA052]"
+            class="!bg-marca-dorado hover:!bg-marca-dorado-oscuro !text-marca-antracita font-semibold focus-visible:!ring-marca-dorado"
           >
             Crear cuenta y entrar
           </UButton>
 
           <p class="text-center text-sm text-slate-500">
             ¿Ya tienes cuenta?
-            <NuxtLink to="/login" class="font-medium text-[#B98D42] hover:underline">Iniciar sesión</NuxtLink>
+            <NuxtLink to="/login" class="font-medium text-marca-dorado-oscuro hover:underline">Iniciar sesión</NuxtLink>
           </p>
         </form>
       </div>

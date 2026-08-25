@@ -49,6 +49,13 @@ const items = computed(() => {
 
 <template>
   <UDropdown :items="items" :disabled="disabled">
-    <UButton icon="i-heroicons-ellipsis-horizontal" color="gray" variant="ghost" size="sm" :disabled="disabled" />
+    <UButton
+      icon="i-heroicons-ellipsis-horizontal"
+      color="gray"
+      variant="ghost"
+      size="sm"
+      :disabled="disabled"
+      aria-label="Más acciones"
+    />
   </UDropdown>
 </template>

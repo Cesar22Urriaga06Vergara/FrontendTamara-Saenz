@@ -23,6 +23,8 @@ async function buscarCliente() {
   }
 }
 
+useBusquedaAutomatica(busquedaCliente, buscarCliente)
+
 // ---- Codeudores (N:M) ----
 const busquedaCodeudor = ref('')
 const resultadosCodeudor = ref<any[]>([])
@@ -39,6 +41,8 @@ async function buscarCodeudor() {
     error.value = e?.data?.message || 'No fue posible buscar el codeudor.'
   }
 }
+
+useBusquedaAutomatica(busquedaCodeudor, buscarCodeudor)
 
 function agregarCodeudor(c: any) {
   if (!codeudoresSeleccionados.value.find((x) => x.id === c.id)) {

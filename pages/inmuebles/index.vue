@@ -191,7 +191,14 @@ onMounted(cargarBarrios)
           <SharedStatusBadge domain="inmueble" :value="row.estado" />
         </template>
         <template #acciones-data="{ row }">
-          <UButton icon="i-heroicons-pencil-square" color="gray" variant="ghost" size="sm" @click="abrirEdicion(row)" />
+          <UButton
+            icon="i-heroicons-pencil-square"
+            color="gray"
+            variant="ghost"
+            size="sm"
+            aria-label="Editar inmueble"
+            @click="abrirEdicion(row)"
+          />
         </template>
         <template #empty-state>
           <div class="text-center py-10 text-slate-400">

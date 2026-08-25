@@ -30,6 +30,8 @@ async function buscarInmueble() {
   }
 }
 
+useBusquedaAutomatica(busquedaInmueble, buscarInmueble)
+
 async function seleccionarInmueble(inmueble: any) {
   inmuebleSeleccionado.value = inmueble
   resultadosInmueble.value = []
