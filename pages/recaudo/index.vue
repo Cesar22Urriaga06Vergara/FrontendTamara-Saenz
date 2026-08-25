@@ -333,7 +333,7 @@ onMounted(() => {
 
         <div v-for="(detalle, i) in detallesPago" :key="i" class="flex gap-2 items-center mb-2">
           <USelectMenu v-model="detalle.medioPago" :options="medios" class="w-44" />
-          <UInput v-model.number="detalle.monto" type="number" placeholder="Monto" class="w-40" />
+          <UiMoneyInput v-model="detalle.monto" placeholder="Monto" class="w-40" />
           <UInput v-model="detalle.referencia" placeholder="Referencia (opcional)" class="flex-1" />
           <UButton
             v-if="detallesPago.length > 1"
@@ -543,7 +543,7 @@ onMounted(() => {
           <p class="text-sm font-medium text-slate-900">Descuentos (opcional)</p>
           <div v-for="(descuento, i) in descuentosDeposito" :key="i" class="flex gap-2 items-center">
             <UInput v-model="descuento.concepto" placeholder="Concepto (ej: Aseo general)" class="flex-1" />
-            <UInput v-model.number="descuento.valor" type="number" min="0" placeholder="Valor" class="w-32" />
+            <UiMoneyInput v-model="descuento.valor" placeholder="Valor" class="w-32" />
             <UButton
               v-if="descuentosDeposito.length > 1"
               color="red"

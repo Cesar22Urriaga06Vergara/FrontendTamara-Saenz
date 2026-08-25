@@ -234,9 +234,8 @@ onMounted(cargarBarrios)
             <UInput v-model="conceptoAprobacion" />
           </UFormGroup>
           <UFormGroup label="Monto">
-            <UInput v-model.number="montoAprobacion" type="number" />
+            <UiMoneyInput v-model="montoAprobacion" />
           </UFormGroup>
-          <p class="text-xs text-slate-400">{{ montoAprobacion > 0 ? moneda(montoAprobacion) : '' }}</p>
         </div>
 
         <template #footer>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth.store'
+
 const { moneda } = useFormatoCO()
+const auth = useAuthStore()
 
 const barrios = ref<string[]>([])
 
@@ -108,12 +111,17 @@ async function guardar() {
       const body: Record<string, any> = {
         direccion: formulario.direccion,
         barrio: formulario.barrio,
-        canonValor: formulario.canonValor,
-        depositoValor: formulario.depositoValor,
         codigoEnergia: formulario.codigoEnergia || undefined,
         codigoAgua: formulario.codigoAgua || undefined,
         codigoGas: formulario.codigoGas || undefined,
         observaciones: formulario.observaciones || undefined,
+      }
+      // RDN-06: solo Administrador puede cambiar canon/depósito de un inmueble ya existente
+      // (el backend lo rechaza para Recepcionista) — no se envían estos campos si no es admin,
+      // para no bloquear con un 403 la edición de los campos descriptivos que sí puede tocar.
+      if (auth.esAdministrador) {
+        body.canonValor = formulario.canonValor
+        body.depositoValor = formulario.depositoValor
       }
       // Solo se envía `estado` si el usuario lo cambió a una de las opciones que esta
       // pantalla ofreció para ese inmueble (ver `opcionesEstado`).
@@ -231,12 +239,18 @@ onMounted(cargarBarrios)
           <UFormGroup v-if="inmuebleEditando" label="Estado">
             <USelectMenu v-model="formulario.estado" :options="opcionesEstado(inmuebleEditando)" />
           </UFormGroup>
-          <UFormGroup label="Canon">
-            <UInput v-model.number="formulario.canonValor" type="number" min="0" />
-          </UFormGroup>
-          <UFormGroup label="Depósito">
-            <UInput v-model.number="formulario.depositoValor" type="number" min="0" />
-          </UFormGroup>
+          <template v-if="!inmuebleEditando || auth.esAdministrador">
+            <UFormGroup label="Canon">
+              <UiMoneyInput v-model="formulario.canonValor" />
+            </UFormGroup>
+            <UFormGroup label="Depósito">
+              <UiMoneyInput v-model="formulario.depositoValor" />
+            </UFormGroup>
+          </template>
+          <p v-else class="col-span-2 text-xs text-slate-500">
+            Canon: {{ moneda(formulario.canonValor) }} · Depósito: {{ moneda(formulario.depositoValor) }} — solo
+            Administrador puede modificarlos.
+          </p>
           <UFormGroup label="Código energía">
             <UInput v-model="formulario.codigoEnergia" />
           </UFormGroup>

@@ -257,7 +257,7 @@ onMounted(cargarInmuebles)
             </p>
           </UFormGroup>
           <UFormGroup label="Depósito en custodia">
-            <UInput v-model.number="depositoCustodia" type="number" />
+            <UiMoneyInput v-model="depositoCustodia" />
           </UFormGroup>
         </div>
         <p class="text-xs text-slate-600 mt-2">

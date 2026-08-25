@@ -73,7 +73,13 @@ function abrirArqueo() {
 
 const diferenciaPreview = computed(() => formArqueo.saldoContado - Number(saldo.value?.saldoEsperado ?? 0))
 
+// La observación es obligatoria cuando hay diferencia: es el único rastro de por qué el
+// conteo físico no cuadró con lo esperado (el backend acepta observaciones vacías, pero
+// dejar esto sin exigir en la UI significa que en la práctica nunca queda explicado).
+const faltaObservacion = computed(() => diferenciaPreview.value !== 0 && !formArqueo.observaciones.trim())
+
 async function confirmarArqueo() {
+  if (faltaObservacion.value) return
   registrando.value = true
   try {
     await useApiFetch('/caja/arqueos', {
@@ -170,7 +176,7 @@ onMounted(cargarSaldo)
             <span class="font-semibold text-slate-900">{{ moneda(saldo?.saldoEsperado) }}</span>
           </p>
           <UFormGroup label="Saldo contado (conteo físico real)">
-            <UInput v-model.number="formArqueo.saldoContado" type="number" min="0" />
+            <UiMoneyInput v-model="formArqueo.saldoContado" />
           </UFormGroup>
           <p class="text-sm">
             Diferencia:
@@ -185,14 +191,21 @@ onMounted(cargarSaldo)
             <span v-if="diferenciaPreview > 0" class="text-slate-500"> (sobrante)</span>
             <span v-else-if="diferenciaPreview < 0" class="text-slate-500"> (faltante)</span>
           </p>
-          <UFormGroup label="Observaciones (opcional)">
+          <UFormGroup
+            :label="
+              diferenciaPreview !== 0 ? 'Observaciones (obligatorio, hay diferencia)' : 'Observaciones (opcional)'
+            "
+            :error="faltaObservacion ? 'Explica el motivo de la diferencia antes de registrar el arqueo.' : undefined"
+          >
             <UTextarea v-model="formArqueo.observaciones" />
           </UFormGroup>
         </div>
         <template #footer>
           <div class="flex justify-end gap-2">
             <UButton color="gray" variant="ghost" @click="modalArqueo = false">Cancelar</UButton>
-            <UButton color="amber" :loading="registrando" @click="confirmarArqueo">Registrar arqueo</UButton>
+            <UButton color="amber" :loading="registrando" :disabled="faltaObservacion" @click="confirmarArqueo">
+              Registrar arqueo
+            </UButton>
           </div>
         </template>
       </UCard>
