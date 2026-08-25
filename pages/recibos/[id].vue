@@ -42,6 +42,19 @@ function etiquetaConcepto(aplicacion: any): string {
   return aplicacion.concepto === 'MORA' ? 'Mora' : 'Capital'
 }
 
+// Mismo criterio que RecaudoModalPrevisualizacionPago: Canon/Novedad se distinguen por
+// `obligacion.tipo`, no por `concepto` (que solo dice CAPITAL/MORA).
+const totalesAplicaciones = computed(() => {
+  const acc = { canon: 0, novedad: 0, mora: 0 }
+  for (const a of recibo.value?.aplicaciones ?? []) {
+    const monto = Number(a.montoAplicado || 0)
+    if (a.concepto === 'MORA') acc.mora += monto
+    else if (a.obligacion?.tipo === 'NOVEDAD') acc.novedad += monto
+    else acc.canon += monto
+  }
+  return acc
+})
+
 // ---- Anular recibo (solo si sigue EMITIDO) ----
 const modalAnular = ref(false)
 const anulando = ref(false)
@@ -171,34 +184,37 @@ onMounted(cargar)
         <p v-if="!recibo.aplicaciones?.length" class="text-sm text-slate-400">
           Sin desglose disponible para este recibo.
         </p>
-        <table v-else class="w-full text-sm">
-          <thead>
-            <tr class="text-left text-slate-500 border-b">
-              <th class="py-1.5 pr-2">Concepto</th>
-              <th class="py-1.5 pr-2">Período</th>
-              <th class="py-1.5 pr-2">Tipo</th>
-              <th class="py-1.5 pr-2 text-right">Valor aplicado</th>
-              <th class="py-1.5 text-right">Saldo posterior</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="a in recibo.aplicaciones" :key="a.id" class="border-b last:border-0">
-              <td class="py-1.5 pr-2 text-slate-900">{{ a.obligacion?.concepto }}</td>
-              <td class="py-1.5 pr-2 text-slate-600">
-                {{ a.obligacion?.periodo ? fecha(a.obligacion.periodo) : '—' }}
-              </td>
-              <td class="py-1.5 pr-2">
-                <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{
-                  etiquetaConcepto(a)
-                }}</UBadge>
-              </td>
-              <td class="py-1.5 pr-2 text-right text-slate-900">{{ moneda(a.montoAplicado) }}</td>
-              <td class="py-1.5 text-right text-slate-600">
-                {{ a.saldoPosterior != null ? moneda(a.saldoPosterior) : '—' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <template v-else>
+          <RecaudoResumenAplicaciones :totales="totalesAplicaciones" class="mb-3" />
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-slate-500 border-b">
+                <th class="py-1.5 pr-2">Concepto</th>
+                <th class="py-1.5 pr-2">Período</th>
+                <th class="py-1.5 pr-2">Tipo</th>
+                <th class="py-1.5 pr-2 text-right">Valor aplicado</th>
+                <th class="py-1.5 text-right">Saldo posterior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="a in recibo.aplicaciones" :key="a.id" class="border-b last:border-0">
+                <td class="py-1.5 pr-2 text-slate-900">{{ a.obligacion?.concepto }}</td>
+                <td class="py-1.5 pr-2 text-slate-600">
+                  {{ a.obligacion?.periodo ? fecha(a.obligacion.periodo) : '—' }}
+                </td>
+                <td class="py-1.5 pr-2">
+                  <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{
+                    etiquetaConcepto(a)
+                  }}</UBadge>
+                </td>
+                <td class="py-1.5 pr-2 text-right text-slate-900">{{ moneda(a.montoAplicado) }}</td>
+                <td class="py-1.5 text-right text-slate-600">
+                  {{ a.saldoPosterior != null ? moneda(a.saldoPosterior) : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
       </UCard>
     </div>
 
