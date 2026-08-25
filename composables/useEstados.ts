@@ -38,6 +38,12 @@ export const ESTADOS: Record<string, Record<string, EntradaEstado>> = {
     EMITIDO: { color: 'emerald', label: 'EMITIDO' },
     ANULADO: { color: 'red', label: 'ANULADO' },
   },
+  obligacion: {
+    PENDIENTE: { color: 'amber', label: 'PENDIENTE' },
+    PARCIAL: { color: 'orange', label: 'PARCIAL' },
+    PAGADA: { color: 'emerald', label: 'PAGADA' },
+    ANULADA: { color: 'gray', label: 'ANULADA' },
+  },
   movimientoTipo: {
     INGRESO: { color: 'emerald', label: 'INGRESO' },
     EGRESO: { color: 'red', label: 'EGRESO' },

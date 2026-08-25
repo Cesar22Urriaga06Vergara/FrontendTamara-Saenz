@@ -27,6 +27,11 @@ const MAPA_TITULOS: EntradaTitulo[] = [
     titulo: 'Nuevo contrato',
     breadcrumb: [{ label: 'Contratos', to: '/contratos' }],
   },
+  {
+    test: (p) => p !== '/contratos/nuevo' && p !== '/contratos' && p.startsWith('/contratos/'),
+    titulo: 'Contrato',
+    breadcrumb: [{ label: 'Contratos', to: '/contratos' }],
+  },
   { test: (p) => p === '/contratos', titulo: 'Contratos' },
   {
     test: (p) => p === '/novedades/nueva',

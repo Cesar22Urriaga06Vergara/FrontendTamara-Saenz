@@ -154,6 +154,9 @@ onMounted(cargarBarrios)
         </template>
         <template #acciones-data="{ row }">
           <div class="flex gap-2">
+            <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/contratos/${row.id}`">
+              Ver
+            </UButton>
             <UButton v-if="row.estado === 'ACTIVO'" size="xs" color="red" variant="soft" @click="abrirTerminar(row)">
               Terminar
             </UButton>
