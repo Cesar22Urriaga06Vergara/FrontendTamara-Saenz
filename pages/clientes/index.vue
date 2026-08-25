@@ -63,13 +63,18 @@ const columnas = [
           <SharedStatusBadge domain="activo" :value="row.activo" />
         </template>
         <template #acciones-data="{ row }">
-          <UiTableRowActions
-            v-if="auth.esAdministrador"
-            :activo="row.activo"
-            @editar="abrirEdicion(row)"
-            @baja="confirmarBaja(row)"
-            @reactivar="alternarActivo(row)"
-          />
+          <div class="flex gap-1">
+            <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/clientes/${row.id}`">
+              Ver
+            </UButton>
+            <UiTableRowActions
+              v-if="auth.esAdministrador"
+              :activo="row.activo"
+              @editar="abrirEdicion(row)"
+              @baja="confirmarBaja(row)"
+              @reactivar="alternarActivo(row)"
+            />
+          </div>
         </template>
         <template #empty-state>
           <div class="text-center py-10 text-slate-400">

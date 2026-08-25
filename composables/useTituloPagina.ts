@@ -19,7 +19,17 @@ interface EntradaTitulo {
  */
 const MAPA_TITULOS: EntradaTitulo[] = [
   { test: (p) => p === '/dashboard', titulo: 'Dashboard' },
+  {
+    test: (p) => p !== '/inmuebles' && p.startsWith('/inmuebles/'),
+    titulo: 'Inmueble',
+    breadcrumb: [{ label: 'Inmuebles', to: '/inmuebles' }],
+  },
   { test: (p) => p === '/inmuebles', titulo: 'Inmuebles' },
+  {
+    test: (p) => p !== '/clientes' && p.startsWith('/clientes/'),
+    titulo: 'Cliente',
+    breadcrumb: [{ label: 'Clientes', to: '/clientes' }],
+  },
   { test: (p) => p === '/clientes', titulo: 'Clientes' },
   { test: (p) => p === '/codeudores', titulo: 'Codeudores' },
   {
