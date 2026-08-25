@@ -44,12 +44,16 @@ const secciones = computed(() =>
       items: [
         { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos', soloAdmin: true },
         { label: 'Caja', icon: 'i-heroicons-calculator', to: '/caja', soloAdmin: true },
+        { label: 'Cartera', icon: 'i-heroicons-banknotes', to: '/cartera', soloAdmin: true },
+        { label: 'Gastos', icon: 'i-heroicons-receipt-refund', to: '/gastos', soloAdmin: true },
+        { label: 'Depósitos', icon: 'i-heroicons-lock-closed', to: '/depositos', soloAdmin: true },
       ],
     },
     {
       titulo: 'CONSULTA Y CONTROL',
       items: [
         { label: 'Movimientos', icon: 'i-heroicons-arrows-right-left', to: '/movimientos', soloAdmin: true },
+        { label: 'Transferencias', icon: 'i-heroicons-building-library', to: '/transferencias', soloAdmin: true },
         { label: 'Reportes', icon: 'i-heroicons-chart-bar', to: '/reportes', soloAdmin: true },
         { label: 'Auditoría', icon: 'i-heroicons-shield-check', to: '/auditoria', soloAdmin: true },
       ],

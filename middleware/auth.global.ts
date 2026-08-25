@@ -35,6 +35,10 @@ export default defineNuxtRouteMiddleware((to) => {
     '/auditoria',
     '/recibos',
     '/caja',
+    '/cartera',
+    '/gastos',
+    '/depositos',
+    '/transferencias',
   ]
   const esRutaAdmin = rutasSoloAdmin.some((r) => to.path.startsWith(r))
   if (esRutaAdmin && auth.rol !== 'ADMINISTRADOR') {
