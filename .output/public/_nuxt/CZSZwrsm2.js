@@ -1,0 +1,1 @@
+function e(){return{moneda:e=>{let t=Number(e??0);return new Intl.NumberFormat(`es-CO`,{style:`currency`,currency:`COP`,maximumFractionDigits:0}).format(t)},fecha:e=>{if(!e)return`—`;let t=typeof e==`string`?new Date(e):e;return new Intl.DateTimeFormat(`es-CO`,{day:`2-digit`,month:`2-digit`,year:`numeric`}).format(t)}}}export{e as t};

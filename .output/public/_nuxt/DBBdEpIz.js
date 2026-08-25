@@ -1,0 +1,1 @@
+function e(e,t){let n={...e};for(let e of t)delete n[e];return n}function t(e,t,n){typeof t==`string`&&(t=t.split(`.`).map(e=>{let t=Number(e);return Number.isNaN(t)?e:t}));let r=e;for(let e of t){if(r==null)return n;r=r[e]}return r===void 0?n:r}export{e as n,t};

@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+/* Badges semánticos según brand tokens */
+.badge-activo { @apply bg-emerald-600 text-white; }
+.badge-suspendido { @apply bg-amber-600 text-white; }
+.badge-mantenimiento { @apply bg-orange-600 text-white; }
+.badge-inactivo { @apply bg-slate-400 text-white; }
