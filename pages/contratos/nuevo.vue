@@ -107,6 +107,10 @@ const puedeCrear = computed(
     !!fechaInicio.value,
 )
 
+// Vista previa antes de confirmar: reutiliza los datos ya seleccionados en memoria, no pide
+// nada nuevo al backend (mismo patrón de "revisar antes de confirmar" que Recaudo).
+const modalConfirmar = ref(false)
+
 async function crearContrato() {
   error.value = ''
   creando.value = true
@@ -122,8 +126,10 @@ async function crearContrato() {
         depositoCustodia: depositoCustodia.value,
       },
     })
+    modalConfirmar.value = false
     await navigateTo(`/contratos`)
   } catch (e: any) {
+    modalConfirmar.value = false
     error.value = e?.data?.message || 'No fue posible crear el contrato.'
   } finally {
     creando.value = false
@@ -266,10 +272,60 @@ onMounted(cargarInmuebles)
       </UCard>
 
       <div class="flex justify-end">
-        <UButton color="amber" size="lg" :disabled="!puedeCrear" :loading="creando" @click="crearContrato">
-          Crear contrato
+        <UButton color="amber" size="lg" :disabled="!puedeCrear" @click="modalConfirmar = true">
+          Revisar y crear contrato
         </UButton>
       </div>
     </div>
+
+    <!-- Vista previa antes de confirmar: no llama al backend hasta que se confirme aquí. -->
+    <UModal v-model="modalConfirmar">
+      <UCard>
+        <template #header>
+          <p class="font-semibold text-slate-900">Confirmar nuevo contrato</p>
+        </template>
+        <div class="space-y-3 text-sm">
+          <div>
+            <p class="text-slate-500">Arrendatario</p>
+            <p class="font-medium text-slate-900">
+              {{ clienteSeleccionado?.nombreCompleto }} — {{ clienteSeleccionado?.numeroDocumento }}
+            </p>
+          </div>
+          <div>
+            <p class="text-slate-500">Codeudor(es)</p>
+            <p class="font-medium text-slate-900">
+              {{ codeudoresSeleccionados.map((c) => c.nombreCompleto).join(', ') }}
+            </p>
+          </div>
+          <div>
+            <p class="text-slate-500">Inmueble</p>
+            <p class="font-medium text-slate-900">
+              {{ inmuebleSeleccionado?.direccion }} ({{ inmuebleSeleccionado?.barrio }})
+            </p>
+            <p class="text-slate-600">Canon: {{ moneda(inmuebleSeleccionado?.canonValor) }}</p>
+          </div>
+          <div class="grid grid-cols-3 gap-3 pt-2 border-t">
+            <div>
+              <p class="text-slate-500">Fecha de inicio</p>
+              <p class="font-medium text-slate-900">{{ fechaInicio || '—' }}</p>
+            </div>
+            <div>
+              <p class="text-slate-500">Día de pago</p>
+              <p class="font-medium text-slate-900">{{ diaPago ?? '—' }}</p>
+            </div>
+            <div>
+              <p class="text-slate-500">Depósito en custodia</p>
+              <p class="font-medium text-slate-900">{{ moneda(depositoCustodia) }}</p>
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton color="gray" variant="ghost" @click="modalConfirmar = false">Seguir editando</UButton>
+            <UButton color="amber" :loading="creando" @click="crearContrato">Confirmar y crear contrato</UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
   </div>
 </template>
