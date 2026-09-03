@@ -93,12 +93,32 @@ AUD-031 (validación de `impactoFinanciero` al anular una novedad) se resolvió 
 backend (`NovedadesService.cambiarEstado()`); no requirió cambios en este frontend porque hoy no
 existe ninguna UI que invoque `PATCH /novedades/:id/estado`.
 
+## Retiro del costo de mora + alineación con el backend (2026-09-01)
+
+El backend retiró el **costo de mora / interés por retraso** (los cobros son netos por canon de
+arrendamiento) y aplicó fixes contables. Sincronización de este frontend:
+
+- **`configuracion/index.vue`**: se quitó la sección "Parámetros de mora" (días de gracia,
+  % mora mensual) — el `PATCH /empresa` rechazaba esos campos con 400. Queda "Horizonte de
+  cánones".
+- **`cartera/index.vue`**: se quitó la columna "Mora"; el "Total" (que sumaba
+  `valorMoraAcumulada`, ahora `undefined` → `NaN` → `$ 0`) se colapsó en una sola columna
+  "Saldo por cobrar" = capital pendiente.
+- **`contratos/nuevo.vue`**: nuevo campo **"Medio de pago del depósito"** (+ referencia si es
+  transferencia), obligatorio cuando el depósito en custodia es > 0 — el backend ahora registra
+  el depósito como un `Movimiento` INGRESO al firmar (hallazgo B5) y exige su medio de pago.
+- **Aplicación del dinero** (`ResumenAplicaciones.vue`, `ModalPrevisualizacionPago.vue`,
+  `recibos/[id].vue`): se quitó la columna "Tipo (Capital/Mora)" y la caja "Mora" del resumen —
+  todo abono es de capital. El orden mostrado pasa de "Canon → Novedad → Mora" a "Canon → Novedad".
+- Cálculos de cartera pendiente en `recaudo/index.vue`, `contratos/[id].vue` y `ModalTerminar.vue`
+  ya no suman `valorMoraAcumulada`.
+
 ## Novedades de esta última entrega
 - `dashboard/index.vue` ahora consume `GET /dashboard` con datos reales.
 - `recaudo/index.vue`: búsqueda de contrato, ficha de recaudo, pago mixto y descarga de PDF.
 - `reportes/index.vue`: centro de exportación a Excel.
 - `contratos/nuevo.vue`: creación de contrato 100% por búsqueda estricta (Cliente, Codeudores N:M, Inmueble disponible), sin captura de datos de personas inline.
-- `administracion/index.vue`: CRUD de Usuarios (RBAC) + edición de parámetros globales de Empresa.
+- `administracion/index.vue`: CRUD de Usuarios (RBAC). Los parámetros de Empresa se editan en `configuracion/index.vue`.
 - `clientes/index.vue`, `codeudores/index.vue`: directorios con búsqueda por cédula y alta rápida.
 - `auditoria/index.vue`: consulta de trazabilidad con filtros por módulo y usuario.
 

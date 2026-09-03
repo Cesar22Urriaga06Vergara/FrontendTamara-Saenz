@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Depósitos en custodia: contratos terminados con depósito aún sin liquidar, e historial de
+ * Depósitos de garantía: contratos terminados con depósito aún sin liquidar, e historial de
  * liquidaciones ya hechas. Antes solo se podía liquidar desde la ficha de un contrato en
  * Recaudo (uno a la vez, sin vista consolidada) — reutiliza el mismo modal de liquidación.
  * EXCLUSIVO Administrador.
@@ -40,17 +40,17 @@ const medios = ['EFECTIVO', 'TRANSFERENCIA']
 const modalLiquidar = ref(false)
 const liquidando = ref(false)
 const contratoLiquidando = ref<any>(null)
-const descuentosDeposito = reactive([{ concepto: '', valor: 0 }])
+const descuentosDeposito = reactive([{ concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }])
 const formLiquidar = reactive({ medioPago: 'EFECTIVO', referencia: '', observaciones: '' })
 
 const totalDescuentosDeposito = computed(() => descuentosDeposito.reduce((acc, d) => acc + Number(d.valor || 0), 0))
 const valorADevolver = computed(() =>
-  Math.max(0, Number(contratoLiquidando.value?.depositoCustodia || 0) - totalDescuentosDeposito.value),
+  Math.max(0, Number(contratoLiquidando.value?.depositoGarantia || 0) - totalDescuentosDeposito.value),
 )
 
 function abrirLiquidar(contrato: any) {
   contratoLiquidando.value = contrato
-  descuentosDeposito.splice(0, descuentosDeposito.length, { concepto: '', valor: 0 })
+  descuentosDeposito.splice(0, descuentosDeposito.length, { concepto: '', valor: 0, tipo: 'GENERAL' })
   formLiquidar.medioPago = 'EFECTIVO'
   formLiquidar.referencia = ''
   formLiquidar.observaciones = ''
@@ -61,7 +61,9 @@ async function confirmarLiquidar() {
   if (!contratoLiquidando.value) return
   liquidando.value = true
   try {
-    const descuentos = descuentosDeposito.filter((d) => d.concepto && Number(d.valor) > 0)
+    const descuentos = descuentosDeposito
+      .filter((d) => d.concepto && Number(d.valor) > 0)
+      .map((d) => ({ concepto: d.concepto, valor: Number(d.valor), tipo: d.tipo ?? 'GENERAL' }))
     await useApiFetch(`/recaudo/contrato/${contratoLiquidando.value.id}/liquidar-deposito`, {
       method: 'POST',
       body: {
@@ -109,18 +111,18 @@ async function confirmarLiquidar() {
           :rows="pendientes"
           :columns="[
             { key: 'cliente', label: 'Arrendatario' },
-            { key: 'inmueble', label: 'Inmueble' },
+            { key: 'inmueble.direccion', label: 'Dirección' },
+            { key: 'inmueble.barrio', label: 'Barrio' },
             { key: 'fechaFin', label: 'Fecha de fin' },
-            { key: 'depositoCustodia', label: 'Depósito' },
-            { key: 'acciones', label: '' },
+            { key: 'depositoGarantia', label: 'Depósito de garantía' },
+            { key: 'acciones', label: 'Acciones' },
           ]"
           :loading="cargandoPendientes"
         >
           <template #cliente-data="{ row }">{{ row.cliente?.nombreCompleto }}</template>
-          <template #inmueble-data="{ row }">{{ row.inmueble?.direccion }} ({{ row.inmueble?.barrio }})</template>
           <template #fechaFin-data="{ row }">{{ fecha(row.fechaFin) }}</template>
-          <template #depositoCustodia-data="{ row }">
-            <span class="font-semibold text-slate-900">{{ moneda(row.depositoCustodia) }}</span>
+          <template #depositoGarantia-data="{ row }">
+            <span class="font-semibold text-slate-900">{{ moneda(row.depositoGarantia) }}</span>
           </template>
           <template #acciones-data="{ row }">
             <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-banknotes" @click="abrirLiquidar(row)">
@@ -144,15 +146,15 @@ async function confirmarLiquidar() {
           :rows="liquidados"
           :columns="[
             { key: 'cliente', label: 'Arrendatario' },
-            { key: 'inmueble', label: 'Inmueble' },
+            { key: 'inmueble.direccion', label: 'Dirección' },
+            { key: 'inmueble.barrio', label: 'Barrio' },
             { key: 'depositoLiquidadoEn', label: 'Fecha de liquidación' },
             { key: 'descuentos', label: 'Descuentos' },
-            { key: 'acciones', label: '' },
+            { key: 'acciones', label: 'Acciones' },
           ]"
           :loading="cargandoLiquidados"
         >
           <template #cliente-data="{ row }">{{ row.cliente?.nombreCompleto }}</template>
-          <template #inmueble-data="{ row }">{{ row.inmueble?.direccion }} ({{ row.inmueble?.barrio }})</template>
           <template #depositoLiquidadoEn-data="{ row }">{{ fecha(row.depositoLiquidadoEn) }}</template>
           <template #descuentos-data="{ row }">
             <p v-if="!row.descuentos?.length" class="text-slate-400">Sin descuentos</p>
@@ -179,7 +181,7 @@ async function confirmarLiquidar() {
 
     <RecaudoModalLiquidarDeposito
       v-model="modalLiquidar"
-      :deposito-custodia="Number(contratoLiquidando?.depositoCustodia || 0)"
+      :deposito-garantia="Number(contratoLiquidando?.depositoGarantia || 0)"
       :valor-a-devolver="valorADevolver"
       :medios="medios"
       :descuentos="descuentosDeposito"

@@ -88,10 +88,11 @@ async function confirmarPago() {
         :rows="gastos"
         :columns="[
           { key: 'descripcion', label: 'Concepto' },
-          { key: 'inmueble', label: 'Inmueble' },
+          { key: 'inmueble.direccion', label: 'Dirección' },
+          { key: 'inmueble.barrio', label: 'Barrio' },
           { key: 'montoAprobado', label: 'Monto' },
           { key: 'gastoPagado', label: 'Estado' },
-          { key: 'acciones', label: '' },
+          { key: 'acciones', label: 'Acciones' },
         ]"
         :loading="cargando"
       >
@@ -101,7 +102,6 @@ async function confirmarPago() {
             <p class="text-xs text-slate-500">{{ fecha(row.fecha) }}</p>
           </div>
         </template>
-        <template #inmueble-data="{ row }">{{ row.inmueble?.direccion }} ({{ row.inmueble?.barrio }})</template>
         <template #montoAprobado-data="{ row }">{{ moneda(row.montoAprobado) }}</template>
         <template #gastoPagado-data="{ row }">
           <SharedStatusBadge domain="gastoPagado" :value="row.gastoPagado" />

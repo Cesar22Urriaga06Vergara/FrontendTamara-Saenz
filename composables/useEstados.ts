@@ -30,6 +30,11 @@ export const ESTADOS: Record<string, Record<string, EntradaEstado>> = {
     CERRADA: { color: 'emerald', label: 'CERRADA' },
     ANULADA: { color: 'gray', label: 'ANULADA' },
   },
+  impactoFinanciero: {
+    PENDIENTE: { color: 'amber', label: 'Pendiente' },
+    CARGO_ARRENDATARIO: { color: 'gray', label: 'Cargo arrendatario' },
+    GASTO_INMOBILIARIA: { color: 'orange', label: 'Gasto inmobiliaria' },
+  },
   gastoPagado: {
     true: { color: 'emerald', label: 'Pagado' },
     false: { color: 'amber', label: 'Pendiente de pago' },

@@ -16,18 +16,12 @@ const props = defineProps<{
 
 defineEmits<{ 'update:modelValue': [boolean]; confirmar: [] }>()
 
-function etiquetaConcepto(aplicacion: any): string {
-  return aplicacion.concepto === 'MORA' ? 'Mora' : 'Capital'
-}
-
-// Canon/Novedad se distinguen por `obligacion.tipo` (el `concepto` de la aplicación solo dice
-// CAPITAL/MORA, no a qué tipo de obligación se aplicó ese capital).
+// Canon/Novedad se distinguen por `obligacion.tipo`.
 const totales = computed(() => {
-  const acc = { canon: 0, novedad: 0, mora: 0 }
+  const acc = { canon: 0, novedad: 0 }
   for (const a of props.previsualizacion?.aplicaciones ?? []) {
     const monto = Number(a.monto || 0)
-    if (a.concepto === 'MORA') acc.mora += monto
-    else if (a.obligacion?.tipo === 'NOVEDAD') acc.novedad += monto
+    if (a.obligacion?.tipo === 'NOVEDAD') acc.novedad += monto
     else acc.canon += monto
   }
   return acc
@@ -48,14 +42,15 @@ const totales = computed(() => {
       <div v-if="cargando" class="text-center py-10 text-slate-500">Calculando aplicación…</div>
 
       <div v-else-if="previsualizacion" class="space-y-4">
-        <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           <p><span class="text-slate-500">Cliente:</span> {{ previsualizacion.contrato?.cliente?.nombreCompleto }}</p>
           <p><span class="text-slate-500">Inmueble:</span> {{ previsualizacion.contrato?.inmueble?.direccion }}</p>
+          <p><span class="text-slate-500">Barrio:</span> {{ previsualizacion.contrato?.inmueble?.barrio || '—' }}</p>
           <p>
             <span class="text-slate-500">Monto recibido:</span>
-            <span class="font-semibold text-slate-900">{{ moneda(previsualizacion.valorTotalPago) }}</span>
+            <span class="font-semibold tabular-nums text-slate-900">{{ moneda(previsualizacion.valorTotalPago) }}</span>
           </p>
-          <p>
+          <p class="sm:col-span-2">
             <span class="text-slate-500">Medio de pago:</span>
             {{
               previsualizacion.detallesPago
@@ -66,34 +61,34 @@ const totales = computed(() => {
         </div>
 
         <div>
-          <p class="text-sm font-medium text-slate-900 mb-2">Aplicación del dinero (Canon → Novedad → Mora)</p>
+          <p class="text-sm font-medium text-slate-900 mb-2">Aplicación del dinero (Canon → Novedad)</p>
           <p v-if="!previsualizacion.aplicaciones.length" class="text-sm text-slate-400">
             El pago no alcanza a aplicarse a ninguna obligación pendiente.
           </p>
           <template v-else>
             <RecaudoResumenAplicaciones :totales="totales" class="mb-3" />
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-left text-slate-500 border-b">
-                  <th class="py-1.5 pr-2">Concepto</th>
-                  <th class="py-1.5 pr-2">Tipo</th>
-                  <th class="py-1.5 pr-2 text-right">Aplicado</th>
-                  <th class="py-1.5 text-right">Saldo posterior</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(a, i) in previsualizacion.aplicaciones" :key="i" class="border-b last:border-0">
-                  <td class="py-1.5 pr-2 text-slate-900">{{ a.obligacion?.concepto }}</td>
-                  <td class="py-1.5 pr-2">
-                    <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{
-                      etiquetaConcepto(a)
-                    }}</UBadge>
-                  </td>
-                  <td class="py-1.5 pr-2 text-right text-slate-900">{{ moneda(a.monto) }}</td>
-                  <td class="py-1.5 text-right text-slate-600">{{ moneda(a.saldoPosterior) }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="overflow-x-auto rounded-lg border border-slate-500">
+              <table class="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr class="text-slate-700">
+                    <th class="border border-slate-400 px-2 py-1.5 text-center">Concepto</th>
+                    <th class="border border-slate-400 px-2 py-1.5 text-center">Aplicado</th>
+                    <th class="border border-slate-400 px-2 py-1.5 text-center">Saldo posterior</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(a, i) in previsualizacion.aplicaciones" :key="i" class="even:bg-slate-50">
+                    <td class="border border-slate-400 px-2 py-1.5 text-slate-700">{{ a.obligacion?.concepto }}</td>
+                    <td class="border border-slate-400 px-2 py-1.5 text-right tabular-nums text-slate-900">
+                      {{ moneda(a.monto) }}
+                    </td>
+                    <td class="border border-slate-400 px-2 py-1.5 text-right tabular-nums text-slate-600">
+                      {{ moneda(a.saldoPosterior) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </template>
         </div>
 

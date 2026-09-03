@@ -42,7 +42,7 @@ const secciones = computed(() =>
     {
       titulo: 'FINANZAS',
       items: [
-        { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos', soloAdmin: true },
+        { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos' },
         { label: 'Caja', icon: 'i-heroicons-calculator', to: '/caja', soloAdmin: true },
         { label: 'Cartera', icon: 'i-heroicons-banknotes', to: '/cartera', soloAdmin: true },
         { label: 'Gastos', icon: 'i-heroicons-receipt-refund', to: '/gastos', soloAdmin: true },

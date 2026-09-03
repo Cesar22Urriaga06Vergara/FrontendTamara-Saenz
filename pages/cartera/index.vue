@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
- * Cartera consolidada: toda obligación con saldo por cobrar, de cualquier contrato — antes
- * solo existía como reporte Excel (§Reportes) o por contrato individual (ficha de recaudo en
- * Recaudo). EXCLUSIVO Administrador. No duplica ningún cálculo: `GET /obligaciones` devuelve
- * la mora ya recalculada por el mismo servicio que usa Recaudo.
+ * Cartera consolidada: toda obligación con saldo de capital por cobrar, de cualquier contrato
+ * — antes solo existía como reporte Excel (§Reportes) o por contrato individual (ficha de
+ * recaudo en Recaudo). EXCLUSIVO Administrador. No duplica ningún cálculo: `GET /obligaciones`
+ * es la misma fuente que usa Recaudo. Sin costo de mora (retirado el 2026-09-01).
  */
 const { moneda, fecha } = useFormatoCO()
 
@@ -20,10 +20,7 @@ const {
 })
 
 const totalPagina = computed(() =>
-  obligaciones.value.reduce(
-    (acc, o) => acc + (Number(o.valorOriginal) - Number(o.valorAbonado)) + Number(o.valorMoraAcumulada),
-    0,
-  ),
+  obligaciones.value.reduce((acc, o) => acc + (Number(o.valorOriginal) - Number(o.valorAbonado)), 0),
 )
 </script>
 
@@ -38,13 +35,12 @@ const totalPagina = computed(() =>
         :rows="obligaciones"
         :columns="[
           { key: 'cliente', label: 'Arrendatario' },
-          { key: 'inmueble', label: 'Inmueble' },
+          { key: 'contrato.inmueble.direccion', label: 'Dirección' },
+          { key: 'contrato.inmueble.barrio', label: 'Barrio' },
           { key: 'tipo', label: 'Tipo' },
           { key: 'fechaVencimiento', label: 'Vencimiento' },
-          { key: 'saldo', label: 'Saldo capital' },
-          { key: 'mora', label: 'Mora' },
-          { key: 'total', label: 'Total' },
-          { key: 'acciones', label: '' },
+          { key: 'saldo', label: 'Saldo por cobrar' },
+          { key: 'acciones', label: 'Acciones' },
         ]"
         :loading="cargando"
       >
@@ -54,38 +50,40 @@ const totalPagina = computed(() =>
             <p class="text-xs text-slate-500">{{ row.contrato?.cliente?.numeroDocumento }}</p>
           </div>
         </template>
-        <template #inmueble-data="{ row }">
-          <div>
-            <p class="text-slate-900">{{ row.contrato?.inmueble?.direccion }}</p>
-            <p class="text-xs text-slate-500">{{ row.contrato?.inmueble?.barrio }}</p>
-          </div>
-        </template>
         <template #tipo-data="{ row }">
           <UBadge :color="row.tipo === 'CANON' ? 'gray' : 'amber'" variant="subtle" size="xs">{{ row.tipo }}</UBadge>
         </template>
         <template #fechaVencimiento-data="{ row }">{{ fecha(row.fechaVencimiento) }}</template>
         <template #saldo-data="{ row }">
-          {{ moneda(Number(row.valorOriginal) - Number(row.valorAbonado)) }}
-        </template>
-        <template #mora-data="{ row }">
-          <span :class="Number(row.valorMoraAcumulada) > 0 ? 'text-red-600 font-medium' : 'text-slate-400'">
-            {{ moneda(row.valorMoraAcumulada) }}
-          </span>
-        </template>
-        <template #total-data="{ row }">
           <span class="font-semibold text-slate-900">
-            {{ moneda(Number(row.valorOriginal) - Number(row.valorAbonado) + Number(row.valorMoraAcumulada)) }}
+            {{ moneda(Number(row.valorOriginal) - Number(row.valorAbonado)) }}
           </span>
         </template>
         <template #acciones-data="{ row }">
-          <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/contratos/${row.contrato?.id}`">
-            Ver contrato
-          </UButton>
+          <div class="flex flex-nowrap items-center justify-center gap-2">
+            <UButton
+              size="xs"
+              color="amber"
+              icon="i-heroicons-banknotes"
+              :to="`/recaudo?contratoId=${row.contrato?.id}`"
+            >
+              Cobrar
+            </UButton>
+            <UButton
+              size="xs"
+              color="gray"
+              variant="soft"
+              icon="i-heroicons-eye"
+              :to="`/contratos/${row.contrato?.id}`"
+            >
+              Ver contrato
+            </UButton>
+          </div>
         </template>
         <template #empty-state>
           <div class="text-center py-10 text-slate-400">
             <UIcon name="i-heroicons-banknotes" class="w-10 h-10 mx-auto mb-2" />
-            <p>No hay cartera pendiente por cobrar.</p>
+            <p>No hay cartera vencida por cobrar.</p>
           </div>
         </template>
       </UTable>

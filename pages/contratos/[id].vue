@@ -33,6 +33,13 @@ const cargandoFicha = ref(false)
 const ficha = ref<any>(null)
 const errorFicha = ref('')
 
+const carteraPendiente = computed(() =>
+  (ficha.value?.obligacionesPendientes ?? []).reduce(
+    (s: number, o: any) => s + (Number(o.valorOriginal) - Number(o.valorAbonado)),
+    0,
+  ),
+)
+
 async function cargarFicha() {
   if (!auth.esAdministrador) return
   cargandoFicha.value = true
@@ -86,82 +93,45 @@ onMounted(async () => {
   if (auth.esAdministrador) cargarSeccionesAdmin()
 })
 
-// ---- Terminar / reactivar (mismo flujo que contratos/index.vue) ----
+// ---- Terminar / reactivar (modales compartidos con el listado) ----
 const modalTerminar = ref(false)
-const formTerminar = reactive({ fechaFin: '', motivoTerminacion: '' })
-const terminando = ref(false)
-
-function abrirTerminar() {
-  error.value = ''
-  formTerminar.fechaFin = new Date().toISOString().slice(0, 10)
-  formTerminar.motivoTerminacion = ''
-  modalTerminar.value = true
-}
-
-async function confirmarTerminar() {
-  terminando.value = true
-  try {
-    await useApiFetch(`/contratos/${route.params.id}/terminar`, {
-      method: 'PATCH',
-      body: { fechaFin: formTerminar.fechaFin, motivoTerminacion: formTerminar.motivoTerminacion },
-    })
-    modalTerminar.value = false
-    await cargar()
-    // El backend anula automáticamente el canon futuro al terminar (CONT-05): refresca la
-    // ficha financiera además del historial, o quedaría mostrando obligaciones ya anuladas.
-    if (auth.esAdministrador) {
-      cargarFicha()
-      cargarHistorial()
-    }
-  } catch (e: any) {
-    error.value = e?.data?.message || 'No fue posible terminar el contrato.'
-  } finally {
-    terminando.value = false
-  }
-}
-
 const modalReactivar = ref(false)
-const formReactivar = reactive({ motivo: '' })
-const reactivando = ref(false)
 
-function abrirReactivar() {
-  error.value = ''
-  formReactivar.motivo = ''
-  modalReactivar.value = true
-}
-
-async function confirmarReactivar() {
-  if (!formReactivar.motivo) return
-  reactivando.value = true
-  try {
-    await useApiFetch(`/contratos/${route.params.id}/reactivar`, { method: 'PATCH', body: formReactivar })
-    modalReactivar.value = false
-    await cargar()
-    if (auth.esAdministrador) {
-      cargarFicha()
-      cargarHistorial()
-    }
-  } catch (e: any) {
-    error.value = e?.data?.message || 'No fue posible reactivar el contrato.'
-  } finally {
-    reactivando.value = false
+function recargarTrasCambio() {
+  cargar()
+  if (auth.esAdministrador) {
+    cargarFicha()
+    cargarHistorial()
   }
 }
+
+const recibosColumnas = [
+  { key: 'consecutivo', label: 'Número' },
+  { key: 'creadoEn', label: 'Fecha', class: 'whitespace-nowrap', rowClass: 'whitespace-nowrap' },
+  {
+    key: 'valorTotal',
+    label: 'Valor',
+    class: 'whitespace-nowrap',
+    rowClass: 'whitespace-nowrap text-right tabular-nums',
+  },
+  { key: 'estado', label: 'Estado', class: 'whitespace-nowrap', rowClass: 'whitespace-nowrap text-center' },
+  { key: 'acciones', label: '', class: 'whitespace-nowrap', rowClass: 'whitespace-nowrap' },
+]
 </script>
 
 <template>
-  <div class="max-w-4xl">
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+  <div class="max-w-5xl">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3">
         <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/contratos">Volver</UButton>
-        <h1 class="text-xl font-semibold text-slate-900">
-          {{ contrato?.cliente?.nombreCompleto ? `Contrato de ${contrato.cliente.nombreCompleto}` : 'Contrato' }}
-        </h1>
+        <p v-if="contrato" class="text-xl font-semibold text-slate-900">
+          {{ contrato.cliente?.nombreCompleto }}
+        </p>
         <SharedStatusBadge v-if="contrato" domain="contrato" :value="contrato.estado" />
       </div>
       <div v-if="contrato" class="flex gap-2">
         <UButton
-          v-if="contrato.estado === 'ACTIVO'"
+          v-if="contrato.estado === 'ACTIVO' && auth.esAdministrador"
           size="sm"
           color="amber"
           icon="i-heroicons-banknotes"
@@ -169,7 +139,7 @@ async function confirmarReactivar() {
         >
           Ir a Recaudo
         </UButton>
-        <UButton v-if="contrato.estado === 'ACTIVO'" size="sm" color="red" variant="soft" @click="abrirTerminar">
+        <UButton v-if="contrato.estado === 'ACTIVO'" size="sm" color="red" variant="soft" @click="modalTerminar = true">
           Terminar
         </UButton>
         <UButton
@@ -177,7 +147,7 @@ async function confirmarReactivar() {
           size="sm"
           color="emerald"
           variant="soft"
-          @click="abrirReactivar"
+          @click="modalReactivar = true"
         >
           Reactivar
         </UButton>
@@ -186,94 +156,113 @@ async function confirmarReactivar() {
 
     <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="cargar" />
 
-    <div v-if="cargando" class="text-center py-16 text-slate-500">Cargando contrato…</div>
+    <div v-if="cargando" class="py-16 text-center text-slate-500">Cargando contrato…</div>
 
     <div v-else-if="contrato" class="space-y-4">
       <UCard>
         <template #header><p class="font-semibold text-slate-900">Datos del contrato</p></template>
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <p>
-            <span class="text-slate-500">Arrendatario:</span> {{ contrato.cliente?.nombreCompleto }} ({{
-              contrato.cliente?.numeroDocumento
-            }})
-          </p>
-          <p>
-            <span class="text-slate-500">Inmueble:</span> {{ contrato.inmueble?.direccion }} ({{
-              contrato.inmueble?.barrio
-            }})
-          </p>
-          <p><span class="text-slate-500">Fecha de inicio:</span> {{ fecha(contrato.fechaInicio) }}</p>
-          <p>
-            <span class="text-slate-500">Fecha de fin:</span> {{ contrato.fechaFin ? fecha(contrato.fechaFin) : '—' }}
-          </p>
-          <p><span class="text-slate-500">Día de pago:</span> {{ contrato.diaPago }}</p>
-          <p><span class="text-slate-500">Canon:</span> {{ moneda(contrato.canonValor) }}</p>
-          <p v-if="contrato.motivoTerminacion" class="col-span-2">
-            <span class="text-slate-500">Motivo de terminación:</span> {{ contrato.motivoTerminacion }}
-          </p>
-        </div>
+        <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Arrendatario</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ contrato.cliente?.nombreCompleto }}</dd>
+            <dd class="text-xs text-slate-500">{{ contrato.cliente?.numeroDocumento }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Dirección</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ contrato.inmueble?.direccion }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Barrio</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ contrato.inmueble?.barrio || '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Fecha de inicio</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ fecha(contrato.fechaInicio) }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Fecha de fin</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ contrato.fechaFin ? fecha(contrato.fechaFin) : '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Día de pago</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ contrato.diaPago }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Canon</dt>
+            <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900">{{ moneda(contrato.canonValor) }}</dd>
+          </div>
+          <div v-if="contrato.motivoTerminacion" class="col-span-full">
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Motivo de terminación</dt>
+            <dd class="mt-0.5 text-sm text-slate-900">{{ contrato.motivoTerminacion }}</dd>
+          </div>
+        </dl>
       </UCard>
 
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">Codeudores</p></template>
-        <p v-if="!contrato.codeudores?.length" class="text-sm text-slate-400">Sin codeudores registrados.</p>
-        <div v-else class="flex flex-wrap gap-2">
-          <UBadge v-for="c in contrato.codeudores" :key="c.id" color="amber" variant="subtle">
-            {{ c.nombreCompleto }} — {{ c.numeroDocumento }}
-          </UBadge>
-        </div>
-      </UCard>
-
-      <template v-if="auth.esAdministrador">
-        <SharedErrorState v-if="errorFicha" :message="errorFicha" @retry="cargarFicha" />
-        <UCard v-else>
-          <template #header><p class="font-semibold text-slate-900">Resumen financiero</p></template>
-          <div v-if="cargandoFicha" class="text-sm text-slate-400">Cargando…</div>
-          <div v-else-if="ficha" class="space-y-4">
-            <div class="grid grid-cols-2 gap-3 text-sm">
-              <p>
-                <span class="text-slate-500">Saldo a favor:</span>
-                <span class="text-emerald-600 font-medium">{{ moneda(ficha.saldoAFavor) }}</span>
-              </p>
-              <p><span class="text-slate-500">Depósito en custodia:</span> {{ moneda(ficha.depositoCustodia) }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-slate-900 mb-2">Obligaciones pendientes</p>
-              <p v-if="!ficha.obligacionesPendientes?.length" class="text-sm text-slate-400">
-                Sin obligaciones pendientes.
-              </p>
-              <div v-else class="space-y-2">
-                <div
-                  v-for="o in ficha.obligacionesPendientes"
-                  :key="o.id"
-                  class="text-xs border rounded-md px-2 py-1.5 flex justify-between"
-                >
-                  <span class="text-slate-700">{{ o.concepto }} · vence {{ fecha(o.fechaVencimiento) }}</span>
-                  <span class="font-medium text-slate-900">
-                    {{ moneda(Number(o.valorOriginal) - Number(o.valorAbonado)) }}
-                    <span v-if="Number(o.valorMoraAcumulada) > 0" class="text-red-600">
-                      (+{{ moneda(o.valorMoraAcumulada) }} mora)
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </div>
+      <div class="grid items-start gap-4 lg:grid-cols-2">
+        <UCard>
+          <template #header><p class="font-semibold text-slate-900">Codeudores</p></template>
+          <p v-if="!contrato.codeudores?.length" class="text-sm text-slate-400">Sin codeudores registrados.</p>
+          <div v-else class="flex flex-wrap gap-2">
+            <UBadge v-for="c in contrato.codeudores" :key="c.id" color="amber" variant="subtle">
+              {{ c.nombreCompleto }} — {{ c.numeroDocumento }}
+            </UBadge>
           </div>
         </UCard>
 
+        <template v-if="auth.esAdministrador">
+          <SharedErrorState v-if="errorFicha" :message="errorFicha" @retry="cargarFicha" />
+          <UCard v-else>
+            <template #header><p class="font-semibold text-slate-900">Resumen financiero</p></template>
+            <div v-if="cargandoFicha" class="text-sm text-slate-400">Cargando…</div>
+            <div v-else-if="ficha" class="space-y-4">
+              <dl class="grid grid-cols-2 gap-x-6 gap-y-3">
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Saldo a favor</dt>
+                  <dd class="mt-0.5 text-sm font-semibold tabular-nums text-emerald-600">
+                    {{ moneda(ficha.saldoAFavor) }}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Depósito de garantía</dt>
+                  <dd class="mt-0.5 text-sm tabular-nums text-slate-900">{{ moneda(ficha.depositoGarantia) }}</dd>
+                </div>
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Cartera pendiente</dt>
+                  <dd
+                    class="mt-0.5 text-sm font-semibold tabular-nums"
+                    :class="carteraPendiente > 0 ? 'text-red-600' : 'text-slate-900'"
+                  >
+                    {{ moneda(carteraPendiente) }}
+                  </dd>
+                </div>
+              </dl>
+              <div>
+                <p class="mb-2 text-sm font-medium text-slate-900">Obligaciones pendientes</p>
+                <p v-if="!ficha.obligacionesPendientes?.length" class="text-sm text-slate-400">
+                  Sin obligaciones pendientes.
+                </p>
+                <ul v-else class="space-y-2">
+                  <li
+                    v-for="o in ficha.obligacionesPendientes"
+                    :key="o.id"
+                    class="flex items-start justify-between gap-3 rounded-md border border-slate-300 px-2.5 py-2 text-xs"
+                  >
+                    <span class="text-slate-600">{{ o.concepto }} · vence {{ fecha(o.fechaVencimiento) }}</span>
+                    <span class="shrink-0 text-right font-medium tabular-nums text-slate-900">
+                      {{ moneda(Number(o.valorOriginal) - Number(o.valorAbonado)) }}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </UCard>
+        </template>
+      </div>
+
+      <template v-if="auth.esAdministrador">
         <UCard>
           <template #header><p class="font-semibold text-slate-900">Recibos emitidos</p></template>
-          <UTable
-            :rows="recibos"
-            :columns="[
-              { key: 'consecutivo', label: 'Número' },
-              { key: 'creadoEn', label: 'Fecha' },
-              { key: 'valorTotal', label: 'Valor' },
-              { key: 'estado', label: 'Estado' },
-              { key: 'acciones', label: '' },
-            ]"
-            :loading="cargandoRecibos"
-          >
+          <UTable :rows="recibos" :columns="recibosColumnas" :loading="cargandoRecibos">
             <template #creadoEn-data="{ row }">{{ fecha(row.creadoEn) }}</template>
             <template #valorTotal-data="{ row }">{{ moneda(row.valorTotal) }}</template>
             <template #estado-data="{ row }">
@@ -285,10 +274,10 @@ async function confirmarReactivar() {
               </UButton>
             </template>
             <template #empty-state>
-              <p class="text-center py-6 text-sm text-slate-400">Sin recibos emitidos para este contrato.</p>
+              <p class="py-6 text-center text-sm text-slate-400">Sin recibos emitidos para este contrato.</p>
             </template>
           </UTable>
-          <div v-if="totalRecibos > limitRecibos" class="flex justify-end mt-4">
+          <div v-if="totalRecibos > limitRecibos" class="mt-4 flex justify-end">
             <UPagination v-model="pageRecibos" :page-count="limitRecibos" :total="totalRecibos" />
           </div>
         </UCard>
@@ -297,86 +286,20 @@ async function confirmarReactivar() {
           <template #header><p class="font-semibold text-slate-900">Historial de estado</p></template>
           <div v-if="cargandoHistorial" class="text-sm text-slate-400">Cargando…</div>
           <p v-else-if="!historial.length" class="text-sm text-slate-400">Sin cambios de estado registrados.</p>
-          <div v-else class="space-y-2 text-sm">
-            <div v-for="h in historial" :key="h.id" class="border-b last:border-0 pb-2">
+          <ul v-else class="space-y-2 text-sm">
+            <li v-for="h in historial" :key="h.id" class="border-b border-slate-200 pb-2 last:border-0">
               <p class="text-slate-900">
                 {{ h.estadoAnterior }} → {{ h.estadoNuevo }}
                 <span class="text-xs text-slate-400">({{ fecha(h.creadoEn) }} · {{ h.usuarioEmail }})</span>
               </p>
               <p v-if="h.motivo" class="text-xs text-slate-500">{{ h.motivo }}</p>
-            </div>
-          </div>
+            </li>
+          </ul>
         </UCard>
       </template>
     </div>
 
-    <!-- Terminar contrato -->
-    <UModal v-model="modalTerminar">
-      <UCard>
-        <template #header>
-          <p class="font-semibold text-slate-900">Terminar contrato</p>
-        </template>
-        <div class="space-y-3">
-          <UAlert
-            color="amber"
-            variant="subtle"
-            title="Esta acción es irreversible."
-            description="Si el contrato tiene saldo pendiente, seguirá siendo cobrable desde Recaudo; no se cancela ni se pierde al terminar."
-          />
-          <UFormGroup label="Fecha de fin">
-            <UInput v-model="formTerminar.fechaFin" type="date" />
-          </UFormGroup>
-          <UFormGroup label="Motivo de terminación">
-            <UTextarea v-model="formTerminar.motivoTerminacion" />
-          </UFormGroup>
-        </div>
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="gray" variant="ghost" @click="modalTerminar = false">Cancelar</UButton>
-            <UButton
-              color="red"
-              :loading="terminando"
-              :disabled="!formTerminar.fechaFin || !formTerminar.motivoTerminacion"
-              @click="confirmarTerminar"
-            >
-              Terminar contrato
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
-
-    <!-- Reactivar contrato -->
-    <UModal v-model="modalReactivar">
-      <UCard>
-        <template #header>
-          <p class="font-semibold text-slate-900">Reactivar contrato</p>
-        </template>
-        <div class="space-y-3">
-          <UAlert
-            color="emerald"
-            variant="subtle"
-            title="El contrato volverá a ACTIVO."
-            description="El inmueble vuelve a quedar ocupado. La fecha y el motivo de la terminación original se conservan en el historial del contrato."
-          />
-          <UFormGroup label="Motivo de la reactivación">
-            <UTextarea v-model="formReactivar.motivo" placeholder="Ej: el cliente decidió continuar el arrendamiento" />
-          </UFormGroup>
-        </div>
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="gray" variant="ghost" @click="modalReactivar = false">Cancelar</UButton>
-            <UButton
-              color="emerald"
-              :loading="reactivando"
-              :disabled="!formReactivar.motivo"
-              @click="confirmarReactivar"
-            >
-              Reactivar contrato
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
+    <ContratosModalTerminar v-model="modalTerminar" :contrato="contrato" @terminado="recargarTrasCambio" />
+    <ContratosModalReactivar v-model="modalReactivar" :contrato="contrato" @reactivado="recargarTrasCambio" />
   </div>
 </template>

@@ -18,15 +18,19 @@ const responsableSugerido = ref<'INMOBILIARIA' | 'ARRENDATARIO'>('INMOBILIARIA')
 
 const guardando = ref(false)
 const error = ref('')
+const buscando = ref(false)
 
 async function buscarInmueble() {
   if (!busquedaInmueble.value) return
   error.value = ''
+  buscando.value = true
   try {
     const data = await useApiFetch<any>('/inmuebles', { params: { busqueda: busquedaInmueble.value, limit: 5 } })
     resultadosInmueble.value = data.data
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible buscar el inmueble.'
+  } finally {
+    buscando.value = false
   }
 }
 
@@ -49,6 +53,7 @@ async function seleccionarInmueble(inmueble: any) {
 function quitarInmuebleSeleccionado() {
   inmuebleSeleccionado.value = null
   contratoSeleccionado.value = null
+  contratosDelInmueble.value = []
 }
 
 const puedeGuardar = computed(() => !!inmuebleSeleccionado.value && !!descripcion.value && !!fecha.value)
@@ -79,8 +84,6 @@ async function guardar() {
 
 <template>
   <div class="max-w-2xl">
-    <h1 class="text-xl font-semibold text-slate-900 mb-4">Registrar novedad</h1>
-
     <UAlert v-if="error" color="red" variant="subtle" :title="error" class="mb-4" />
 
     <UCard>
@@ -94,7 +97,7 @@ async function guardar() {
               class="flex-1"
               @keyup.enter="buscarInmueble"
             />
-            <UButton color="amber" @click="buscarInmueble">Buscar</UButton>
+            <UButton color="amber" :loading="buscando" @click="buscarInmueble">Buscar</UButton>
           </div>
           <div v-else class="flex items-center justify-between bg-slate-50 rounded-lg p-3">
             <div>
@@ -119,7 +122,7 @@ async function guardar() {
           <USelectMenu
             v-model="contratoSeleccionado"
             :options="contratosDelInmueble"
-            option-attribute="id"
+            option-attribute="cliente.nombreCompleto"
             placeholder="Sin contrato específico"
           >
             <template #option="{ option }">{{ option.cliente?.nombreCompleto }}</template>
@@ -130,7 +133,7 @@ async function guardar() {
           <UTextarea v-model="descripcion" placeholder="Describe la novedad observada…" />
         </UFormGroup>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormGroup label="Fecha">
             <UInput v-model="fecha" type="date" />
           </UFormGroup>

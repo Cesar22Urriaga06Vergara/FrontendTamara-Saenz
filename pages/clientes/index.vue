@@ -27,6 +27,7 @@ const {
   confirmarBaja,
   ejecutarBaja,
   alternarActivo,
+  reactivando,
 } = usePersonasDirectorio('clientes', 'cliente')
 
 const columnas = [
@@ -35,14 +36,13 @@ const columnas = [
   { key: 'telefono', label: 'Teléfono' },
   { key: 'email', label: 'Correo' },
   { key: 'activo', label: 'Estado' },
-  { key: 'acciones', label: '' },
+  { key: 'acciones', label: 'Acciones' },
 ]
 </script>
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-xl font-semibold text-slate-900">Clientes</h1>
+    <div class="flex justify-end mb-4">
       <UButton color="amber" icon="i-heroicons-plus" @click="abrirCreacion">Nuevo cliente</UButton>
     </div>
 
@@ -70,6 +70,7 @@ const columnas = [
             <UiTableRowActions
               v-if="auth.esAdministrador"
               :activo="row.activo"
+              :disabled="reactivando"
               @editar="abrirEdicion(row)"
               @baja="confirmarBaja(row)"
               @reactivar="alternarActivo(row)"

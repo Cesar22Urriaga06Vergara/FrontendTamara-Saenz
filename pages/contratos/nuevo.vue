@@ -4,7 +4,7 @@
  * No se permite digitar datos de personas aquí: se buscan y seleccionan
  * Cliente, Codeudor(es) e Inmueble ya registrados en sus respectivos directorios.
  */
-const { moneda } = useFormatoCO()
+const { moneda, fecha } = useFormatoCO()
 
 // ---- Cliente ----
 const busquedaCliente = ref('')
@@ -85,7 +85,14 @@ async function cargarInmuebles() {
 const fechaInicio = ref('')
 const diaPago = ref<number | undefined>(undefined)
 const diaPagoEditadoManualmente = ref(false)
-const depositoCustodia = ref(0)
+const depositoGarantia = ref(0)
+
+// B5: el depósito de garantía ahora se registra como un Movimiento de INGRESO al firmar, así
+// que el backend exige su medio de pago cuando el valor es > 0 (mismo criterio que la
+// devolución al liquidarlo). Solo se muestra/envía cuando hay depósito.
+const mediosPago = ['EFECTIVO', 'TRANSFERENCIA']
+const medioPagoDeposito = ref('EFECTIVO')
+const referenciaDeposito = ref('')
 
 watch(fechaInicio, (nuevaFecha) => {
   if (diaPagoEditadoManualmente.value) return
@@ -93,6 +100,14 @@ watch(fechaInicio, (nuevaFecha) => {
 })
 
 function marcarDiaPagoManual() {
+  // Si el usuario borra su edición manual, se vuelve al modo automático (en vez de dejar
+  // el campo vacío para siempre) para que la vista previa de confirmación no muestre "—"
+  // mientras en el fondo se seguiría derivando y enviando un valor distinto.
+  if (diaPago.value === undefined || diaPago.value === null) {
+    diaPagoEditadoManualmente.value = false
+    diaPago.value = fechaInicio.value ? Number(fechaInicio.value.slice(8, 10)) : undefined
+    return
+  }
   diaPagoEditadoManualmente.value = true
 }
 
@@ -123,7 +138,13 @@ async function crearContrato() {
         inmuebleId: inmuebleSeleccionado.value.id,
         fechaInicio: fechaInicio.value,
         diaPago: diaPago.value,
-        depositoCustodia: depositoCustodia.value,
+        depositoGarantia: depositoGarantia.value,
+        ...(depositoGarantia.value > 0
+          ? {
+              medioPagoDeposito: medioPagoDeposito.value,
+              referenciaDeposito: medioPagoDeposito.value === 'TRANSFERENCIA' ? referenciaDeposito.value : undefined,
+            }
+          : {}),
       },
     })
     modalConfirmar.value = false
@@ -141,8 +162,6 @@ onMounted(cargarInmuebles)
 
 <template>
   <div class="max-w-3xl">
-    <h1 class="text-xl font-semibold text-slate-900 mb-4">Nuevo contrato</h1>
-
     <UAlert v-if="error" color="red" variant="subtle" :title="error" class="mb-4" />
 
     <div class="space-y-6">
@@ -213,7 +232,12 @@ onMounted(cargarInmuebles)
             class="flex items-center gap-1"
           >
             {{ c.nombreCompleto }}
-            <UIcon name="i-heroicons-x-mark" class="cursor-pointer" @click="quitarCodeudor(c.id)" />
+            <UIcon
+              name="i-heroicons-x-mark"
+              class="cursor-pointer"
+              aria-label="Quitar codeudor"
+              @click="quitarCodeudor(c.id)"
+            />
           </UBadge>
         </div>
         <p v-else class="text-xs text-slate-600">Aún no hay codeudores seleccionados.</p>
@@ -252,7 +276,7 @@ onMounted(cargarInmuebles)
       <!-- Datos del contrato -->
       <UCard>
         <template #header><p class="font-semibold text-slate-900">4. Datos del contrato</p></template>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <UFormGroup label="Fecha de inicio">
             <UInput v-model="fechaInicio" type="date" />
           </UFormGroup>
@@ -262,10 +286,20 @@ onMounted(cargarInmuebles)
               Se toma de la fecha de inicio por defecto; edítalo si el pago es en otro día.
             </p>
           </UFormGroup>
-          <UFormGroup label="Depósito en custodia">
-            <UiMoneyInput v-model="depositoCustodia" />
+          <UFormGroup label="Depósito de garantía">
+            <UiMoneyInput v-model="depositoGarantia" />
           </UFormGroup>
         </div>
+
+        <div v-if="depositoGarantia > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+          <UFormGroup label="Medio de pago del depósito">
+            <USelectMenu v-model="medioPagoDeposito" :options="mediosPago" />
+          </UFormGroup>
+          <UFormGroup v-if="medioPagoDeposito === 'TRANSFERENCIA'" label="Referencia del depósito">
+            <UInput v-model="referenciaDeposito" placeholder="Número de transacción" />
+          </UFormGroup>
+        </div>
+
         <p class="text-xs text-slate-600 mt-2">
           La fecha de fin queda en blanco: solo se define al terminar el contrato.
         </p>
@@ -304,18 +338,24 @@ onMounted(cargarInmuebles)
             </p>
             <p class="text-slate-600">Canon: {{ moneda(inmuebleSeleccionado?.canonValor) }}</p>
           </div>
-          <div class="grid grid-cols-3 gap-3 pt-2 border-t">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t">
             <div>
               <p class="text-slate-500">Fecha de inicio</p>
-              <p class="font-medium text-slate-900">{{ fechaInicio || '—' }}</p>
+              <p class="font-medium text-slate-900">{{ fechaInicio ? fecha(fechaInicio) : '—' }}</p>
             </div>
             <div>
               <p class="text-slate-500">Día de pago</p>
               <p class="font-medium text-slate-900">{{ diaPago ?? '—' }}</p>
             </div>
             <div>
-              <p class="text-slate-500">Depósito en custodia</p>
-              <p class="font-medium text-slate-900">{{ moneda(depositoCustodia) }}</p>
+              <p class="text-slate-500">Depósito de garantía</p>
+              <p class="font-medium text-slate-900">{{ moneda(depositoGarantia) }}</p>
+              <p v-if="depositoGarantia > 0" class="text-xs text-slate-600">
+                Medio: {{ medioPagoDeposito === 'TRANSFERENCIA' ? 'Transferencia' : 'Efectivo' }}
+                <span v-if="medioPagoDeposito === 'TRANSFERENCIA' && referenciaDeposito">
+                  · Ref: {{ referenciaDeposito }}
+                </span>
+              </p>
             </div>
           </div>
         </div>

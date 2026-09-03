@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Liquidación de depósito en custodia (contrato ya TERMINADO) — DEP-01: los descuentos van
+ * Liquidación de depósito de garantía (contrato ya TERMINADO) — DEP-01: los descuentos van
  * desglosados por concepto/valor (no un número agregado), y la devolución exige medio de pago
  * cuando efectivamente queda saldo por devolver.
  *
@@ -13,10 +13,10 @@ const { moneda } = useFormatoCO()
 
 const props = defineProps<{
   modelValue: boolean
-  depositoCustodia: number
+  depositoGarantia: number
   valorADevolver: number
   medios: string[]
-  descuentos: Array<{ concepto: string; valor: number }>
+  descuentos: Array<{ concepto: string; valor: number; tipo?: 'GENERAL' | 'DEUDA' }>
   form: { medioPago: string; referencia: string; observaciones: string }
   liquidando: boolean
 }>()
@@ -24,7 +24,7 @@ const props = defineProps<{
 defineEmits<{ 'update:modelValue': [boolean]; confirmar: [] }>()
 
 function agregarDescuento() {
-  props.descuentos.push({ concepto: '', valor: 0 })
+  props.descuentos.push({ concepto: '', valor: 0, tipo: 'GENERAL' })
 }
 
 function quitarDescuento(i: number) {
@@ -36,23 +36,35 @@ function quitarDescuento(i: number) {
   <UModal :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
     <UCard>
       <template #header>
-        <p class="font-semibold text-slate-900">Liquidar depósito en custodia</p>
+        <p class="font-semibold text-slate-900">Liquidar depósito de garantía</p>
       </template>
       <div class="space-y-3">
         <p class="text-sm text-slate-600">
-          Depósito en custodia disponible: <span class="font-medium">{{ moneda(depositoCustodia) }}</span>
+          Depósito de garantía disponible:
+          <span class="font-medium tabular-nums">{{ moneda(depositoGarantia) }}</span>
         </p>
 
         <p class="text-sm font-medium text-slate-900">Descuentos (opcional)</p>
-        <div v-for="(descuento, i) in descuentos" :key="i" class="flex gap-2 items-center">
-          <UInput v-model="descuento.concepto" placeholder="Concepto (ej: Aseo general)" class="flex-1" />
-          <UiMoneyInput v-model="descuento.valor" placeholder="Valor" class="w-32" />
+        <div v-for="(descuento, i) in descuentos" :key="i" class="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="flex-1">
+            <label class="mb-1 block text-xs text-slate-500 sm:hidden">Concepto</label>
+            <UInput v-model="descuento.concepto" placeholder="Concepto (ej: Aseo general)" class="w-full" />
+          </div>
+          <div class="w-full sm:w-32">
+            <label class="mb-1 block text-xs text-slate-500 sm:hidden">Valor</label>
+            <UiMoneyInput v-model="descuento.valor" placeholder="Valor" class="w-full" />
+          </div>
+          <div class="w-full sm:w-40">
+            <label class="mb-1 block text-xs text-slate-500 sm:hidden">Tipo</label>
+            <USelectMenu v-model="descuento.tipo" :options="['GENERAL', 'DEUDA']" class="w-full" />
+          </div>
           <UButton
             v-if="descuentos.length > 1"
             color="red"
             variant="ghost"
             icon="i-heroicons-trash"
             aria-label="Quitar descuento"
+            class="self-end"
             @click="quitarDescuento(i)"
           />
         </div>
@@ -60,8 +72,9 @@ function quitarDescuento(i: number) {
           Agregar descuento
         </UButton>
 
-        <p class="text-sm text-slate-600 pt-2 border-t">
-          Valor a devolver: <span class="font-semibold text-slate-900">{{ moneda(valorADevolver) }}</span>
+        <p class="border-t border-slate-200 pt-2 text-sm text-slate-600">
+          Valor a devolver:
+          <span class="text-base font-semibold tabular-nums text-slate-900">{{ moneda(valorADevolver) }}</span>
         </p>
 
         <template v-if="valorADevolver > 0">
@@ -80,7 +93,14 @@ function quitarDescuento(i: number) {
       <template #footer>
         <div class="flex justify-end gap-2">
           <UButton color="gray" variant="ghost" @click="$emit('update:modelValue', false)">Cancelar</UButton>
-          <UButton color="amber" :loading="liquidando" @click="$emit('confirmar')">Liquidar</UButton>
+          <UButton
+            color="amber"
+            :loading="liquidando"
+            :disabled="valorADevolver > 0 && form.medioPago === 'TRANSFERENCIA' && !form.referencia"
+            @click="$emit('confirmar')"
+          >
+            Liquidar
+          </UButton>
         </div>
       </template>
     </UCard>

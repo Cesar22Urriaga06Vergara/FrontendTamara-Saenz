@@ -35,14 +35,14 @@ defineEmits<{ 'update:modelValue': [boolean]; guardar: [] }>()
       <template #header>
         <p class="font-semibold text-slate-900">{{ editando ? tituloEdicion : tituloCreacion }}</p>
       </template>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <UFormGroup label="Tipo documento">
           <USelectMenu v-model="formulario.tipoDocumento" :options="['CC', 'CE', 'NIT', 'PAS']" />
         </UFormGroup>
         <UFormGroup label="Número documento" required>
           <UInput v-model="formulario.numeroDocumento" />
         </UFormGroup>
-        <UFormGroup label="Nombre completo" class="col-span-2" required>
+        <UFormGroup label="Nombre completo" class="sm:col-span-2" required>
           <UInput v-model="formulario.nombreCompleto" />
         </UFormGroup>
         <UFormGroup label="Correo">
@@ -51,7 +51,7 @@ defineEmits<{ 'update:modelValue': [boolean]; guardar: [] }>()
         <UFormGroup label="Teléfono">
           <UInput v-model="formulario.telefono" />
         </UFormGroup>
-        <UFormGroup label="Dirección" class="col-span-2">
+        <UFormGroup label="Dirección" class="sm:col-span-2">
           <UInput v-model="formulario.direccion" />
         </UFormGroup>
       </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
  * Panel de Administración — EXCLUSIVO Administrador (protegido por middleware global).
- * Gestión de Usuarios (RBAC). Los parámetros globales de Empresa (mora, horizonte de
- * canon, datos corporativos, logo) se editan únicamente desde /configuracion — antes
- * se duplicaban aquí, generando dos pantallas para el mismo recurso (H9).
+ * Gestión de Usuarios (RBAC). Los parámetros globales de Empresa (horizonte de canon,
+ * datos corporativos, logo) se editan únicamente desde /configuracion — antes se
+ * duplicaban aquí, generando dos pantallas para el mismo recurso (H9).
  */
 
 // ---- Usuarios ----

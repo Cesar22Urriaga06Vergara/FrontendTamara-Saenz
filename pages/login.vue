@@ -3,8 +3,9 @@ import { useAuthStore } from '~/stores/auth.store'
 
 definePageMeta({ layout: false })
 
+useHead({ title: 'Iniciar sesión · Tamara & Saenz' })
+
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 const marca = useMarcaEmpresa()
 
 const email = ref('')
@@ -22,7 +23,13 @@ function validar(): boolean {
     : !REGEX_EMAIL.test(email.value)
       ? 'Ingresa un correo válido.'
       : ''
-  erroresCampo.password = !password.value ? 'La contraseña es obligatoria.' : ''
+  // El backend rechaza cualquier contraseña de menos de 6 caracteres (LoginDto @MinLength(6)),
+  // así que se valida aquí también para no gastar un intento del límite de 5/min en un 400.
+  erroresCampo.password = !password.value
+    ? 'La contraseña es obligatoria.'
+    : password.value.length < 6
+      ? 'La contraseña debe tener al menos 6 caracteres.'
+      : ''
   return !erroresCampo.email && !erroresCampo.password
 }
 
@@ -35,7 +42,20 @@ async function ingresar() {
     await auth.iniciarSesion(email.value, password.value)
     await navigateTo('/dashboard')
   } catch (e: any) {
-    error.value = e?.data?.message || 'Credenciales inválidas. Verifica tu correo y contraseña.'
+    const status = e?.statusCode ?? e?.response?.status
+    const msg = e?.data?.message
+    const detalle = Array.isArray(msg) ? msg[0] : msg
+    if (status === 429) {
+      error.value = 'Demasiados intentos. Espera un minuto e inténtalo de nuevo.'
+    } else if (status === 401) {
+      error.value = 'Credenciales inválidas. Verifica tu correo y contraseña.'
+    } else if (status === 400) {
+      error.value = detalle || 'Revisa los datos ingresados.'
+    } else if (!status) {
+      error.value = 'No se pudo conectar con el servidor. Inténtalo más tarde.'
+    } else {
+      error.value = detalle || 'No fue posible iniciar sesión. Inténtalo más tarde.'
+    }
   } finally {
     cargando.value = false
   }
@@ -43,91 +63,128 @@ async function ingresar() {
 </script>
 
 <template>
-  <div class="min-h-screen flex">
-    <!-- Franja izquierda: marca (split-screen) -->
-    <div
-      class="hidden lg:flex w-1/2 bg-marca-antracita text-white flex-col justify-between p-12 relative overflow-hidden"
-    >
-      <div class="absolute inset-0 opacity-10 bg-gradient-to-br from-marca-dorado to-transparent"></div>
-      <div class="relative z-10">
-        <p class="text-2xl font-bold tracking-tight">{{ config.public.appName }}</p>
-      </div>
-      <div class="relative z-10">
-        <p class="text-4xl font-serif italic text-marca-dorado leading-tight">"{{ config.public.appSlogan }}"</p>
-        <p class="mt-4 text-slate-400 text-sm max-w-sm">
-          Control centralizado de recaudo, contratos y novedades operativas de todo el portafolio inmobiliario.
-        </p>
-      </div>
-      <p class="relative z-10 text-xs text-slate-500">
-        © {{ new Date().getFullYear() }} — Todos los derechos reservados.
-      </p>
+  <div class="relative flex min-h-screen items-center justify-center overflow-hidden bg-marca-antracita p-4 sm:p-6">
+    <!-- Fondo decorativo: silueta de casa + resplandor dorado + viñeta -->
+    <div class="pointer-events-none absolute inset-0 select-none" aria-hidden="true">
+      <!-- Resplandor cálido detrás de la tarjeta -->
+      <div
+        class="absolute left-1/2 top-[40%] h-[62vmin] w-[100vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-marca-dorado/25 blur-[130px]"
+      ></div>
+      <div
+        class="absolute left-1/2 top-[36%] h-[24vmin] w-[38vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-marca-dorado/30 blur-[80px]"
+      ></div>
+      <!-- Silueta de la casa (motivo del logo), nítida y tenue -->
+      <svg
+        class="absolute -right-16 -top-24 w-[560px] max-w-[72vw] text-marca-dorado/[0.12]"
+        viewBox="0 0 240 200"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="5"
+        stroke-linejoin="round"
+      >
+        <path d="M18 92 L120 20 L222 92" stroke-linecap="round" />
+        <path d="M44 78 L44 178 L196 178 L196 78" />
+        <path d="M104 178 L104 120 L140 120 L140 178" />
+      </svg>
+      <svg
+        class="absolute -bottom-24 -left-20 w-[420px] max-w-[60vw] text-marca-dorado/[0.06]"
+        viewBox="0 0 240 200"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="5"
+        stroke-linejoin="round"
+      >
+        <path d="M18 92 L120 20 L222 92" stroke-linecap="round" />
+        <path d="M44 78 L44 178 L196 178 L196 78" />
+      </svg>
+      <!-- Viñeta -->
+      <div
+        class="absolute inset-0"
+        style="background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%)"
+      ></div>
     </div>
 
-    <!-- Franja derecha: formulario -->
-    <div class="flex-1 flex items-center justify-center bg-slate-50 p-8">
-      <div class="w-full max-w-sm">
-        <img
-          :src="marca.logoSrc.value || '/Logo.png'"
-          alt="Inversiones Tamara & Saenz"
-          class="h-20 w-auto mx-auto mb-8"
-        />
+    <!-- Tarjeta de acceso -->
+    <div class="relative z-10 w-full max-w-md">
+      <div class="overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-20px_rgba(0,0,0,0.6)] ring-1 ring-black/5">
+        <div class="h-1.5 w-full bg-gradient-to-r from-marca-dorado via-marca-dorado-oscuro to-marca-dorado"></div>
 
-        <h2 class="text-2xl font-semibold text-slate-900 mb-1 text-center">Iniciar sesión</h2>
-        <p class="text-sm text-slate-600 mb-6 text-center">Ingresa tus credenciales para continuar.</p>
+        <div class="px-8 pb-9 pt-8 sm:px-10">
+          <div class="flex flex-col items-center text-center">
+            <!-- El logo trae mucho margen en blanco; se recorta al alto útil del arte -->
+            <div class="flex h-24 w-full items-center justify-center overflow-hidden sm:h-28">
+              <img
+                :src="marca.logoSrc.value || '/Logo.png'"
+                :alt="marca.nombre.value"
+                class="h-56 w-auto max-w-none object-contain sm:h-64"
+              />
+            </div>
+            <h1 class="mt-4 text-xl font-semibold tracking-tight text-slate-900">Iniciar sesión</h1>
+            <p class="mt-1 text-sm text-slate-600">Ingresa tus credenciales para continuar.</p>
+          </div>
 
-        <form class="space-y-4" novalidate @submit.prevent="ingresar">
-          <UFormGroup label="Correo electrónico" :error="erroresCampo.email">
-            <UInput
-              v-model="email"
-              type="email"
-              placeholder="usuario@tamarasaenz.com"
-              icon="i-heroicons-envelope"
-              @update:model-value="erroresCampo.email = ''"
-            />
-          </UFormGroup>
+          <form class="mt-7 space-y-4" novalidate @submit.prevent="ingresar">
+            <UFormGroup label="Correo electrónico" :error="erroresCampo.email">
+              <UInput
+                v-model="email"
+                type="email"
+                name="email"
+                autocomplete="username"
+                autofocus
+                size="lg"
+                placeholder="usuario@tamarasaenz.com"
+                icon="i-heroicons-envelope"
+                @update:model-value="erroresCampo.email = ''"
+              />
+            </UFormGroup>
 
-          <UFormGroup label="Contraseña" :error="erroresCampo.password">
-            <UInput
-              v-model="password"
-              :type="mostrarPassword ? 'text' : 'password'"
-              placeholder="••••••••"
-              icon="i-heroicons-lock-closed"
-              @update:model-value="erroresCampo.password = ''"
+            <UFormGroup label="Contraseña" :error="erroresCampo.password">
+              <UInput
+                v-model="password"
+                :type="mostrarPassword ? 'text' : 'password'"
+                name="password"
+                autocomplete="current-password"
+                size="lg"
+                placeholder="••••••••"
+                icon="i-heroicons-lock-closed"
+                @update:model-value="erroresCampo.password = ''"
+              >
+                <template #trailing>
+                  <UButton
+                    :icon="mostrarPassword ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+                    color="gray"
+                    variant="link"
+                    :padded="false"
+                    class="pointer-events-auto"
+                    :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                    @click="mostrarPassword = !mostrarPassword"
+                  />
+                </template>
+              </UInput>
+            </UFormGroup>
+
+            <UAlert v-if="error" color="red" variant="subtle" :title="error" icon="i-heroicons-exclamation-triangle" />
+
+            <UButton
+              type="submit"
+              block
+              size="lg"
+              :loading="cargando"
+              class="mt-2 !bg-marca-dorado hover:!bg-marca-dorado-oscuro !text-marca-antracita font-semibold shadow-sm focus-visible:!ring-2 focus-visible:!ring-marca-dorado focus-visible:!ring-offset-2"
             >
-              <template #trailing>
-                <UButton
-                  :icon="mostrarPassword ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
-                  color="gray"
-                  variant="link"
-                  :padded="false"
-                  class="pointer-events-auto"
-                  :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                  @click="mostrarPassword = !mostrarPassword"
-                />
-              </template>
-            </UInput>
-          </UFormGroup>
-
-          <UAlert v-if="error" color="red" variant="subtle" :title="error" icon="i-heroicons-exclamation-triangle" />
-
-          <UButton
-            type="submit"
-            block
-            size="lg"
-            :loading="cargando"
-            class="!bg-marca-dorado hover:!bg-marca-dorado-oscuro !text-marca-antracita font-semibold focus-visible:!ring-marca-dorado"
-          >
-            Ingresar
-          </UButton>
-
-          <p class="text-center text-sm text-slate-500">
-            ¿Primera vez que usas el sistema?
-            <NuxtLink to="/registro" class="font-medium text-marca-dorado-oscuro hover:underline"
-              >Crear cuenta de Administrador</NuxtLink
-            >
-          </p>
-        </form>
+              Ingresar
+            </UButton>
+          </form>
+        </div>
       </div>
+
+      <p
+        class="mt-6 flex flex-col items-center justify-center gap-1 text-center text-xs text-white/45 sm:flex-row sm:gap-2"
+      >
+        <span class="font-serif italic text-marca-dorado/90">"{{ marca.slogan.value }}"</span>
+        <span class="hidden text-white/25 sm:inline">·</span>
+        <span>© {{ new Date().getFullYear() }} {{ marca.nombre.value }}</span>
+      </p>
     </div>
   </div>
 </template>

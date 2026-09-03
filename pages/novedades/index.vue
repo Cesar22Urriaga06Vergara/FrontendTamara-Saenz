@@ -19,8 +19,58 @@ function abrirAprobacion(row: any, tipo: 'CARGO_ARRENDATARIO' | 'GASTO_INMOBILIA
   modalAbierto.value = true
 }
 
+const descargandoRecibo = ref<string | null>(null)
 async function descargarReciboNovedad(row: any) {
-  await usePdfDownload(`/documentos/novedades/${row.id}/pdf`, row.consecutivo)
+  descargandoRecibo.value = row.id
+  try {
+    await usePdfDownload(`/documentos/novedades/${row.id}/pdf`, row.consecutivo)
+  } finally {
+    descargandoRecibo.value = null
+  }
+}
+
+// ---- Cambiar estado del tablero (ABIERTA -> EN_SEGUIMIENTO -> CERRADA / ANULADA) ----
+// El backend acepta cualquier estado destino mientras la novedad no esté ya concluida
+// (`cambiarEstado`, novedades.service.ts), pero aquí solo se ofrecen las transiciones hacia
+// adelante que documenta el propio tablero — nunca retroceder a un estado anterior. CERRAR/
+// ANULAR con impactoFinanciero PENDIENTE queda oculto para Recepcionista (RDN-07), igual que
+// el backend lo rechazaría con 403 si se forzara.
+const modalEstado = ref(false)
+const novedadCambiandoEstado = ref<any>(null)
+const nuevoEstado = ref('')
+const cambiandoEstado = ref(false)
+
+function opcionesEstado(row: any | null): string[] {
+  if (!row) return []
+  const puedeConcluir = auth.esAdministrador || row.impactoFinanciero !== 'PENDIENTE'
+  if (row.estado === 'ABIERTA') return puedeConcluir ? ['EN_SEGUIMIENTO', 'CERRADA', 'ANULADA'] : ['EN_SEGUIMIENTO']
+  if (row.estado === 'EN_SEGUIMIENTO') return puedeConcluir ? ['CERRADA', 'ANULADA'] : []
+  return []
+}
+
+function abrirCambiarEstado(row: any) {
+  novedadCambiandoEstado.value = row
+  nuevoEstado.value = ''
+  error.value = ''
+  modalEstado.value = true
+}
+
+async function confirmarCambiarEstado() {
+  if (!novedadCambiandoEstado.value || !nuevoEstado.value) return
+  cambiandoEstado.value = true
+  try {
+    await useApiFetch(`/novedades/${novedadCambiandoEstado.value.id}/estado`, {
+      method: 'PATCH',
+      body: { estado: nuevoEstado.value },
+    })
+    modalEstado.value = false
+    error.value = ''
+    await cargar()
+  } catch (e: any) {
+    error.value = e?.data?.message || 'No fue posible cambiar el estado de la novedad.'
+  } finally {
+    cambiandoEstado.value = false
+  }
 }
 
 async function confirmarAprobacion() {
@@ -98,12 +148,13 @@ const {
 
 const columnas = [
   { key: 'consecutivo', label: 'No.' },
-  { key: 'inmueble', label: 'Inmueble / Barrio' },
+  { key: 'inmueble.direccion', label: 'Dirección' },
+  { key: 'inmueble.barrio', label: 'Barrio' },
   { key: 'descripcion', label: 'Descripción' },
   { key: 'fecha', label: 'Fecha' },
   { key: 'estado', label: 'Estado' },
   { key: 'impactoFinanciero', label: 'Impacto financiero' },
-  { key: 'acciones', label: '' },
+  { key: 'acciones', label: 'Acciones' },
 ]
 
 async function cargarBarrios() {
@@ -115,8 +166,7 @@ onMounted(cargarBarrios)
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-xl font-semibold text-slate-900">Novedades</h1>
+    <div class="flex justify-end mb-4">
       <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva"> Registrar novedad </UButton>
     </div>
 
@@ -141,18 +191,12 @@ onMounted(cargarBarrios)
 
     <UCard>
       <UTable :rows="novedades" :columns="columnas" :loading="cargando">
-        <template #inmueble-data="{ row }">
-          <div>
-            <p class="text-slate-900">{{ row.inmueble?.direccion }}</p>
-            <p class="text-xs text-slate-500">{{ row.inmueble?.barrio }}</p>
-          </div>
-        </template>
         <template #fecha-data="{ row }">{{ fecha(row.fecha) }}</template>
         <template #estado-data="{ row }">
           <SharedStatusBadge domain="novedad" :value="row.estado" />
         </template>
         <template #impactoFinanciero-data="{ row }">
-          <span class="text-xs text-slate-500">{{ row.impactoFinanciero }}</span>
+          <SharedStatusBadge domain="impactoFinanciero" :value="row.impactoFinanciero" size="xs" />
           <SharedStatusBadge
             v-if="row.impactoFinanciero === 'GASTO_INMOBILIARIA'"
             domain="gastoPagado"
@@ -167,10 +211,21 @@ onMounted(cargarBarrios)
               size="xs"
               color="gray"
               variant="ghost"
-              icon="i-heroicons-document-arrow-down"
+              icon="i-heroicons-eye"
+              :loading="descargandoRecibo === row.id"
               @click="descargarReciboNovedad(row)"
             >
-              Recibo
+              Ver recibo
+            </UButton>
+            <UButton
+              v-if="opcionesEstado(row).length"
+              size="xs"
+              color="gray"
+              variant="soft"
+              icon="i-heroicons-arrow-path"
+              @click="abrirCambiarEstado(row)"
+            >
+              Cambiar estado
             </UButton>
             <!-- Punto de aprobación financiera: exclusivo Administrador -->
             <template v-if="auth.esAdministrador && row.impactoFinanciero === 'PENDIENTE'">
@@ -241,7 +296,12 @@ onMounted(cargarBarrios)
         <template #footer>
           <div class="flex justify-end gap-2">
             <UButton color="gray" variant="ghost" @click="modalAbierto = false">Cancelar</UButton>
-            <UButton color="amber" :loading="aprobando" :disabled="montoAprobacion <= 0" @click="confirmarAprobacion">
+            <UButton
+              color="amber"
+              :loading="aprobando"
+              :disabled="montoAprobacion <= 0 || !conceptoAprobacion.trim()"
+              @click="confirmarAprobacion"
+            >
               Confirmar aprobación
             </UButton>
           </div>
@@ -279,6 +339,41 @@ onMounted(cargarBarrios)
             <UButton color="gray" variant="ghost" @click="modalPago = false">Cancelar</UButton>
             <UButton color="red" :loading="pagando" :disabled="!medioPago" @click="confirmarPago">
               Confirmar pago
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
+
+    <!-- Cambiar estado del tablero -->
+    <UModal v-model="modalEstado">
+      <UCard>
+        <template #header>
+          <p class="font-semibold text-slate-900">Cambiar estado de la novedad</p>
+        </template>
+
+        <div class="space-y-3">
+          <p class="text-sm text-slate-500">
+            Estado actual:
+            <SharedStatusBadge domain="novedad" :value="novedadCambiandoEstado?.estado" size="xs" class="ml-1" />
+          </p>
+          <UFormGroup label="Nuevo estado">
+            <USelectMenu v-model="nuevoEstado" :options="opcionesEstado(novedadCambiandoEstado)" />
+          </UFormGroup>
+          <UAlert
+            v-if="nuevoEstado === 'CERRADA' || nuevoEstado === 'ANULADA'"
+            color="amber"
+            variant="subtle"
+            title="Esta acción concluye la novedad."
+            description="Una novedad CERRADA o ANULADA no admite más cambios de estado."
+          />
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton color="gray" variant="ghost" @click="modalEstado = false">Cancelar</UButton>
+            <UButton color="amber" :loading="cambiandoEstado" :disabled="!nuevoEstado" @click="confirmarCambiarEstado">
+              Confirmar
             </UButton>
           </div>
         </template>

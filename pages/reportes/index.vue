@@ -28,7 +28,7 @@ const reportes = [
     clave: 'cartera',
     titulo: 'Cartera consolidada',
     descripcion:
-      'Obligaciones pendientes y parciales de todos los contratos, con saldo y mora acumulada, incluye fila de totales.',
+      'Obligaciones pendientes y parciales de todos los contratos, con saldo por cobrar, incluye fila de totales.',
     icon: 'i-heroicons-banknotes',
     path: '/documentos/reportes/cartera.xlsx',
     archivo: 'reporte-cartera.xlsx',

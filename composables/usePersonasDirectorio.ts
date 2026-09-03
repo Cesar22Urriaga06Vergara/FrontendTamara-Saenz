@@ -120,13 +120,18 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
     }
   }
 
+  const reactivando = ref(false)
+
   async function alternarActivo(persona: Persona) {
     error.value = ''
+    reactivando.value = true
     try {
       await useApiFetch(`/${recurso}/${persona.id}`, { method: 'PATCH', body: { activo: true } })
       await cargar()
     } catch (e: any) {
       error.value = e?.data?.message || `No fue posible reactivar al ${etiqueta}.`
+    } finally {
+      reactivando.value = false
     }
   }
 
@@ -160,5 +165,6 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
     confirmarBaja,
     ejecutarBaja,
     alternarActivo,
+    reactivando,
   }
 }

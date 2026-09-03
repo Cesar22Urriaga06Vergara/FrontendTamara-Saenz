@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /** Anulación de una obligación PENDIENTE generada por error (sin ningún abono aplicado). */
 /* eslint-disable vue/no-mutating-props */
-const { moneda } = useFormatoCO()
+const { moneda, fecha } = useFormatoCO()
 
 defineProps<{
   modelValue: boolean
@@ -26,10 +26,15 @@ defineEmits<{ 'update:modelValue': [boolean]; confirmar: [] }>()
           title="Solo úsalo para corregir un error de generación."
           description="La obligación queda marcada ANULADA (no se borra) y deja de aparecer como cartera pendiente. Solo aplica si aún no tiene ningún abono aplicado."
         />
-        <p class="text-sm text-slate-600">
-          <span class="text-slate-500">Concepto:</span> {{ obligacion?.concepto }} —
-          <span class="font-medium">{{ moneda(obligacion?.valorOriginal) }}</span>
-        </p>
+        <div class="text-sm text-slate-600">
+          <p>
+            <span class="text-slate-500">Concepto:</span> {{ obligacion?.concepto }} —
+            <span class="font-medium tabular-nums">{{ moneda(obligacion?.valorOriginal) }}</span>
+          </p>
+          <p v-if="obligacion?.fechaVencimiento" class="text-xs text-slate-500">
+            Vence {{ fecha(obligacion.fechaVencimiento) }}
+          </p>
+        </div>
         <UFormGroup label="Motivo de la anulación">
           <UTextarea v-model="form.motivo" />
         </UFormGroup>

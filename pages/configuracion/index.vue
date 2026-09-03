@@ -1,13 +1,24 @@
 <script setup lang="ts">
+interface EmpresaConfig {
+  nombre: string
+  nit: string
+  slogan: string
+  direccion: string
+  telefono: string
+  horizonteMesesCanon: number
+  saldoInicialCaja: number
+  logoUrl?: string | null
+}
+
 /**
  * Configuración global de la empresa — EXCLUSIVO Administrador.
  * Separa lo que antes vivía embebido en /administracion: datos corporativos,
- * parámetros de mora y logo (subida de archivo real vía POST /empresa/logo).
+ * horizonte de cánones, saldo inicial de caja y logo (subida de archivo real vía POST /empresa/logo).
  */
 const config = useRuntimeConfig()
 const origenApi = computed(() => new URL(config.public.apiBaseUrl).origin)
 
-const empresa = ref<any>(null)
+const empresa = ref<EmpresaConfig | null>(null)
 const cargandoEmpresa = ref(true)
 const guardandoEmpresa = ref(false)
 const errorEmpresa = ref('')
@@ -15,7 +26,10 @@ const errorEmpresa = ref('')
 async function cargarEmpresa() {
   cargandoEmpresa.value = true
   try {
-    empresa.value = await useApiFetch<any>('/empresa')
+    const respuesta = await useApiFetch<EmpresaConfig & { direccion: string | null; telefono: string | null }>(
+      '/empresa',
+    )
+    empresa.value = { ...respuesta, direccion: respuesta.direccion ?? '', telefono: respuesta.telefono ?? '' }
   } catch (e: any) {
     errorEmpresa.value = e?.data?.message || 'No fue posible cargar los datos de la empresa.'
   } finally {
@@ -24,10 +38,11 @@ async function cargarEmpresa() {
 }
 
 async function guardarEmpresa() {
+  if (!empresa.value) return
   errorEmpresa.value = ''
   guardandoEmpresa.value = true
   try {
-    empresa.value = await useApiFetch<any>('/empresa', {
+    empresa.value = await useApiFetch<EmpresaConfig>('/empresa', {
       method: 'PATCH',
       body: {
         nombre: empresa.value.nombre,
@@ -35,9 +50,8 @@ async function guardarEmpresa() {
         slogan: empresa.value.slogan,
         direccion: empresa.value.direccion,
         telefono: empresa.value.telefono,
-        diasGraciaMora: empresa.value.diasGraciaMora,
-        porcentajeMoraMensual: empresa.value.porcentajeMoraMensual,
         horizonteMesesCanon: empresa.value.horizonteMesesCanon,
+        saldoInicialCaja: empresa.value.saldoInicialCaja,
       },
     })
   } catch (e: any) {
@@ -125,7 +139,7 @@ onBeforeUnmount(() => {
   <div class="space-y-6">
     <div>
       <h1 class="text-xl font-semibold text-slate-900">Configuración</h1>
-      <p class="text-sm text-slate-500">Datos corporativos, parámetros de mora y logo de la empresa.</p>
+      <p class="text-sm text-slate-500">Datos corporativos, horizonte de cánones y logo de la empresa.</p>
     </div>
 
     <SharedErrorState v-if="errorEmpresa" :message="errorEmpresa" @retry="cargarEmpresa" />
@@ -133,7 +147,7 @@ onBeforeUnmount(() => {
     <div v-if="cargandoEmpresa" class="text-slate-400 text-sm">Cargando…</div>
 
     <template v-else-if="empresa">
-      <!-- Datos de la empresa + parámetros de mora -->
+      <!-- Datos de la empresa -->
       <UCard>
         <template #header>
           <p class="font-semibold text-slate-900">Datos de la empresa</p>
@@ -155,19 +169,11 @@ onBeforeUnmount(() => {
           <UFormGroup label="Teléfono">
             <UInput v-model="empresa.telefono" />
           </UFormGroup>
-        </div>
-
-        <UDivider class="my-6" label="Parámetros de mora" />
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <UFormGroup label="Días de gracia para mora">
-            <UInput v-model.number="empresa.diasGraciaMora" type="number" />
-          </UFormGroup>
-          <UFormGroup label="% Mora mensual">
-            <UInput v-model.number="empresa.porcentajeMoraMensual" type="number" step="0.1" />
-          </UFormGroup>
           <UFormGroup label="Horizonte de cánones (meses)">
             <UInput v-model.number="empresa.horizonteMesesCanon" type="number" />
+          </UFormGroup>
+          <UFormGroup label="Saldo inicial de caja">
+            <UInput v-model.number="empresa.saldoInicialCaja" type="number" />
           </UFormGroup>
         </div>
 
@@ -228,7 +234,7 @@ onBeforeUnmount(() => {
             <input
               ref="inputLogoRef"
               type="file"
-              accept="image/png,image/jpeg,image/svg+xml"
+              accept="image/png,image/jpeg"
               class="hidden"
               @change="seleccionarLogo"
             />
@@ -250,7 +256,7 @@ onBeforeUnmount(() => {
                 Cancelar
               </UButton>
             </div>
-            <p class="text-xs text-slate-400">PNG, JPG o SVG. Máximo 2 MB.</p>
+            <p class="text-xs text-slate-400">PNG o JPG. Máximo 2 MB.</p>
             <p v-if="archivoLogo" class="text-xs text-slate-500">{{ archivoLogo.name }}</p>
           </div>
         </div>

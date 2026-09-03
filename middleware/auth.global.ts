@@ -13,7 +13,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   const auth = useAuthStore()
 
-  const rutasPublicas = ['/login', '/registro']
+  const rutasPublicas = ['/login']
   if (rutasPublicas.includes(to.path)) return
 
   if (!auth.isAuthenticated) {
@@ -33,7 +33,7 @@ export default defineNuxtRouteMiddleware((to) => {
     '/configuracion',
     '/movimientos',
     '/auditoria',
-    '/recibos',
+    '/recibos/',
     '/caja',
     '/cartera',
     '/gastos',

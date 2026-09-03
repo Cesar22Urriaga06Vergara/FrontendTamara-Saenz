@@ -6,6 +6,14 @@ interface UsuarioSesion {
   rol: 'ADMINISTRADOR' | 'RECEPCIONISTA'
 }
 
+interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  usuario: UsuarioSesion
+}
+
+type RefreshResponse = LoginResponse
+
 /**
  * Store de autenticación y RBAC en frontend.
  * Persiste tokens en memoria + localStorage (solo claves no sensibles del perfil).
@@ -28,7 +36,7 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async iniciarSesion(email: string, password: string) {
       const config = useRuntimeConfig()
-      const data = await $fetch<any>('/auth/login', {
+      const data = await $fetch<LoginResponse>('/auth/login', {
         baseURL: config.public.apiBaseUrl,
         method: 'POST',
         body: { email, password },
@@ -39,29 +47,10 @@ export const useAuthStore = defineStore('auth', {
       this.persistir()
     },
 
-    /**
-     * Registro inicial del primer Administrador cuando el sistema entra a producción con la
-     * base de datos en blanco (§ver AuthController.registroInicial): solo funciona mientras
-     * no exista ningún usuario en el sistema. Deja la sesión iniciada de inmediato, igual que
-     * `iniciarSesion`.
-     */
-    async registrarInicial(nombreCompleto: string, email: string, password: string) {
-      const config = useRuntimeConfig()
-      const data = await $fetch<any>('/auth/registro-inicial', {
-        baseURL: config.public.apiBaseUrl,
-        method: 'POST',
-        body: { nombreCompleto, email, password },
-      })
-      this.accessToken = data.accessToken
-      this.refreshToken = data.refreshToken
-      this.usuario = data.usuario
-      this.persistir()
-    },
-
     async refrescarSesion(): Promise<boolean> {
       try {
         const config = useRuntimeConfig()
-        const data = await $fetch<any>('/auth/refresh', {
+        const data = await $fetch<RefreshResponse>('/auth/refresh', {
           baseURL: config.public.apiBaseUrl,
           method: 'POST',
           body: { refreshToken: this.refreshToken },
@@ -113,10 +102,10 @@ export const useAuthStore = defineStore('auth', {
       if (import.meta.client) {
         const raw = localStorage.getItem('tamara_saenz_sesion')
         if (raw) {
-          const data = JSON.parse(raw)
-          this.accessToken = data.accessToken
-          this.refreshToken = data.refreshToken
-          this.usuario = data.usuario
+          const data = JSON.parse(raw) as Partial<LoginResponse>
+          this.accessToken = data.accessToken ?? ''
+          this.refreshToken = data.refreshToken ?? ''
+          this.usuario = data.usuario ?? null
         }
       }
     },

@@ -21,3 +21,30 @@ node_modules/
 
 # Testing
 coverage/
+
+# ==========================================================
+# REGLAS DE PRECISIÓN PARA IA & AGENT SKILLS (FRONTEND)
+# ==========================================================
+.agents/
+.github/skills/
+.claude/
+skills-lock.json
+
+# Bloquear reportes de diseño o UI generados por IA
+*auditoria*.md
+*plan*.md
+*fases*.md
+*bitacora*.md
+
+# Bloquear archivos de habilidades de diseño
+SKILL.md
+SKILL.MD
+*SKILL*.md
+
+# Forzar exclusión de otros .md en componentes o vistas
+**/*.md
+
+# EXCEPCIONES: Permitir siempre el README de desarrollo
+!README.md
+
+

@@ -38,18 +38,12 @@ async function descargar(formato: 'CARTA' | 'MEDIA_CARTA') {
   }
 }
 
-function etiquetaConcepto(aplicacion: any): string {
-  return aplicacion.concepto === 'MORA' ? 'Mora' : 'Capital'
-}
-
-// Mismo criterio que RecaudoModalPrevisualizacionPago: Canon/Novedad se distinguen por
-// `obligacion.tipo`, no por `concepto` (que solo dice CAPITAL/MORA).
+// Mismo criterio que RecaudoModalPrevisualizacionPago: Canon/Novedad se distinguen por `obligacion.tipo`.
 const totalesAplicaciones = computed(() => {
-  const acc = { canon: 0, novedad: 0, mora: 0 }
+  const acc = { canon: 0, novedad: 0 }
   for (const a of recibo.value?.aplicaciones ?? []) {
     const monto = Number(a.montoAplicado || 0)
-    if (a.concepto === 'MORA') acc.mora += monto
-    else if (a.obligacion?.tipo === 'NOVEDAD') acc.novedad += monto
+    if (a.obligacion?.tipo === 'NOVEDAD') acc.novedad += monto
     else acc.canon += monto
   }
   return acc
@@ -105,14 +99,12 @@ onMounted(cargar)
         <UDropdown
           :items="[
             [
-              { label: 'PDF Carta', click: () => descargar('CARTA') },
-              { label: 'PDF Media Carta', click: () => descargar('MEDIA_CARTA') },
+              { label: 'Ver Carta', click: () => descargar('CARTA') },
+              { label: 'Ver Media Carta', click: () => descargar('MEDIA_CARTA') },
             ],
           ]"
         >
-          <UButton size="sm" color="amber" icon="i-heroicons-arrow-down-tray" :loading="descargando">
-            Descargar PDF
-          </UButton>
+          <UButton size="sm" color="amber" icon="i-heroicons-eye" :loading="descargando"> Ver / Imprimir </UButton>
         </UDropdown>
       </div>
     </div>
@@ -191,7 +183,6 @@ onMounted(cargar)
               <tr class="text-left text-slate-500 border-b">
                 <th class="py-1.5 pr-2">Concepto</th>
                 <th class="py-1.5 pr-2">Período</th>
-                <th class="py-1.5 pr-2">Tipo</th>
                 <th class="py-1.5 pr-2 text-right">Valor aplicado</th>
                 <th class="py-1.5 text-right">Saldo posterior</th>
               </tr>
@@ -201,11 +192,6 @@ onMounted(cargar)
                 <td class="py-1.5 pr-2 text-slate-900">{{ a.obligacion?.concepto }}</td>
                 <td class="py-1.5 pr-2 text-slate-600">
                   {{ a.obligacion?.periodo ? fecha(a.obligacion.periodo) : '—' }}
-                </td>
-                <td class="py-1.5 pr-2">
-                  <UBadge :color="a.concepto === 'MORA' ? 'red' : 'gray'" variant="subtle" size="xs">{{
-                    etiquetaConcepto(a)
-                  }}</UBadge>
                 </td>
                 <td class="py-1.5 pr-2 text-right text-slate-900">{{ moneda(a.montoAplicado) }}</td>
                 <td class="py-1.5 text-right text-slate-600">
@@ -229,7 +215,7 @@ onMounted(cargar)
             color="red"
             variant="subtle"
             title="Esta acción no se puede deshacer."
-            description="El recibo NUNCA se elimina: queda marcado ANULADO, con el motivo, y se revierte exactamente lo que aplicó (capital, mora, saldo a favor y movimientos de caja)."
+            description="El recibo NUNCA se elimina: queda marcado ANULADO, con el motivo, y se revierte exactamente lo que aplicó (capital, saldo a favor y movimientos de caja)."
           />
           <UFormGroup label="Motivo de la anulación">
             <UTextarea v-model="motivoAnulacion" />

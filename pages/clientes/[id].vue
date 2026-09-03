@@ -108,13 +108,17 @@ async function ejecutarBaja() {
   }
 }
 
+const reactivando = ref(false)
 async function reactivar() {
   error.value = ''
+  reactivando.value = true
   try {
     await useApiFetch(`/clientes/${route.params.id}`, { method: 'PATCH', body: { activo: true } })
     await cargar()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible reactivar al cliente.'
+  } finally {
+    reactivando.value = false
   }
 }
 </script>
@@ -124,7 +128,9 @@ async function reactivar() {
     <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <div class="flex items-center gap-3">
         <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/clientes">Volver</UButton>
-        <h1 class="text-xl font-semibold text-slate-900">{{ cliente?.nombreCompleto || 'Cliente' }}</h1>
+        <!-- No es <h1>: el título real de la página ya lo fija definirTituloDinamico() y lo
+             muestra Header.vue — este texto es solo contexto inline junto al botón Volver. -->
+        <p class="text-xl font-semibold text-slate-900">{{ cliente?.nombreCompleto || 'Cliente' }}</p>
         <SharedStatusBadge v-if="cliente" domain="activo" :value="cliente.activo" />
       </div>
       <div v-if="cliente && auth.esAdministrador" class="flex gap-2">
@@ -141,7 +147,15 @@ async function reactivar() {
         >
           Dar de baja
         </UButton>
-        <UButton v-else size="sm" color="emerald" variant="soft" icon="i-heroicons-arrow-path" @click="reactivar">
+        <UButton
+          v-else
+          size="sm"
+          color="emerald"
+          variant="soft"
+          icon="i-heroicons-arrow-path"
+          :loading="reactivando"
+          @click="reactivar"
+        >
           Reactivar
         </UButton>
       </div>
@@ -154,7 +168,7 @@ async function reactivar() {
     <div v-else-if="cliente" class="space-y-4">
       <UCard>
         <template #header><p class="font-semibold text-slate-900">Datos de contacto</p></template>
-        <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <p>
             <span class="text-slate-500">Documento:</span> {{ cliente.tipoDocumento }} {{ cliente.numeroDocumento }}
           </p>
@@ -169,14 +183,14 @@ async function reactivar() {
         <UTable
           :rows="contratos"
           :columns="[
-            { key: 'inmueble', label: 'Inmueble' },
+            { key: 'inmueble.direccion', label: 'Dirección' },
+            { key: 'inmueble.barrio', label: 'Barrio' },
             { key: 'fechaInicio', label: 'Fecha inicio' },
             { key: 'estado', label: 'Estado' },
-            { key: 'acciones', label: '' },
+            { key: 'acciones', label: 'Acciones' },
           ]"
           :loading="cargandoContratos"
         >
-          <template #inmueble-data="{ row }">{{ row.inmueble?.direccion }} ({{ row.inmueble?.barrio }})</template>
           <template #fechaInicio-data="{ row }">{{ fecha(row.fechaInicio) }}</template>
           <template #estado-data="{ row }">
             <SharedStatusBadge domain="contrato" :value="row.estado" />
