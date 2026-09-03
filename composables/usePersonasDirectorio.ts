@@ -81,10 +81,20 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
     error.value = ''
     guardando.value = true
     try {
+      // Los campos opcionales vacíos van como `undefined`, no como `''`: el backend valida
+      // `@IsEmail` sobre `email` y un `''` rechazaría toda la petición (D2).
+      const payload = {
+        numeroDocumento: formulario.numeroDocumento.trim(),
+        tipoDocumento: formulario.tipoDocumento,
+        nombreCompleto: formulario.nombreCompleto.trim(),
+        email: formulario.email?.trim() || undefined,
+        telefono: formulario.telefono?.trim() || undefined,
+        direccion: formulario.direccion?.trim() || undefined,
+      }
       if (editando.value) {
-        await useApiFetch(`/${recurso}/${editando.value.id}`, { method: 'PATCH', body: formulario })
+        await useApiFetch(`/${recurso}/${editando.value.id}`, { method: 'PATCH', body: payload })
       } else {
-        await useApiFetch(`/${recurso}`, { method: 'POST', body: formulario })
+        await useApiFetch(`/${recurso}`, { method: 'POST', body: payload })
       }
       modalAbierto.value = false
       resetearFormulario()
