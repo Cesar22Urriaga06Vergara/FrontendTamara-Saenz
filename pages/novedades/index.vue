@@ -127,6 +127,46 @@ async function confirmarPago() {
   }
 }
 
+// Revertir una aprobación financiera mal hecha, siempre que aún no se haya materializado en
+// dinero (UX-NOV-01). El backend valida las precondiciones exactas y responde 400 con un
+// mensaje claro si el cargo ya tiene pagos o el gasto ya fue pagado.
+const modalRevertir = ref(false)
+const novedadRevirtiendo = ref<any>(null)
+const motivoRevertir = ref('')
+const revirtiendo = ref(false)
+
+function puedeRevertirAprobacion(row: any): boolean {
+  return (
+    row.impactoFinanciero === 'CARGO_ARRENDATARIO' ||
+    (row.impactoFinanciero === 'GASTO_INMOBILIARIA' && !row.gastoPagado)
+  )
+}
+
+function abrirRevertir(row: any) {
+  novedadRevirtiendo.value = row
+  motivoRevertir.value = ''
+  error.value = ''
+  modalRevertir.value = true
+}
+
+async function confirmarRevertir() {
+  if (!novedadRevirtiendo.value || !motivoRevertir.value.trim()) return
+  revirtiendo.value = true
+  try {
+    await useApiFetch(`/novedades/${novedadRevirtiendo.value.id}/revertir-aprobacion`, {
+      method: 'PATCH',
+      body: { motivo: motivoRevertir.value.trim() },
+    })
+    modalRevertir.value = false
+    error.value = ''
+    await cargar()
+  } catch (e: any) {
+    error.value = e?.data?.message || 'No fue posible revertir la aprobación de la novedad.'
+  } finally {
+    revirtiendo.value = false
+  }
+}
+
 const barrios = ref<string[]>([])
 
 const {
@@ -247,6 +287,17 @@ onMounted(cargarBarrios)
             >
               Registrar pago
             </UButton>
+            <!-- Revertir una aprobación mal hecha que aún no movió dinero (UX-NOV-01) -->
+            <UButton
+              v-if="auth.esAdministrador && puedeRevertirAprobacion(row)"
+              size="xs"
+              color="gray"
+              variant="soft"
+              icon="i-heroicons-arrow-uturn-left"
+              @click="abrirRevertir(row)"
+            >
+              Revertir aprobación
+            </UButton>
           </div>
         </template>
         <template #empty-state>
@@ -339,6 +390,35 @@ onMounted(cargarBarrios)
             <UButton color="gray" variant="ghost" @click="modalPago = false">Cancelar</UButton>
             <UButton color="red" :loading="pagando" :disabled="!medioPago" @click="confirmarPago">
               Confirmar pago
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
+
+    <!-- Revertir una aprobación financiera aún no materializada en dinero — exclusivo Administrador -->
+    <UModal v-model="modalRevertir">
+      <UCard>
+        <template #header>
+          <p class="font-semibold text-slate-900">Revertir aprobación</p>
+        </template>
+
+        <div class="space-y-3">
+          <p class="text-sm text-slate-500">
+            La novedad vuelve a <strong>impacto financiero pendiente</strong> para poder re-emitir el cargo o el gasto
+            correcto. Solo procede si aún no se materializó en dinero: si el cargo ya tiene pagos, revierte el pago
+            desde Recaudo primero; si el gasto ya fue pagado, revierte el movimiento desde Movimientos.
+          </p>
+          <UFormGroup label="Motivo" required>
+            <UTextarea v-model="motivoRevertir" placeholder="Por qué se revierte esta aprobación" />
+          </UFormGroup>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton color="gray" variant="ghost" @click="modalRevertir = false">Cancelar</UButton>
+            <UButton color="amber" :loading="revirtiendo" :disabled="!motivoRevertir.trim()" @click="confirmarRevertir">
+              Revertir aprobación
             </UButton>
           </div>
         </template>
