@@ -72,8 +72,10 @@ const { moneda, fecha } = useFormatoCO()
 
 // `error` = fallos de acción (simular/pagar/pdf/anular/liquidar), se muestran como alerta
 // compacta arriba. `errorFicha` = fallo de CARGA de la ficha, va con estado "Reintentar".
+// `avisoRefresco` = la operación SÍ se completó pero el refresco de pantalla posterior falló.
 const error = ref('')
 const errorFicha = ref('')
+const avisoRefresco = ref('')
 
 // ---- Listado de deudores (modo lista) ----
 const {
@@ -139,6 +141,7 @@ const columnasDeudores = [
 // ---- Generación manual de canon (además del cron diario) ----
 const generandoCanon = ref(false)
 const resultadoCanon = ref<{ generadas: number } | null>(null)
+const modalConfirmarCanon = ref(false)
 
 async function generarCanones() {
   error.value = ''
@@ -146,6 +149,7 @@ async function generarCanones() {
   generandoCanon.value = true
   try {
     resultadoCanon.value = await useApiFetch<{ generadas: number }>('/obligaciones/generar-canones', { method: 'POST' })
+    modalConfirmarCanon.value = false
     await cargarDeudores()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible generar los cánones.'
@@ -201,6 +205,7 @@ async function seleccionarContrato(contrato: ContratoBusqueda) {
   busquedaRealizada.value = false
   error.value = ''
   errorFicha.value = ''
+  avisoRefresco.value = ''
   cargandoFicha.value = true
   try {
     ficha.value = await useApiFetch<FichaRecaudo>(`/contratos/${contrato.id}/ficha-recaudo`)
@@ -217,12 +222,27 @@ function recargarFicha() {
   if (contratoSeleccionado.value) seleccionarContrato(contratoSeleccionado.value)
 }
 
+// Refresco de pantalla DESPUÉS de una operación ya completada (pago, anulación, liquidación).
+// Su fallo no significa que la operación fallara — solo que la vista quedó desactualizada; se
+// avisa suave, nunca con la alerta roja de "no se pudo <operación>" que llevaría al cajero a
+// reintentar (riesgo de doble cobro).
+async function refrescarTrasOperacion() {
+  if (!contratoSeleccionado.value) return
+  try {
+    ficha.value = await useApiFetch<FichaRecaudo>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
+    await cargarDeudores()
+  } catch {
+    avisoRefresco.value = 'La operación quedó registrada. Recargá la pantalla para ver los saldos actualizados.'
+  }
+}
+
 // Vuelve al listado dejando el modo detalle en limpio, y refresca el listado.
 function volverAlListado() {
   contratoSeleccionado.value = null
   ficha.value = null
   errorFicha.value = ''
   error.value = ''
+  avisoRefresco.value = ''
   ultimoRecibo.value = null
   contratosEncontrados.value = []
   busquedaContrato.value = ''
@@ -307,6 +327,7 @@ async function abrirConfirmarPago() {
 async function registrarPago() {
   if (!contratoSeleccionado.value || totalPago.value <= 0) return
   error.value = ''
+  avisoRefresco.value = ''
   registrandoPago.value = true
   try {
     const recibo = await useApiFetch<ReciboCaja>('/recaudo/pagos', {
@@ -317,18 +338,19 @@ async function registrarPago() {
         dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value,
       },
     })
+    // Pago registrado y recibo emitido: cerrar la operación (modal + formulario) ANTES de
+    // cualquier refetch, para que un fallo del refresco no se muestre como pago fallido.
     ultimoRecibo.value = recibo
     modalPrevisualizacion.value = false
-    // refrescar ficha tras el pago, y el listado de deudores en segundo plano
-    ficha.value = await useApiFetch<any>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
-    cargarDeudores()
     detallesPago.splice(0, detallesPago.length, { medioPago: 'EFECTIVO', monto: 0, referencia: '' })
     dejarExcedenteComoSaldoFavor.value = false
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible registrar el pago.'
+    return
   } finally {
     registrandoPago.value = false
   }
+  await refrescarTrasOperacion()
 }
 
 const descargando = ref(false)
@@ -365,6 +387,7 @@ function abrirAnularObligacion(o: any) {
 async function confirmarAnularObligacion() {
   if (!obligacionAnulando.value || !contratoSeleccionado.value) return
   error.value = ''
+  avisoRefresco.value = ''
   anulandoObligacion.value = true
   try {
     await useApiFetch(`/obligaciones/${obligacionAnulando.value.id}/anular`, {
@@ -372,13 +395,13 @@ async function confirmarAnularObligacion() {
       body: { motivo: formAnular.motivo },
     })
     modalAnularObligacion.value = false
-    ficha.value = await useApiFetch<any>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
-    cargarDeudores()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible anular la obligación.'
+    return
   } finally {
     anulandoObligacion.value = false
   }
+  await refrescarTrasOperacion()
 }
 
 // ---- Liquidación de depósito de garantía (contrato ya TERMINADO) ----
@@ -404,6 +427,7 @@ function abrirLiquidarDeposito() {
 async function confirmarLiquidarDeposito() {
   if (!contratoSeleccionado.value) return
   error.value = ''
+  avisoRefresco.value = ''
   liquidando.value = true
   try {
     const descuentos = descuentosDeposito
@@ -419,12 +443,13 @@ async function confirmarLiquidarDeposito() {
       },
     })
     modalLiquidar.value = false
-    ficha.value = await useApiFetch<any>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible liquidar el depósito.'
+    return
   } finally {
     liquidando.value = false
   }
+  await refrescarTrasOperacion()
 }
 
 // Permite llegar directo a la ficha de un contrato desde otra pantalla (ej. "Ver ficha del
@@ -442,6 +467,15 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
 <template>
   <div class="space-y-4">
     <UAlert v-if="error" color="red" variant="subtle" :title="error" />
+    <UAlert
+      v-if="avisoRefresco"
+      color="amber"
+      variant="subtle"
+      icon="i-heroicons-information-circle"
+      :title="avisoRefresco"
+      :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'gray', variant: 'link' }"
+      @close="avisoRefresco = ''"
+    />
 
     <!-- ==================== MODO LISTA ==================== -->
     <template v-if="!enDetalle">
@@ -459,7 +493,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
           size="sm"
           icon="i-heroicons-arrow-path"
           :loading="generandoCanon"
-          @click="generarCanones"
+          @click="modalConfirmarCanon = true"
         >
           Generar canones
         </UButton>
@@ -856,6 +890,16 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
       :form="formLiquidar"
       :liquidando="liquidando"
       @confirmar="confirmarLiquidarDeposito"
+    />
+
+    <UiConfirmModal
+      v-model="modalConfirmarCanon"
+      title="Generar cánones pendientes"
+      message="Se generará una obligación de canon para cada contrato activo dentro del horizonte configurado, para todos los meses que aún no tengan canon generado. Esta acción crea deuda cobrable de forma masiva. ¿Confirmas?"
+      confirm-label="Generar cánones"
+      color="amber"
+      :loading="generandoCanon"
+      @confirm="generarCanones"
     />
   </div>
 </template>
