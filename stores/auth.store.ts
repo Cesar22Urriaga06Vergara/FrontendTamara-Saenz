@@ -15,6 +15,17 @@ interface LoginResponse {
 type RefreshResponse = LoginResponse
 
 /**
+ * Deduplica refrescos de sesión concurrentes. El backend rota y revoca el refresh token en
+ * cada `/auth/refresh` (single-use), así que si varias peticiones reciben 401 a la vez y cada
+ * una llama `refrescarSesion()` por su cuenta, la primera renueva y las demás mandan el token
+ * ya revocado → 401 → `cerrarSesion()` → expulsión a `/login` cada vez que expira el access
+ * token con la app abierta (el dashboard, p. ej., dispara ~6 peticiones en paralelo). Con esta
+ * promesa compartida todas esperan el mismo refresco. Vive a nivel de módulo (una por pestaña,
+ * transitoria) — no necesita ser reactiva ni persistirse.
+ */
+let refrescoEnCurso: Promise<boolean> | null = null
+
+/**
  * Store de autenticación y RBAC en frontend.
  * Persiste tokens en memoria + localStorage (solo claves no sensibles del perfil).
  * NUNCA persiste la contraseña; el refreshToken se guarda para renovar la sesión.
@@ -48,21 +59,30 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async refrescarSesion(): Promise<boolean> {
-      try {
-        const config = useRuntimeConfig()
-        const data = await $fetch<RefreshResponse>('/auth/refresh', {
-          baseURL: config.public.apiBaseUrl,
-          method: 'POST',
-          body: { refreshToken: this.refreshToken },
-        })
-        this.accessToken = data.accessToken
-        this.refreshToken = data.refreshToken
-        this.usuario = data.usuario
-        this.persistir()
-        return true
-      } catch {
-        return false
-      }
+      // Si ya hay un refresco en vuelo, los llamadores concurrentes esperan ese mismo.
+      if (refrescoEnCurso) return refrescoEnCurso
+
+      refrescoEnCurso = (async (): Promise<boolean> => {
+        try {
+          const config = useRuntimeConfig()
+          const data = await $fetch<RefreshResponse>('/auth/refresh', {
+            baseURL: config.public.apiBaseUrl,
+            method: 'POST',
+            body: { refreshToken: this.refreshToken },
+          })
+          this.accessToken = data.accessToken
+          this.refreshToken = data.refreshToken
+          this.usuario = data.usuario
+          this.persistir()
+          return true
+        } catch {
+          return false
+        } finally {
+          refrescoEnCurso = null
+        }
+      })()
+
+      return refrescoEnCurso
     },
 
     async cerrarSesion() {
