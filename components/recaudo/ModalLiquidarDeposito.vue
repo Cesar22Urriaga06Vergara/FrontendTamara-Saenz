@@ -73,8 +73,12 @@ function quitarDescuento(i: number) {
         </UButton>
 
         <p class="border-t border-slate-200 pt-2 text-sm text-slate-600">
-          Valor a devolver:
+          Valor a devolver (estimado):
           <span class="text-base font-semibold tabular-nums text-slate-900">{{ moneda(valorADevolver) }}</span>
+        </p>
+        <p v-if="descuentos.some((d) => d.tipo === 'DEUDA' && Number(d.valor) > 0)" class="text-xs text-slate-400">
+          Los descuentos por deuda solo bajan de la devolución lo que alcanzan a abonar; el neto final lo confirma el
+          sistema al liquidar.
         </p>
 
         <template v-if="valorADevolver > 0">
