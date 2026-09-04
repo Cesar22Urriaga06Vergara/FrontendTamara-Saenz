@@ -50,22 +50,22 @@ con inputs de fecha nativos y botón "Limpiar filtros". Esta sección solo no se
 actualizado tras implementarlos.
 
 ## Reglas de negocio confirmadas 2026-08-18 — RBAC Recepcionista vs Administrador
-Ver detalle completo en `README.md` del backend y en `AUDITORIA_FUNCIONAL_COMPLETA.md`
+Ver detalle completo en `README.md` del backend y en `ARCHITECTURE_AND_AUDIT.md` (raíz de cada repo)
 (AUD-002, AUD-007, AUD-035 a AUD-037). Regla general: **lo operativo/técnico es de
 Recepcionista, lo contable es exclusivo de Administrador**. Recaudo, Reportes, Administración
 y la ficha de recaudo del contrato siguen exclusivos de Administrador (sin cambio). Ya
 implementado en este frontend:
 - `pages/inmuebles/index.vue`: "Nuevo inmueble" y "Editar" visibles para cualquier usuario
   autenticado; el backend controla el acceso real (AUD-036).
-- `pages/contratos/index.vue`: columna de acciones con "Suspender"/"Reactivar"/"Terminar"
-  (según el estado del contrato), con modal de motivo/fecha para terminar y suspender, y
+- `pages/contratos/index.vue`: columna de acciones con "Reactivar"/"Terminar"
+  (según el estado del contrato), con modal de motivo/fecha para terminar, y
   confirmación (`UiConfirmModal`) para reactivar. Accesible a Recepcionista y Administrador
   (AUD-035).
 - `pages/novedades/index.vue`: botón "Recibo" que descarga el recibo de reporte de novedad
   (`GET /documentos/novedades/:id/pdf`) vía `usePdfDownload`, accesible a Recepcionista y
   Administrador (AUD-037).
 
-## Fase 3 (2026-08-18) — cerrada (AUD-022 a AUD-029 de `AUDITORIA_FUNCIONAL_COMPLETA.md`)
+## Fase 3 (2026-08-18) — cerrada (AUD-022 a AUD-029)
 
 - `composables/useApiFetch.ts`: reintenta la petición original una vez tras renovar sesión por
   401, en vez de dejar que el error se propague igual (AUD-023).
@@ -90,8 +90,9 @@ implementado en este frontend:
 `middleware/auth.global.ts`: se agregó `/auditoria` a `rutasSoloAdmin` — un Recepcionista que
 navegue directo a esa URL ahora es redirigido a `/dashboard`, igual que con `/recaudo` (AUD-030).
 AUD-031 (validación de `impactoFinanciero` al anular una novedad) se resolvió enteramente en el
-backend (`NovedadesService.cambiarEstado()`); no requirió cambios en este frontend porque hoy no
-existe ninguna UI que invoque `PATCH /novedades/:id/estado`.
+backend (`NovedadesService.cambiarEstado()`); no requirió cambios en este frontend. El cambio de
+estado del tablero de novedades (`ABIERTA` → `EN_SEGUIMIENTO` → `CERRADA`/`ANULADA`) se hace desde
+`pages/novedades/index.vue` (botón "Cambiar estado"), que invoca `PATCH /novedades/:id/estado`.
 
 ## Retiro del costo de mora + alineación con el backend (2026-09-01)
 
@@ -132,7 +133,13 @@ npm run dev                # http://localhost:3001
 
 ## Notas de diseño
 - Colores: `amber-600` (primario/dorado), `slate-700` (estructural), `slate-900` (texto), `slate-50` (fondo).
-- Badges semánticos: `emerald-600` activo/disponible, `amber-600` suspendido/en_terminación,
+- Badges semánticos: `emerald-600` activo/disponible, `amber-600` terminado,
   `orange-600` mantenimiento, `slate-400` inactivo/anulado.
 - Todas las tablas usan `<UTable>` + `<UPagination>` con barra de filtros combinados, tal como
   especifica la sección 5 del super-prompt.
+
+## Limpieza de documentación (2026-09-04)
+
+Corregidas afirmaciones obsoletas en esta bitácora: no existe acción "Suspender" de contrato
+(estado SUSPENDIDO eliminado); la UI de cambio de estado de novedades SÍ existe
+(`PATCH /novedades/:id/estado`); refs a `AUDITORIA_FUNCIONAL_COMPLETA.md` → `ARCHITECTURE_AND_AUDIT.md`.
