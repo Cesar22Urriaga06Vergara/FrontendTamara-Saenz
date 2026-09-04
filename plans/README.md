@@ -14,7 +14,7 @@ fila al terminar. Los planes son auto-contenidos.
 | Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
 |------|--------|-----------|----------|--------|------------|--------|
 | ~~001~~ | ~~`restaurar()` tolera un `localStorage` corrupto~~ | — | — | — | — | **REEMPLAZADO por 004** (su fix es el Step 1 de 004) |
-| 002 | Descargas de PDF/Excel renuevan el token si expiró | P2 | S | LOW | — | TODO |
+| 002 | Descargas de PDF/Excel renuevan el token si expiró | P2 | S | LOW | — | **DONE** (commit `<pendiente>`) |
 | 003 | Limpieza de documentación del frontend | P3 | S | LOW | — | TODO |
 | 004 | Resiliencia de sesión (corte de red no te echa al login) | P1 | M | MED | — | **DONE** (commit `324385c`) |
 | 005 | Borradores de formulario (no perder lo escrito) | P1 | M | MED | — | **DONE** (commit `4c30fdd`) |
