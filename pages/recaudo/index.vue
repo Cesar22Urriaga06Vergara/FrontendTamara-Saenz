@@ -207,6 +207,8 @@ async function seleccionarContrato(contrato: ContratoBusqueda) {
   errorFicha.value = ''
   avisoRefresco.value = ''
   cargandoFicha.value = true
+  borradorPago.detectar()
+  borradorLiquidar.detectar()
   try {
     ficha.value = await useApiFetch<FichaRecaudo>(`/contratos/${contrato.id}/ficha-recaudo`)
   } catch (e: any) {
@@ -293,6 +295,23 @@ const totalPago = computed(() => detallesPago.reduce((acc, d) => acc + Number(d.
 // expresamente dejarlo como abono adelantado se marca este flag.
 const dejarExcedenteComoSaldoFavor = ref(false)
 
+// Borrador del formulario de pago: si se cierra el navegador o se cae la red a mitad de
+// registrar un pago con varios medios, al volver al mismo contrato se ofrece recuperarlo.
+// Solo recupera — nunca envía nada solo. Declarado DESPUÉS de `dejarExcedenteComoSaldoFavor`:
+// `watch()` evalúa su getter una vez de forma síncrona al registrarse (no solo ante cambios
+// futuros), así que si este bloque fuera antes de esa declaración, `leer()` intentaría leer
+// `dejarExcedenteComoSaldoFavor.value` en su "temporal dead zone" y reventaría el SSR con
+// "Cannot access before initialization".
+const borradorPago = useBorrador(
+  () => 'borrador:pago:' + (contratoSeleccionado.value?.id ?? 'sin-contrato'),
+  () => ({ detallesPago: [...detallesPago], dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value }),
+  (datos) => {
+    const guardado = datos as { detallesPago: DetallePagoInput[]; dejarExcedenteComoSaldoFavor: boolean }
+    detallesPago.splice(0, detallesPago.length, ...guardado.detallesPago)
+    dejarExcedenteComoSaldoFavor.value = guardado.dejarExcedenteComoSaldoFavor
+  },
+)
+
 // ---- Previsualización antes de confirmar (Recibos §2) ----
 // La previsualización NUNCA se calcula en el frontend: pide al backend `POST
 // /recaudo/pagos/simular`, que corre el MISMO método (`calcularPlanAplicacion`) que el pago
@@ -344,6 +363,7 @@ async function registrarPago() {
     modalPrevisualizacion.value = false
     detallesPago.splice(0, detallesPago.length, { medioPago: 'EFECTIVO', monto: 0, referencia: '' })
     dejarExcedenteComoSaldoFavor.value = false
+    borradorPago.limpiar()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible registrar el pago.'
     return
@@ -410,6 +430,21 @@ const liquidando = ref(false)
 const descuentosDeposito = reactive([{ concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }])
 const formLiquidar = reactive({ medioPago: 'EFECTIVO', referencia: '', observaciones: '' })
 
+// Borrador de la liquidación de depósito: mismo criterio que el de pago (solo recupera, nunca
+// auto-envía).
+const borradorLiquidar = useBorrador(
+  () => 'borrador:liquidar:' + (contratoSeleccionado.value?.id ?? 'sin-contrato'),
+  () => ({ descuentosDeposito: [...descuentosDeposito], formLiquidar: { ...formLiquidar } }),
+  (datos) => {
+    const guardado = datos as {
+      descuentosDeposito: Array<{ concepto: string; valor: number; tipo: 'GENERAL' | 'DEUDA' }>
+      formLiquidar: { medioPago: string; referencia: string; observaciones: string }
+    }
+    descuentosDeposito.splice(0, descuentosDeposito.length, ...guardado.descuentosDeposito)
+    Object.assign(formLiquidar, guardado.formLiquidar)
+  },
+)
+
 // Solo cuentan las filas que efectivamente se enviarán (mismo filtro que `confirmarLiquidarDeposito`):
 // una fila con valor pero sin concepto no viaja al backend y no debe restar del estimado.
 const totalDescuentosDeposito = computed(() =>
@@ -427,6 +462,14 @@ function abrirLiquidarDeposito() {
   formLiquidar.medioPago = 'EFECTIVO'
   formLiquidar.referencia = ''
   formLiquidar.observaciones = ''
+  borradorLiquidar.detectar()
+  modalLiquidar.value = true
+}
+
+// Recuperar el borrador abre el modal directamente con esos datos, sin pasar por el reset de
+// abrirLiquidarDeposito() (que los pisaría con los valores por defecto).
+function recuperarBorradorLiquidar() {
+  borradorLiquidar.restaurar()
   modalLiquidar.value = true
 }
 
@@ -449,6 +492,7 @@ async function confirmarLiquidarDeposito() {
       },
     })
     modalLiquidar.value = false
+    borradorLiquidar.limpiar()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible liquidar el depósito.'
     return
@@ -722,6 +766,12 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
             v-if="ficha.contrato?.estado === 'TERMINADO' && Number(ficha.depositoGarantia) > 0"
             class="mt-4 border-t border-slate-200 pt-3"
           >
+            <p v-if="borradorLiquidar.hayBorrador.value" class="mb-2 text-xs text-amber-700">
+              Tienes una liquidación de depósito a medio hacer guardada.
+              <button type="button" class="font-medium underline" @click="recuperarBorradorLiquidar">Recuperar</button>
+              ·
+              <button type="button" class="underline" @click="borradorLiquidar.limpiar()">Descartar</button>
+            </p>
             <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-banknotes" @click="abrirLiquidarDeposito">
               Liquidar depósito
             </UButton>
@@ -771,6 +821,22 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
         <!-- Registro de pago mixto -->
         <UCard class="lg:col-span-2">
           <template #header><p class="font-semibold text-slate-900">Registrar pago (medios combinados)</p></template>
+
+          <UAlert
+            v-if="borradorPago.hayBorrador.value"
+            color="amber"
+            variant="subtle"
+            icon="i-heroicons-document-text"
+            title="Tienes un pago a medio registrar guardado"
+            class="mb-3"
+          >
+            <template #description>
+              <div class="mt-2 flex gap-2">
+                <UButton size="xs" color="amber" @click="borradorPago.restaurar()">Recuperar</UButton>
+                <UButton size="xs" color="gray" variant="ghost" @click="borradorPago.limpiar()">Descartar</UButton>
+              </div>
+            </template>
+          </UAlert>
 
           <div class="space-y-3">
             <div v-for="(detalle, i) in detallesPago" :key="i" class="flex flex-col gap-2 sm:flex-row sm:items-end">

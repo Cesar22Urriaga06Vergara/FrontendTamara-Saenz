@@ -148,6 +148,7 @@ async function crearContrato() {
       },
     })
     modalConfirmar.value = false
+    borradorContrato.limpiar()
     await navigateTo(`/contratos`)
   } catch (e: any) {
     modalConfirmar.value = false
@@ -157,12 +158,69 @@ async function crearContrato() {
   }
 }
 
-onMounted(cargarInmuebles)
+// Borrador: formulario largo (búsqueda de cliente/codeudores/inmueble + datos del contrato).
+// Solo recupera — nunca envía nada solo.
+const borradorContrato = useBorrador(
+  'borrador:contrato-nuevo',
+  () => ({
+    clienteSeleccionado: clienteSeleccionado.value,
+    codeudoresSeleccionados: codeudoresSeleccionados.value,
+    inmuebleSeleccionado: inmuebleSeleccionado.value,
+    fechaInicio: fechaInicio.value,
+    diaPago: diaPago.value,
+    diaPagoEditadoManualmente: diaPagoEditadoManualmente.value,
+    depositoGarantia: depositoGarantia.value,
+    medioPagoDeposito: medioPagoDeposito.value,
+    referenciaDeposito: referenciaDeposito.value,
+  }),
+  (datos) => {
+    const guardado = datos as {
+      clienteSeleccionado: any
+      codeudoresSeleccionados: any[]
+      inmuebleSeleccionado: any
+      fechaInicio: string
+      diaPago: number | undefined
+      diaPagoEditadoManualmente: boolean
+      depositoGarantia: number
+      medioPagoDeposito: string
+      referenciaDeposito: string
+    }
+    clienteSeleccionado.value = guardado.clienteSeleccionado
+    codeudoresSeleccionados.value = guardado.codeudoresSeleccionados
+    inmuebleSeleccionado.value = guardado.inmuebleSeleccionado
+    fechaInicio.value = guardado.fechaInicio
+    diaPagoEditadoManualmente.value = guardado.diaPagoEditadoManualmente
+    diaPago.value = guardado.diaPago
+    depositoGarantia.value = guardado.depositoGarantia
+    medioPagoDeposito.value = guardado.medioPagoDeposito
+    referenciaDeposito.value = guardado.referenciaDeposito
+  },
+)
+
+onMounted(() => {
+  cargarInmuebles()
+  borradorContrato.detectar()
+})
 </script>
 
 <template>
   <div class="max-w-3xl">
     <UAlert v-if="error" color="red" variant="subtle" :title="error" class="mb-4" />
+    <UAlert
+      v-if="borradorContrato.hayBorrador.value"
+      color="amber"
+      variant="subtle"
+      icon="i-heroicons-document-text"
+      title="Tienes un contrato a medio crear guardado"
+      class="mb-4"
+    >
+      <template #description>
+        <div class="mt-2 flex gap-2">
+          <UButton size="xs" color="amber" @click="borradorContrato.restaurar()">Recuperar</UButton>
+          <UButton size="xs" color="gray" variant="ghost" @click="borradorContrato.limpiar()">Descartar</UButton>
+        </div>
+      </template>
+    </UAlert>
 
     <div class="space-y-6">
       <!-- Cliente -->

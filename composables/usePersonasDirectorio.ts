@@ -58,6 +58,18 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
     })
   }
 
+  // Borrador SOLO en modo creación — editar ya trae los datos reales del backend; restaurar un
+  // borrador viejo encima de una edición podría pisar cambios reales con datos obsoletos.
+  const borrador = useBorrador(
+    () => 'borrador:persona:' + recurso,
+    () => ({ ...formulario }),
+    (datos) => Object.assign(formulario, datos),
+  )
+
+  // Detecta el borrador al montar la página (no solo al abrir el modal) para que el aviso
+  // sea visible de inmediato al volver a /clientes o /codeudores tras un cierre accidental.
+  onMounted(() => borrador.detectar())
+
   function abrirCreacion() {
     editando.value = null
     resetearFormulario()
@@ -91,6 +103,7 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
         telefono: formulario.telefono?.trim() || undefined,
         direccion: formulario.direccion?.trim() || undefined,
       }
+      const eraCreacion = !editando.value
       if (editando.value) {
         await useApiFetch(`/${recurso}/${editando.value.id}`, { method: 'PATCH', body: payload })
       } else {
@@ -98,6 +111,7 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
       }
       modalAbierto.value = false
       resetearFormulario()
+      if (eraCreacion) borrador.limpiar()
       await cargar()
     } catch (e: any) {
       error.value = e?.data?.message || `No fue posible guardar el ${etiqueta}.`
@@ -169,6 +183,9 @@ export function usePersonasDirectorio(recurso: 'clientes' | 'codeudores', etique
     abrirCreacion,
     abrirEdicion,
     formularioValido,
+    hayBorrador: borrador.hayBorrador,
+    restaurarBorrador: borrador.restaurar,
+    descartarBorrador: borrador.limpiar,
     modalBajaAbierto,
     procesandoBaja,
     paraBaja,

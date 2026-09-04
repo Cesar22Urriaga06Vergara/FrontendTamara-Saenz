@@ -58,6 +58,40 @@ function quitarInmuebleSeleccionado() {
 
 const puedeGuardar = computed(() => !!inmuebleSeleccionado.value && !!descripcion.value && !!fecha.value)
 
+// Borrador: solo recupera, nunca envía nada solo.
+const borradorNovedad = useBorrador(
+  'borrador:novedad-nueva',
+  () => ({
+    inmuebleSeleccionado: inmuebleSeleccionado.value,
+    contratosDelInmueble: contratosDelInmueble.value,
+    contratoSeleccionado: contratoSeleccionado.value,
+    descripcion: descripcion.value,
+    fecha: fecha.value,
+    observaciones: observaciones.value,
+    responsableSugerido: responsableSugerido.value,
+  }),
+  (datos) => {
+    const guardado = datos as {
+      inmuebleSeleccionado: any
+      contratosDelInmueble: any[]
+      contratoSeleccionado: any
+      descripcion: string
+      fecha: string
+      observaciones: string
+      responsableSugerido: 'INMOBILIARIA' | 'ARRENDATARIO'
+    }
+    inmuebleSeleccionado.value = guardado.inmuebleSeleccionado
+    contratosDelInmueble.value = guardado.contratosDelInmueble
+    contratoSeleccionado.value = guardado.contratoSeleccionado
+    descripcion.value = guardado.descripcion
+    fecha.value = guardado.fecha
+    observaciones.value = guardado.observaciones
+    responsableSugerido.value = guardado.responsableSugerido
+  },
+)
+
+onMounted(() => borradorNovedad.detectar())
+
 async function guardar() {
   error.value = ''
   guardando.value = true
@@ -73,6 +107,7 @@ async function guardar() {
         responsableSugerido: responsableSugerido.value,
       },
     })
+    borradorNovedad.limpiar()
     await navigateTo('/novedades')
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible registrar la novedad.'
@@ -85,6 +120,21 @@ async function guardar() {
 <template>
   <div class="max-w-2xl">
     <UAlert v-if="error" color="red" variant="subtle" :title="error" class="mb-4" />
+    <UAlert
+      v-if="borradorNovedad.hayBorrador.value"
+      color="amber"
+      variant="subtle"
+      icon="i-heroicons-document-text"
+      title="Tienes una novedad a medio registrar guardada"
+      class="mb-4"
+    >
+      <template #description>
+        <div class="mt-2 flex gap-2">
+          <UButton size="xs" color="amber" @click="borradorNovedad.restaurar()">Recuperar</UButton>
+          <UButton size="xs" color="gray" variant="ghost" @click="borradorNovedad.limpiar()">Descartar</UButton>
+        </div>
+      </template>
+    </UAlert>
 
     <UCard>
       <div class="space-y-4">
