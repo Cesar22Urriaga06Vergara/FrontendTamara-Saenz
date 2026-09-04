@@ -17,7 +17,7 @@ fila al terminar. Los planes son auto-contenidos.
 | 002 | Descargas de PDF/Excel renuevan el token si expiró | P2 | S | LOW | — | TODO |
 | 003 | Limpieza de documentación del frontend | P3 | S | LOW | — | TODO |
 | 004 | Resiliencia de sesión (corte de red no te echa al login) | P1 | M | MED | — | **DONE** (commit `324385c`) |
-| 005 | Borradores de formulario (no perder lo escrito) | P1 | M | MED | — | **DONE** (commit `<pendiente>`) |
+| 005 | Borradores de formulario (no perder lo escrito) | P1 | M | MED | — | **DONE** (commit `4c30fdd`) |
 
 Valores de estado: TODO · IN PROGRESS · DONE · BLOCKED (razón) · REJECTED (motivo) · REEMPLAZADO.
 
