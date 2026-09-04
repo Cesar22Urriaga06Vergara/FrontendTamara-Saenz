@@ -23,7 +23,9 @@ type RefreshResponse = LoginResponse
  * promesa compartida todas esperan el mismo refresco. Vive a nivel de módulo (una por pestaña,
  * transitoria) — no necesita ser reactiva ni persistirse.
  */
-let refrescoEnCurso: Promise<boolean> | null = null
+type ResultadoRefresco = 'ok' | 'invalido' | 'sin-red'
+
+let refrescoEnCurso: Promise<ResultadoRefresco> | null = null
 
 /**
  * Store de autenticación y RBAC en frontend.
@@ -58,11 +60,11 @@ export const useAuthStore = defineStore('auth', {
       this.persistir()
     },
 
-    async refrescarSesion(): Promise<boolean> {
+    async refrescarSesion(): Promise<ResultadoRefresco> {
       // Si ya hay un refresco en vuelo, los llamadores concurrentes esperan ese mismo.
       if (refrescoEnCurso) return refrescoEnCurso
 
-      refrescoEnCurso = (async (): Promise<boolean> => {
+      refrescoEnCurso = (async (): Promise<ResultadoRefresco> => {
         try {
           const config = useRuntimeConfig()
           const data = await $fetch<RefreshResponse>('/auth/refresh', {
@@ -74,9 +76,16 @@ export const useAuthStore = defineStore('auth', {
           this.refreshToken = data.refreshToken
           this.usuario = data.usuario
           this.persistir()
-          return true
-        } catch {
-          return false
+          return 'ok'
+        } catch (e: unknown) {
+          const status =
+            typeof e === 'object' && e !== null && 'response' in e
+              ? Number((e as { response?: { status?: number } }).response?.status)
+              : undefined
+          // 401/403 = el refresh token ya no sirve (revocado/expirado) → sesión inválida de
+          // verdad. Sin status (error de red/DNS/offline) → no se pudo verificar; NO cerrar
+          // sesión, es distinto de un token inválido.
+          return status === 401 || status === 403 ? 'invalido' : 'sin-red'
         } finally {
           refrescoEnCurso = null
         }
@@ -119,14 +128,18 @@ export const useAuthStore = defineStore('auth', {
     },
 
     restaurar() {
-      if (import.meta.client) {
-        const raw = localStorage.getItem('tamara_saenz_sesion')
-        if (raw) {
-          const data = JSON.parse(raw) as Partial<LoginResponse>
-          this.accessToken = data.accessToken ?? ''
-          this.refreshToken = data.refreshToken ?? ''
-          this.usuario = data.usuario ?? null
-        }
+      if (!import.meta.client) return
+      const raw = localStorage.getItem('tamara_saenz_sesion')
+      if (!raw) return
+      try {
+        const data = JSON.parse(raw) as Partial<LoginResponse>
+        this.accessToken = data.accessToken ?? ''
+        this.refreshToken = data.refreshToken ?? ''
+        this.usuario = data.usuario ?? null
+      } catch {
+        // localStorage corrupto (JSON inválido): se limpia y se arranca como sesión no
+        // iniciada, en vez de dejar caer el plugin de arranque y romper toda la app.
+        localStorage.removeItem('tamara_saenz_sesion')
       }
     },
   },
