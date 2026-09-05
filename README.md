@@ -128,7 +128,7 @@ arrendamiento) y aplicó fixes contables. Sincronización de este frontend:
 ```bash
 npm install
 cp .env.example .env      # y apunta NUXT_PUBLIC_API_BASE_URL a tu backend
-npm run dev                # http://localhost:3001
+npm run dev                # http://localhost:3011
 ```
 
 ## Notas de diseño
