@@ -25,7 +25,7 @@ fila al terminar. Los planes son auto-contenidos.
 | 010 | `<TransitionGroup>` en 3 formularios con filas dinámicas (ronda 2, UX) | P3 | S | LOW-MED | — | **DONE** (commit `e4953e7`) |
 | 011 | Jerarquía visual por color en `ConfirmModal.vue` (ronda 2, UX) | P3 | S | LOW | — | **DONE** (commit `2ac8f49`) |
 | 012 | La tabla de Novedades exigía scroll horizontal (ronda 2, ad-hoc) | P3 | S | LOW | — | **DONE** (commit `f8409da`) |
-| 013 | Transición en `SharedStatusBadge` al cambiar de valor (ronda 2, UX) | P4 | S | LOW | — | **DONE** (commit pendiente) |
+| 013 | Transición en `SharedStatusBadge` al cambiar de valor (ronda 2, UX) | P4 | S | LOW | — | **DONE** (commit `d8177bf`) |
 
 Valores de estado: TODO · IN PROGRESS · DONE · BLOCKED (razón) · REJECTED (motivo) · REEMPLAZADO.
 
