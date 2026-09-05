@@ -29,6 +29,9 @@ const {
 
 const columnas = [
   { key: 'consecutivo', label: 'No.' },
+  // `key` sin puntos a propósito: ver comentario equivalente en pages/novedades/index.vue
+  // (un key anidado rompe el nombre del slot `#key-data`, Vue lo lee como modificador de v-slot).
+  { key: 'clienteNombre', label: 'Cliente' },
   { key: 'inmueble.direccion', label: 'Dirección' },
   { key: 'inmueble.barrio', label: 'Barrio' },
   { key: 'descripcion', label: 'Descripción' },
@@ -73,6 +76,9 @@ onMounted(cargarBarrios)
 
     <UCard>
       <UTable :rows="novedades" :columns="columnas" :loading="cargando">
+        <template #clienteNombre-data="{ row }">
+          {{ row.contrato?.cliente?.nombreCompleto ?? '—' }}
+        </template>
         <template #fecha-data="{ row }">{{ fecha(row.fecha) }}</template>
         <template #estado-data="{ row }">
           <SharedStatusBadge domain="novedad" :value="row.estado" />
