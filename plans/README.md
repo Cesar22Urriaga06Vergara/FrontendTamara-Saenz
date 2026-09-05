@@ -18,7 +18,7 @@ fila al terminar. Los planes son auto-contenidos.
 | 003 | Limpieza de documentación del frontend | P3 | S | LOW | — | **DONE** (commit `eb67d0a`) |
 | 004 | Resiliencia de sesión (corte de red no te echa al login) | P1 | M | MED | — | **DONE** (commit `324385c`) |
 | 005 | Borradores de formulario (no perder lo escrito) | P1 | M | MED | — | **DONE** (commit `4c30fdd`) |
-| 006 | Columna Cliente ausente en el listado de Novedades (ronda 2) | P2 | S | LOW | BE-010 | **DONE** (commit `<pendiente>`) |
+| 006 | Columna Cliente ausente en el listado de Novedades (ronda 2) | P2 | S | LOW | BE-010 | **DONE** (commit `8a9132a`) |
 
 Valores de estado: TODO · IN PROGRESS · DONE · BLOCKED (razón) · REJECTED (motivo) · REEMPLAZADO.
 
