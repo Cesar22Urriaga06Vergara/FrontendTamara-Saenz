@@ -19,6 +19,7 @@ fila al terminar. Los planes son auto-contenidos.
 | 004 | Resiliencia de sesión (corte de red no te echa al login) | P1 | M | MED | — | **DONE** (commit `324385c`) |
 | 005 | Borradores de formulario (no perder lo escrito) | P1 | M | MED | — | **DONE** (commit `4c30fdd`) |
 | 006 | Columna Cliente ausente en el listado de Novedades (ronda 2) | P2 | S | LOW | BE-010 | **DONE** (commit `8a9132a`) |
+| 007 | Transición de navegación global entre páginas (ronda 2, UX) | P3 | S | LOW | — | **DONE** (commit `<pendiente>`) |
 
 Valores de estado: TODO · IN PROGRESS · DONE · BLOCKED (razón) · REJECTED (motivo) · REEMPLAZADO.
 

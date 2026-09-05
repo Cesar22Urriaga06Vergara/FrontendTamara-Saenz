@@ -11,3 +11,13 @@ body {
 .badge-suspendido { @apply bg-amber-600 text-white; }
 .badge-mantenimiento { @apply bg-orange-600 text-white; }
 .badge-inactivo { @apply bg-slate-400 text-white; }
+
+/* Transición de navegación entre páginas (nuxt.config.ts: app.pageTransition). */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
