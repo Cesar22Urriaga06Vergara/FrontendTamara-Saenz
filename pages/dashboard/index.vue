@@ -266,7 +266,7 @@ onMounted(() => {
             <NuxtLink to="/novedades" class="text-xs text-amber-600 hover:underline">Ver todas</NuxtLink>
           </div>
         </template>
-        <div v-if="cargandoNovedades" class="py-8 text-center text-sm text-slate-400">Cargando…</div>
+        <SharedSkeletonText v-if="cargandoNovedades" :lines="3" class="py-2" />
         <div v-else-if="!novedadesRecientes.length" class="py-8 text-center text-sm text-slate-400">
           <UIcon name="i-heroicons-check-circle" class="mx-auto mb-1 h-6 w-6 text-slate-300" />
           No hay novedades abiertas pendientes de atención.
@@ -294,7 +294,7 @@ onMounted(() => {
             <NuxtLink to="/recibos" class="text-xs text-amber-600 hover:underline">Ver todos</NuxtLink>
           </div>
         </template>
-        <div v-if="cargandoRecibos" class="py-8 text-center text-sm text-slate-400">Cargando…</div>
+        <SharedSkeletonText v-if="cargandoRecibos" :lines="3" class="py-2" />
         <div v-else-if="!recibosRecientes.length" class="py-8 text-center text-sm text-slate-400">
           Sin recibos emitidos todavía.
         </div>

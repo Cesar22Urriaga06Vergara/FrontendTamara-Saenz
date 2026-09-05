@@ -213,7 +213,7 @@ const recibosColumnas = [
           <SharedErrorState v-if="errorFicha" :message="errorFicha" @retry="cargarFicha" />
           <UCard v-else>
             <template #header><p class="font-semibold text-slate-900">Resumen financiero</p></template>
-            <div v-if="cargandoFicha" class="text-sm text-slate-400">Cargando…</div>
+            <SharedSkeletonText v-if="cargandoFicha" :lines="3" />
             <div v-else-if="ficha" class="space-y-4">
               <dl class="grid grid-cols-2 gap-x-6 gap-y-3">
                 <div>
@@ -284,7 +284,7 @@ const recibosColumnas = [
 
         <UCard>
           <template #header><p class="font-semibold text-slate-900">Historial de estado</p></template>
-          <div v-if="cargandoHistorial" class="text-sm text-slate-400">Cargando…</div>
+          <SharedSkeletonText v-if="cargandoHistorial" :lines="2" />
           <p v-else-if="!historial.length" class="text-sm text-slate-400">Sin cambios de estado registrados.</p>
           <ul v-else class="space-y-2 text-sm">
             <li v-for="h in historial" :key="h.id" class="border-b border-slate-200 pb-2 last:border-0">

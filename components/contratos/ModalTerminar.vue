@@ -102,7 +102,7 @@ async function confirmar() {
           v-if="auth.esAdministrador"
           class="space-y-1 rounded-md border border-slate-300 bg-slate-50 p-3 text-sm text-slate-700"
         >
-          <p v-if="cargandoCartera" class="text-slate-400">Consultando cartera…</p>
+          <SharedSkeletonText v-if="cargandoCartera" :lines="2" width-class="w-32" />
           <template v-else>
             <p v-if="carteraTotal > 0">
               Cartera pendiente:

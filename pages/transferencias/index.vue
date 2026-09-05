@@ -89,7 +89,7 @@ onMounted(cargarSaldo)
       <h1 class="text-xl font-semibold text-slate-900">Transferencias</h1>
       <UCard :ui="{ body: { padding: 'px-4 py-2' } }">
         <p class="text-xs text-slate-500">Saldo control bancario</p>
-        <p v-if="cargandoSaldo" class="text-sm text-slate-400">Cargando…</p>
+        <SharedSkeletonText v-if="cargandoSaldo" width-class="w-20" />
         <p
           v-else
           class="text-xl font-bold"

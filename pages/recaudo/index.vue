@@ -530,12 +530,9 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
     <!-- ==================== MODO LISTA ==================== -->
     <template v-if="!enDetalle">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <p class="text-sm text-slate-500">
-          {{
-            cargandoDeudores
-              ? 'Cargando…'
-              : `${total} ${total === 1 ? 'contrato con cartera vencida' : 'contratos con cartera vencida'}`
-          }}
+        <SharedSkeletonText v-if="cargandoDeudores" width-class="w-40" />
+        <p v-else class="text-sm text-slate-500">
+          {{ total }} {{ total === 1 ? 'contrato con cartera vencida' : 'contratos con cartera vencida' }}
         </p>
         <UButton
           color="gray"
@@ -699,7 +696,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
         </UButton>
       </div>
 
-      <div v-if="cargandoFicha" class="py-8 text-center text-sm text-slate-400">Cargando ficha de recaudo…</div>
+      <SharedSkeletonText v-if="cargandoFicha" :lines="4" class="py-4" />
 
       <SharedErrorState v-else-if="errorFicha" :message="errorFicha" :loading="cargandoFicha" @retry="recargarFicha" />
 
