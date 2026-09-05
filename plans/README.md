@@ -22,7 +22,7 @@ fila al terminar. Los planes son auto-contenidos.
 | 007 | Transición de navegación global entre páginas (ronda 2, UX) | P3 | S | LOW | — | **DONE** (commit `6d576bb`) |
 | 008 | Skeleton loader reutilizable (ronda 2, UX) | P2 | M | LOW | — | **DONE** (commit `a6fd417`) |
 | 009 | `<Transition>` interna en 2 modales calculando→resultado (ronda 2, UX) | P3 | S | LOW | — | **DONE** (commit `6d1950b`) |
-| 010 | `<TransitionGroup>` en 3 formularios con filas dinámicas (ronda 2, UX) | P3 | S | LOW-MED | — | **DONE** (commit pendiente) |
+| 010 | `<TransitionGroup>` en 3 formularios con filas dinámicas (ronda 2, UX) | P3 | S | LOW-MED | — | **DONE** (commit `e4953e7`) |
 
 Valores de estado: TODO · IN PROGRESS · DONE · BLOCKED (razón) · REJECTED (motivo) · REEMPLAZADO.
 
