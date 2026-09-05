@@ -41,9 +41,23 @@ interface FichaRecaudo {
 }
 
 interface DetallePagoInput {
+  /** Solo para `:key` de `TransitionGroup` en el formulario — nunca se envía al backend. */
+  _key: number
   medioPago: 'EFECTIVO' | 'TRANSFERENCIA'
   monto: number
   referencia?: string
+}
+
+let siguienteKeyDetalle = 0
+function nuevaFilaDetalle(): DetallePagoInput {
+  return { _key: siguienteKeyDetalle++, medioPago: 'EFECTIVO', monto: 0, referencia: '' }
+}
+
+/** `_key` es solo para `:key` de `TransitionGroup` en el formulario — el backend, con
+ * `whitelist: true` + `forbidNonWhitelisted: true` globales, rechazaría la petición completa
+ * si la recibiera (propiedad no declarada en `DetallePagoInput` del DTO). */
+function detallesPagoParaEnviar(lista: DetallePagoInput[]) {
+  return lista.map(({ _key, ...resto }) => resto)
 }
 
 interface PrevisualizacionPago {
@@ -195,7 +209,7 @@ const ficha = ref<FichaRecaudo | null>(null)
 const cargandoFicha = ref(false)
 
 const medios = ['EFECTIVO', 'TRANSFERENCIA']
-const detallesPago = reactive<DetallePagoInput[]>([{ medioPago: 'EFECTIVO', monto: 0, referencia: '' }])
+const detallesPago = reactive<DetallePagoInput[]>([nuevaFilaDetalle()])
 const registrandoPago = ref(false)
 const ultimoRecibo = ref<ReciboCaja | null>(null)
 
@@ -250,7 +264,7 @@ function volverAlListado() {
   busquedaContrato.value = ''
   busquedaRealizada.value = false
   mostrarBuscadorLibre.value = false
-  detallesPago.splice(0, detallesPago.length, { medioPago: 'EFECTIVO', monto: 0, referencia: '' })
+  detallesPago.splice(0, detallesPago.length, nuevaFilaDetalle())
   dejarExcedenteComoSaldoFavor.value = false
   cargarDeudores()
 }
@@ -282,7 +296,7 @@ const carteraPendiente = computed(() =>
 )
 
 function agregarDetalle() {
-  detallesPago.push({ medioPago: 'EFECTIVO', monto: 0, referencia: '' })
+  detallesPago.push(nuevaFilaDetalle())
 }
 
 function quitarDetalle(i: number) {
@@ -307,7 +321,13 @@ const borradorPago = useBorrador(
   () => ({ detallesPago: [...detallesPago], dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value }),
   (datos) => {
     const guardado = datos as { detallesPago: DetallePagoInput[]; dejarExcedenteComoSaldoFavor: boolean }
-    detallesPago.splice(0, detallesPago.length, ...guardado.detallesPago)
+    // Un borrador guardado ANTES de introducir `_key` (para el `TransitionGroup` del formulario)
+    // no la trae — se asigna una nueva al restaurar en vez de asumir que ya existe.
+    detallesPago.splice(
+      0,
+      detallesPago.length,
+      ...guardado.detallesPago.map((d) => ({ ...d, _key: d._key ?? siguienteKeyDetalle++ })),
+    )
     dejarExcedenteComoSaldoFavor.value = guardado.dejarExcedenteComoSaldoFavor
   },
 )
@@ -331,7 +351,7 @@ async function abrirConfirmarPago() {
       method: 'POST',
       body: {
         contratoId: contratoSeleccionado.value.id,
-        detallesPago,
+        detallesPago: detallesPagoParaEnviar(detallesPago),
         dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value,
       },
     })
@@ -353,7 +373,7 @@ async function registrarPago() {
       method: 'POST',
       body: {
         contratoId: contratoSeleccionado.value.id,
-        detallesPago,
+        detallesPago: detallesPagoParaEnviar(detallesPago),
         dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value,
       },
     })
@@ -361,7 +381,7 @@ async function registrarPago() {
     // cualquier refetch, para que un fallo del refresco no se muestre como pago fallido.
     ultimoRecibo.value = recibo
     modalPrevisualizacion.value = false
-    detallesPago.splice(0, detallesPago.length, { medioPago: 'EFECTIVO', monto: 0, referencia: '' })
+    detallesPago.splice(0, detallesPago.length, nuevaFilaDetalle())
     dejarExcedenteComoSaldoFavor.value = false
     borradorPago.limpiar()
   } catch (e: any) {
@@ -427,7 +447,11 @@ async function confirmarAnularObligacion() {
 // ---- Liquidación de depósito de garantía (contrato ya TERMINADO) ----
 const modalLiquidar = ref(false)
 const liquidando = ref(false)
-const descuentosDeposito = reactive([{ concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }])
+let siguienteKeyDescuento = 0
+function nuevoDescuento() {
+  return { _key: siguienteKeyDescuento++, concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }
+}
+const descuentosDeposito = reactive([nuevoDescuento()])
 const formLiquidar = reactive({ medioPago: 'EFECTIVO', referencia: '', observaciones: '' })
 
 // Borrador de la liquidación de depósito: mismo criterio que el de pago (solo recupera, nunca
@@ -437,10 +461,16 @@ const borradorLiquidar = useBorrador(
   () => ({ descuentosDeposito: [...descuentosDeposito], formLiquidar: { ...formLiquidar } }),
   (datos) => {
     const guardado = datos as {
-      descuentosDeposito: Array<{ concepto: string; valor: number; tipo: 'GENERAL' | 'DEUDA' }>
+      descuentosDeposito: Array<{ _key?: number; concepto: string; valor: number; tipo: 'GENERAL' | 'DEUDA' }>
       formLiquidar: { medioPago: string; referencia: string; observaciones: string }
     }
-    descuentosDeposito.splice(0, descuentosDeposito.length, ...guardado.descuentosDeposito)
+    // Un borrador guardado ANTES de introducir `_key` (para el `TransitionGroup` del modal) no
+    // la trae — se asigna una nueva al restaurar en vez de asumir que ya existe.
+    descuentosDeposito.splice(
+      0,
+      descuentosDeposito.length,
+      ...guardado.descuentosDeposito.map((d) => ({ ...d, _key: d._key ?? siguienteKeyDescuento++ })),
+    )
     Object.assign(formLiquidar, guardado.formLiquidar)
   },
 )
@@ -458,7 +488,7 @@ const valorADevolver = computed(() =>
 
 function abrirLiquidarDeposito() {
   error.value = ''
-  descuentosDeposito.splice(0, descuentosDeposito.length, { concepto: '', valor: 0, tipo: 'GENERAL' })
+  descuentosDeposito.splice(0, descuentosDeposito.length, nuevoDescuento())
   formLiquidar.medioPago = 'EFECTIVO'
   formLiquidar.referencia = ''
   formLiquidar.observaciones = ''
@@ -836,29 +866,35 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
           </UAlert>
 
           <div class="space-y-3">
-            <div v-for="(detalle, i) in detallesPago" :key="i" class="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div class="w-full sm:w-44">
-                <label class="mb-1 block text-xs text-slate-500 sm:hidden">Medio de pago</label>
-                <USelectMenu v-model="detalle.medioPago" :options="medios" class="w-full" />
+            <TransitionGroup name="fila" tag="div" class="space-y-3">
+              <div
+                v-for="(detalle, i) in detallesPago"
+                :key="detalle._key"
+                class="flex flex-col gap-2 sm:flex-row sm:items-end"
+              >
+                <div class="w-full sm:w-44">
+                  <label class="mb-1 block text-xs text-slate-500 sm:hidden">Medio de pago</label>
+                  <USelectMenu v-model="detalle.medioPago" :options="medios" class="w-full" />
+                </div>
+                <div class="w-full sm:w-40">
+                  <label class="mb-1 block text-xs text-slate-500 sm:hidden">Monto</label>
+                  <UiMoneyInput v-model="detalle.monto" placeholder="Monto" class="w-full" />
+                </div>
+                <div class="flex-1">
+                  <label class="mb-1 block text-xs text-slate-500 sm:hidden">Referencia</label>
+                  <UInput v-model="detalle.referencia" placeholder="Referencia (opcional)" class="w-full" />
+                </div>
+                <UButton
+                  v-if="detallesPago.length > 1"
+                  color="red"
+                  variant="ghost"
+                  icon="i-heroicons-trash"
+                  aria-label="Quitar medio de pago"
+                  class="self-end"
+                  @click="quitarDetalle(i)"
+                />
               </div>
-              <div class="w-full sm:w-40">
-                <label class="mb-1 block text-xs text-slate-500 sm:hidden">Monto</label>
-                <UiMoneyInput v-model="detalle.monto" placeholder="Monto" class="w-full" />
-              </div>
-              <div class="flex-1">
-                <label class="mb-1 block text-xs text-slate-500 sm:hidden">Referencia</label>
-                <UInput v-model="detalle.referencia" placeholder="Referencia (opcional)" class="w-full" />
-              </div>
-              <UButton
-                v-if="detallesPago.length > 1"
-                color="red"
-                variant="ghost"
-                icon="i-heroicons-trash"
-                aria-label="Quitar medio de pago"
-                class="self-end"
-                @click="quitarDetalle(i)"
-              />
-            </div>
+            </TransitionGroup>
 
             <UButton size="xs" variant="soft" icon="i-heroicons-plus" @click="agregarDetalle">
               Agregar medio de pago
@@ -972,3 +1008,18 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
     />
   </div>
 </template>
+
+<style scoped>
+.fila-enter-active,
+.fila-leave-active {
+  transition: all 0.2s ease;
+}
+.fila-enter-from,
+.fila-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.fila-leave-active {
+  position: absolute;
+}
+</style>

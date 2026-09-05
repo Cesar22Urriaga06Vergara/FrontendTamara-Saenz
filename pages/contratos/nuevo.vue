@@ -281,7 +281,7 @@ onMounted(() => {
           </button>
         </div>
 
-        <div v-if="codeudoresSeleccionados.length" class="flex flex-wrap gap-2">
+        <TransitionGroup v-if="codeudoresSeleccionados.length" tag="div" name="chip" class="flex flex-wrap gap-2">
           <UBadge
             v-for="c in codeudoresSeleccionados"
             :key="c.id"
@@ -297,7 +297,7 @@ onMounted(() => {
               @click="quitarCodeudor(c.id)"
             />
           </UBadge>
-        </div>
+        </TransitionGroup>
         <p v-else class="text-xs text-slate-600">Aún no hay codeudores seleccionados.</p>
       </UCard>
 
@@ -427,3 +427,18 @@ onMounted(() => {
     </UModal>
   </div>
 </template>
+
+<style scoped>
+.chip-enter-active,
+.chip-leave-active {
+  transition: all 0.2s ease;
+}
+.chip-enter-from,
+.chip-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+.chip-leave-active {
+  position: absolute;
+}
+</style>
