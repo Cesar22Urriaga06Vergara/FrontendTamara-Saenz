@@ -15,6 +15,19 @@ interface LoginResponse {
 type RefreshResponse = LoginResponse
 
 /**
+ * Deduplica refrescos de sesión concurrentes. El backend rota y revoca el refresh token en
+ * cada `/auth/refresh` (single-use), así que si varias peticiones reciben 401 a la vez y cada
+ * una llama `refrescarSesion()` por su cuenta, la primera renueva y las demás mandan el token
+ * ya revocado → 401 → `cerrarSesion()` → expulsión a `/login` cada vez que expira el access
+ * token con la app abierta (el dashboard, p. ej., dispara ~6 peticiones en paralelo). Con esta
+ * promesa compartida todas esperan el mismo refresco. Vive a nivel de módulo (una por pestaña,
+ * transitoria) — no necesita ser reactiva ni persistirse.
+ */
+type ResultadoRefresco = 'ok' | 'invalido' | 'sin-red'
+
+let refrescoEnCurso: Promise<ResultadoRefresco> | null = null
+
+/**
  * Store de autenticación y RBAC en frontend.
  * Persiste tokens en memoria + localStorage (solo claves no sensibles del perfil).
  * NUNCA persiste la contraseña; el refreshToken se guarda para renovar la sesión.
@@ -47,22 +60,38 @@ export const useAuthStore = defineStore('auth', {
       this.persistir()
     },
 
-    async refrescarSesion(): Promise<boolean> {
-      try {
-        const config = useRuntimeConfig()
-        const data = await $fetch<RefreshResponse>('/auth/refresh', {
-          baseURL: config.public.apiBaseUrl,
-          method: 'POST',
-          body: { refreshToken: this.refreshToken },
-        })
-        this.accessToken = data.accessToken
-        this.refreshToken = data.refreshToken
-        this.usuario = data.usuario
-        this.persistir()
-        return true
-      } catch {
-        return false
-      }
+    async refrescarSesion(): Promise<ResultadoRefresco> {
+      // Si ya hay un refresco en vuelo, los llamadores concurrentes esperan ese mismo.
+      if (refrescoEnCurso) return refrescoEnCurso
+
+      refrescoEnCurso = (async (): Promise<ResultadoRefresco> => {
+        try {
+          const config = useRuntimeConfig()
+          const data = await $fetch<RefreshResponse>('/auth/refresh', {
+            baseURL: config.public.apiBaseUrl,
+            method: 'POST',
+            body: { refreshToken: this.refreshToken },
+          })
+          this.accessToken = data.accessToken
+          this.refreshToken = data.refreshToken
+          this.usuario = data.usuario
+          this.persistir()
+          return 'ok'
+        } catch (e: unknown) {
+          const status =
+            typeof e === 'object' && e !== null && 'response' in e
+              ? Number((e as { response?: { status?: number } }).response?.status)
+              : undefined
+          // 401/403 = el refresh token ya no sirve (revocado/expirado) → sesión inválida de
+          // verdad. Sin status (error de red/DNS/offline) → no se pudo verificar; NO cerrar
+          // sesión, es distinto de un token inválido.
+          return status === 401 || status === 403 ? 'invalido' : 'sin-red'
+        } finally {
+          refrescoEnCurso = null
+        }
+      })()
+
+      return refrescoEnCurso
     },
 
     async cerrarSesion() {
@@ -99,14 +128,18 @@ export const useAuthStore = defineStore('auth', {
     },
 
     restaurar() {
-      if (import.meta.client) {
-        const raw = localStorage.getItem('tamara_saenz_sesion')
-        if (raw) {
-          const data = JSON.parse(raw) as Partial<LoginResponse>
-          this.accessToken = data.accessToken ?? ''
-          this.refreshToken = data.refreshToken ?? ''
-          this.usuario = data.usuario ?? null
-        }
+      if (!import.meta.client) return
+      const raw = localStorage.getItem('tamara_saenz_sesion')
+      if (!raw) return
+      try {
+        const data = JSON.parse(raw) as Partial<LoginResponse>
+        this.accessToken = data.accessToken ?? ''
+        this.refreshToken = data.refreshToken ?? ''
+        this.usuario = data.usuario ?? null
+      } catch {
+        // localStorage corrupto (JSON inválido): se limpia y se arranca como sesión no
+        // iniciada, en vez de dejar caer el plugin de arranque y romper toda la app.
+        localStorage.removeItem('tamara_saenz_sesion')
       }
     },
   },

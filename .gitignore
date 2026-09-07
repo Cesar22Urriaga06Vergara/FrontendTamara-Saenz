@@ -22,6 +22,9 @@ node_modules/
 # Testing
 coverage/
 
+# Mockups / capturas sueltas en la raíz (material de diseño, no se versiona)
+POSIBLES VISTAS.png
+
 # ==========================================================
 # REGLAS DE PRECISIÓN PARA IA & AGENT SKILLS (FRONTEND)
 # ==========================================================

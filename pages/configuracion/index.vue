@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
 
     <SharedErrorState v-if="errorEmpresa" :message="errorEmpresa" @retry="cargarEmpresa" />
 
-    <div v-if="cargandoEmpresa" class="text-slate-400 text-sm">Cargando…</div>
+    <SharedSkeletonText v-if="cargandoEmpresa" :lines="4" />
 
     <template v-else-if="empresa">
       <!-- Datos de la empresa -->

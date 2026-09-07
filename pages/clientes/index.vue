@@ -21,6 +21,9 @@ const {
   abrirCreacion,
   abrirEdicion,
   formularioValido,
+  hayBorrador,
+  restaurarBorrador,
+  descartarBorrador,
   modalBajaAbierto,
   procesandoBaja,
   paraBaja: clienteParaBaja,
@@ -29,6 +32,11 @@ const {
   alternarActivo,
   reactivando,
 } = usePersonasDirectorio('clientes', 'cliente')
+
+function recuperarBorradorCliente() {
+  restaurarBorrador()
+  modalAbierto.value = true
+}
 
 const columnas = [
   { key: 'numeroDocumento', label: 'Documento' },
@@ -45,6 +53,22 @@ const columnas = [
     <div class="flex justify-end mb-4">
       <UButton color="amber" icon="i-heroicons-plus" @click="abrirCreacion">Nuevo cliente</UButton>
     </div>
+
+    <UAlert
+      v-if="hayBorrador"
+      color="amber"
+      variant="subtle"
+      icon="i-heroicons-document-text"
+      title="Tienes un cliente a medio crear guardado"
+      class="mb-4"
+    >
+      <template #description>
+        <div class="mt-2 flex gap-2">
+          <UButton size="xs" color="amber" @click="recuperarBorradorCliente">Recuperar</UButton>
+          <UButton size="xs" color="gray" variant="ghost" @click="descartarBorrador">Descartar</UButton>
+        </div>
+      </template>
+    </UAlert>
 
     <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="cargar" />
 

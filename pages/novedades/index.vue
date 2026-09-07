@@ -127,6 +127,46 @@ async function confirmarPago() {
   }
 }
 
+// Revertir una aprobación financiera mal hecha, siempre que aún no se haya materializado en
+// dinero (UX-NOV-01). El backend valida las precondiciones exactas y responde 400 con un
+// mensaje claro si el cargo ya tiene pagos o el gasto ya fue pagado.
+const modalRevertir = ref(false)
+const novedadRevirtiendo = ref<any>(null)
+const motivoRevertir = ref('')
+const revirtiendo = ref(false)
+
+function puedeRevertirAprobacion(row: any): boolean {
+  return (
+    row.impactoFinanciero === 'CARGO_ARRENDATARIO' ||
+    (row.impactoFinanciero === 'GASTO_INMOBILIARIA' && !row.gastoPagado)
+  )
+}
+
+function abrirRevertir(row: any) {
+  novedadRevirtiendo.value = row
+  motivoRevertir.value = ''
+  error.value = ''
+  modalRevertir.value = true
+}
+
+async function confirmarRevertir() {
+  if (!novedadRevirtiendo.value || !motivoRevertir.value.trim()) return
+  revirtiendo.value = true
+  try {
+    await useApiFetch(`/novedades/${novedadRevirtiendo.value.id}/revertir-aprobacion`, {
+      method: 'PATCH',
+      body: { motivo: motivoRevertir.value.trim() },
+    })
+    modalRevertir.value = false
+    error.value = ''
+    await cargar()
+  } catch (e: any) {
+    error.value = e?.data?.message || 'No fue posible revertir la aprobación de la novedad.'
+  } finally {
+    revirtiendo.value = false
+  }
+}
+
 const barrios = ref<string[]>([])
 
 const {
@@ -148,14 +188,64 @@ const {
 
 const columnas = [
   { key: 'consecutivo', label: 'No.' },
-  { key: 'inmueble.direccion', label: 'Dirección' },
-  { key: 'inmueble.barrio', label: 'Barrio' },
+  // `key` sin puntos a propósito: un key anidado ("contrato.cliente.nombreCompleto") hace que
+  // Vue interprete el punto del nombre del slot `#key-data` como un modificador de v-slot
+  // (inválido, `vue/valid-v-slot`) — se resuelve el valor a mano en el slot de abajo.
+  { key: 'clienteNombre', label: 'Cliente' },
+  // Dirección + Barrio fusionadas en una sola columna ("Inmueble") — 2 columnas angostas por
+  // separado sumaban más ancho que una sola con el mismo texto, y era la causa principal (junto
+  // con Acciones) de que la tabla necesitara scroll horizontal en pantallas normales. `key` sin
+  // puntos por la misma razón que `clienteNombre` (arriba): un key anidado rompe el nombre del
+  // slot `#key-data`.
+  { key: 'inmuebleTexto', label: 'Inmueble' },
   { key: 'descripcion', label: 'Descripción' },
   { key: 'fecha', label: 'Fecha' },
   { key: 'estado', label: 'Estado' },
   { key: 'impactoFinanciero', label: 'Impacto financiero' },
   { key: 'acciones', label: 'Acciones' },
 ]
+
+// Acciones de aprobación/estado/pago colapsadas en un menú (mismo patrón que la columna
+// Acciones de /recibos: un botón primario visible + un UDropdown para el resto) — antes eran
+// hasta 4 botones con texto simultáneos (Administrador + novedad PENDIENTE), la causa principal
+// del scroll horizontal en esta tabla. "Ver recibo" es la única acción que todos los roles usan
+// siempre, por eso es la que se queda como botón visible; el resto es condicional por rol/estado.
+function accionesNovedad(row: any): Array<Array<{ label: string; icon: string; click: () => void }>> {
+  const grupos: Array<Array<{ label: string; icon: string; click: () => void }>> = []
+
+  if (opcionesEstado(row).length) {
+    grupos.push([{ label: 'Cambiar estado', icon: 'i-heroicons-arrow-path', click: () => abrirCambiarEstado(row) }])
+  }
+
+  const financieras: Array<{ label: string; icon: string; click: () => void }> = []
+  if (auth.esAdministrador && row.impactoFinanciero === 'PENDIENTE') {
+    financieras.push(
+      {
+        label: 'Cargo arrendatario',
+        icon: 'i-heroicons-document-currency-dollar',
+        click: () => abrirAprobacion(row, 'CARGO_ARRENDATARIO'),
+      },
+      {
+        label: 'Gasto inmobiliaria',
+        icon: 'i-heroicons-building-office-2',
+        click: () => abrirAprobacion(row, 'GASTO_INMOBILIARIA'),
+      },
+    )
+  }
+  if (auth.esAdministrador && row.impactoFinanciero === 'GASTO_INMOBILIARIA' && !row.gastoPagado) {
+    financieras.push({ label: 'Registrar pago', icon: 'i-heroicons-banknotes', click: () => abrirPago(row) })
+  }
+  if (auth.esAdministrador && puedeRevertirAprobacion(row)) {
+    financieras.push({
+      label: 'Revertir aprobación',
+      icon: 'i-heroicons-arrow-uturn-left',
+      click: () => abrirRevertir(row),
+    })
+  }
+  if (financieras.length) grupos.push(financieras)
+
+  return grupos
+}
 
 async function cargarBarrios() {
   barrios.value = await useApiFetch<string[]>('/inmuebles/barrios')
@@ -191,6 +281,12 @@ onMounted(cargarBarrios)
 
     <UCard>
       <UTable :rows="novedades" :columns="columnas" :loading="cargando">
+        <template #clienteNombre-data="{ row }">
+          {{ row.contrato?.cliente?.nombreCompleto ?? '—' }}
+        </template>
+        <template #inmuebleTexto-data="{ row }">
+          {{ row.inmueble?.direccion ?? '' }} <span class="text-slate-400">({{ row.inmueble?.barrio ?? '' }})</span>
+        </template>
         <template #fecha-data="{ row }">{{ fecha(row.fecha) }}</template>
         <template #estado-data="{ row }">
           <SharedStatusBadge domain="novedad" :value="row.estado" />
@@ -206,7 +302,7 @@ onMounted(cargarBarrios)
           />
         </template>
         <template #acciones-data="{ row }">
-          <div class="flex gap-2">
+          <div class="flex gap-1">
             <UButton
               size="xs"
               color="gray"
@@ -217,36 +313,15 @@ onMounted(cargarBarrios)
             >
               Ver recibo
             </UButton>
-            <UButton
-              v-if="opcionesEstado(row).length"
-              size="xs"
-              color="gray"
-              variant="soft"
-              icon="i-heroicons-arrow-path"
-              @click="abrirCambiarEstado(row)"
-            >
-              Cambiar estado
-            </UButton>
-            <!-- Punto de aprobación financiera: exclusivo Administrador -->
-            <template v-if="auth.esAdministrador && row.impactoFinanciero === 'PENDIENTE'">
-              <UButton size="xs" color="amber" variant="soft" @click="abrirAprobacion(row, 'CARGO_ARRENDATARIO')">
-                Cargo arrendatario
-              </UButton>
-              <UButton size="xs" color="orange" variant="soft" @click="abrirAprobacion(row, 'GASTO_INMOBILIARIA')">
-                Gasto inmobiliaria
-              </UButton>
-            </template>
-            <!-- Pago real del gasto ya aprobado: único paso que mueve dinero (NOV-01) -->
-            <UButton
-              v-if="auth.esAdministrador && row.impactoFinanciero === 'GASTO_INMOBILIARIA' && !row.gastoPagado"
-              size="xs"
-              color="red"
-              variant="soft"
-              icon="i-heroicons-banknotes"
-              @click="abrirPago(row)"
-            >
-              Registrar pago
-            </UButton>
+            <UDropdown v-if="accionesNovedad(row).length" :items="accionesNovedad(row)">
+              <UButton
+                size="xs"
+                color="gray"
+                variant="soft"
+                icon="i-heroicons-ellipsis-horizontal"
+                aria-label="Más acciones"
+              />
+            </UDropdown>
           </div>
         </template>
         <template #empty-state>
@@ -339,6 +414,35 @@ onMounted(cargarBarrios)
             <UButton color="gray" variant="ghost" @click="modalPago = false">Cancelar</UButton>
             <UButton color="red" :loading="pagando" :disabled="!medioPago" @click="confirmarPago">
               Confirmar pago
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
+
+    <!-- Revertir una aprobación financiera aún no materializada en dinero — exclusivo Administrador -->
+    <UModal v-model="modalRevertir">
+      <UCard>
+        <template #header>
+          <p class="font-semibold text-slate-900">Revertir aprobación</p>
+        </template>
+
+        <div class="space-y-3">
+          <p class="text-sm text-slate-500">
+            La novedad vuelve a <strong>impacto financiero pendiente</strong> para poder re-emitir el cargo o el gasto
+            correcto. Solo procede si aún no se materializó en dinero: si el cargo ya tiene pagos, revierte el pago
+            desde Recaudo primero; si el gasto ya fue pagado, revierte el movimiento desde Movimientos.
+          </p>
+          <UFormGroup label="Motivo" required>
+            <UTextarea v-model="motivoRevertir" placeholder="Por qué se revierte esta aprobación" />
+          </UFormGroup>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton color="gray" variant="ghost" @click="modalRevertir = false">Cancelar</UButton>
+            <UButton color="amber" :loading="revirtiendo" :disabled="!motivoRevertir.trim()" @click="confirmarRevertir">
+              Revertir aprobación
             </UButton>
           </div>
         </template>

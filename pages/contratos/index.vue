@@ -95,9 +95,8 @@ onMounted(cargarBarrios)
 <template>
   <div>
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <p class="text-sm text-slate-500">
-        {{ cargando ? 'Cargando…' : `${total} ${total === 1 ? 'contrato' : 'contratos'}` }}
-      </p>
+      <SharedSkeletonText v-if="cargando" width-class="w-24" />
+      <p v-else class="text-sm text-slate-500">{{ total }} {{ total === 1 ? 'contrato' : 'contratos' }}</p>
       <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo">Nuevo contrato</UButton>
     </div>
 

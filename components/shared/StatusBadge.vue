@@ -17,5 +17,19 @@ const entrada = computed(() => resolverEstado(props.domain, props.value))
 </script>
 
 <template>
-  <UBadge :color="entrada.color" variant="subtle" :size="size">{{ entrada.label }}</UBadge>
+  <Transition name="badge-pop" mode="out-in">
+    <UBadge :key="entrada.label" :color="entrada.color" variant="subtle" :size="size">{{ entrada.label }}</UBadge>
+  </Transition>
 </template>
+
+<style scoped>
+.badge-pop-enter-active,
+.badge-pop-leave-active {
+  transition: all 0.15s ease;
+}
+.badge-pop-enter-from,
+.badge-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+</style>

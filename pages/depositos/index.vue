@@ -43,7 +43,11 @@ const contratoLiquidando = ref<any>(null)
 const descuentosDeposito = reactive([{ concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }])
 const formLiquidar = reactive({ medioPago: 'EFECTIVO', referencia: '', observaciones: '' })
 
-const totalDescuentosDeposito = computed(() => descuentosDeposito.reduce((acc, d) => acc + Number(d.valor || 0), 0))
+// Solo cuentan las filas que efectivamente se enviarán (mismo filtro que `confirmarLiquidar`).
+const totalDescuentosDeposito = computed(() =>
+  descuentosDeposito.filter((d) => d.concepto && Number(d.valor) > 0).reduce((acc, d) => acc + Number(d.valor), 0),
+)
+// Estimado: el neto real lo calcula el backend (los descuentos DEUDA solo restan lo que abonan).
 const valorADevolver = computed(() =>
   Math.max(0, Number(contratoLiquidando.value?.depositoGarantia || 0) - totalDescuentosDeposito.value),
 )

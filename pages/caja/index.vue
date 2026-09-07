@@ -118,24 +118,24 @@ onMounted(cargarSaldo)
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <UCard>
         <p class="text-xs text-slate-500 mb-1">Saldo inicial</p>
-        <p v-if="cargandoSaldo" class="text-slate-400 text-sm">Cargando…</p>
+        <SharedSkeletonText v-if="cargandoSaldo" width-class="w-24" />
         <p v-else class="text-lg font-bold text-slate-900">{{ moneda(saldo?.saldoInicial) }}</p>
       </UCard>
       <UCard>
         <p class="text-xs text-slate-500 mb-1">Ingresos efectivo</p>
-        <p v-if="cargandoSaldo" class="text-slate-400 text-sm">Cargando…</p>
+        <SharedSkeletonText v-if="cargandoSaldo" width-class="w-24" />
         <p v-else class="text-lg font-bold text-emerald-600">{{ moneda(saldo?.ingresosEfectivo) }}</p>
       </UCard>
       <UCard>
         <p class="text-xs text-slate-500 mb-1">Egresos + devoluciones</p>
-        <p v-if="cargandoSaldo" class="text-slate-400 text-sm">Cargando…</p>
+        <SharedSkeletonText v-if="cargandoSaldo" width-class="w-24" />
         <p v-else class="text-lg font-bold text-red-600">
           {{ moneda(Number(saldo?.egresosEfectivo ?? 0) + Number(saldo?.devolucionesEfectivo ?? 0)) }}
         </p>
       </UCard>
       <UCard class="border-amber-300">
         <p class="text-xs text-slate-500 mb-1">Saldo esperado (en vivo)</p>
-        <p v-if="cargandoSaldo" class="text-slate-400 text-sm">Cargando…</p>
+        <SharedSkeletonText v-if="cargandoSaldo" width-class="w-24" />
         <p v-else class="text-lg font-bold text-amber-600">{{ moneda(saldo?.saldoEsperado) }}</p>
       </UCard>
     </div>

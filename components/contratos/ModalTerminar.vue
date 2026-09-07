@@ -102,20 +102,22 @@ async function confirmar() {
           v-if="auth.esAdministrador"
           class="space-y-1 rounded-md border border-slate-300 bg-slate-50 p-3 text-sm text-slate-700"
         >
-          <p v-if="cargandoCartera" class="text-slate-400">Consultando cartera…</p>
-          <template v-else>
-            <p v-if="carteraTotal > 0">
-              Cartera pendiente:
-              <span class="font-semibold text-red-600">{{ moneda(carteraTotal) }}</span>
-              <span class="text-slate-500"> — sigue cobrable desde Recaudo tras terminar.</span>
-            </p>
-            <p v-else class="text-slate-500">Sin cartera pendiente.</p>
-            <p v-if="depositoPendiente > 0">
-              Depósito de garantía:
-              <span class="font-semibold text-slate-900">{{ moneda(depositoPendiente) }}</span>
-              <span class="text-slate-500"> — se liquida aparte desde Recaudo.</span>
-            </p>
-          </template>
+          <Transition name="fade" mode="out-in">
+            <SharedSkeletonText v-if="cargandoCartera" key="cargando" :lines="2" width-class="w-32" />
+            <div v-else key="cartera" class="space-y-1">
+              <p v-if="carteraTotal > 0">
+                Cartera pendiente:
+                <span class="font-semibold text-red-600">{{ moneda(carteraTotal) }}</span>
+                <span class="text-slate-500"> — sigue cobrable desde Recaudo tras terminar.</span>
+              </p>
+              <p v-else class="text-slate-500">Sin cartera pendiente.</p>
+              <p v-if="depositoPendiente > 0">
+                Depósito de garantía:
+                <span class="font-semibold text-slate-900">{{ moneda(depositoPendiente) }}</span>
+                <span class="text-slate-500"> — se liquida aparte desde Recaudo.</span>
+              </p>
+            </div>
+          </Transition>
         </div>
 
         <UFormGroup label="Fecha de fin" required>
@@ -148,3 +150,14 @@ async function confirmar() {
     </UCard>
   </UModal>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

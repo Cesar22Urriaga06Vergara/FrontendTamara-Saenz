@@ -41,9 +41,23 @@ interface FichaRecaudo {
 }
 
 interface DetallePagoInput {
+  /** Solo para `:key` de `TransitionGroup` en el formulario — nunca se envía al backend. */
+  _key: number
   medioPago: 'EFECTIVO' | 'TRANSFERENCIA'
   monto: number
   referencia?: string
+}
+
+let siguienteKeyDetalle = 0
+function nuevaFilaDetalle(): DetallePagoInput {
+  return { _key: siguienteKeyDetalle++, medioPago: 'EFECTIVO', monto: 0, referencia: '' }
+}
+
+/** `_key` es solo para `:key` de `TransitionGroup` en el formulario — el backend, con
+ * `whitelist: true` + `forbidNonWhitelisted: true` globales, rechazaría la petición completa
+ * si la recibiera (propiedad no declarada en `DetallePagoInput` del DTO). */
+function detallesPagoParaEnviar(lista: DetallePagoInput[]) {
+  return lista.map(({ _key, ...resto }) => resto)
 }
 
 interface PrevisualizacionPago {
@@ -72,8 +86,10 @@ const { moneda, fecha } = useFormatoCO()
 
 // `error` = fallos de acción (simular/pagar/pdf/anular/liquidar), se muestran como alerta
 // compacta arriba. `errorFicha` = fallo de CARGA de la ficha, va con estado "Reintentar".
+// `avisoRefresco` = la operación SÍ se completó pero el refresco de pantalla posterior falló.
 const error = ref('')
 const errorFicha = ref('')
+const avisoRefresco = ref('')
 
 // ---- Listado de deudores (modo lista) ----
 const {
@@ -139,6 +155,7 @@ const columnasDeudores = [
 // ---- Generación manual de canon (además del cron diario) ----
 const generandoCanon = ref(false)
 const resultadoCanon = ref<{ generadas: number } | null>(null)
+const modalConfirmarCanon = ref(false)
 
 async function generarCanones() {
   error.value = ''
@@ -146,6 +163,7 @@ async function generarCanones() {
   generandoCanon.value = true
   try {
     resultadoCanon.value = await useApiFetch<{ generadas: number }>('/obligaciones/generar-canones', { method: 'POST' })
+    modalConfirmarCanon.value = false
     await cargarDeudores()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible generar los cánones.'
@@ -191,7 +209,7 @@ const ficha = ref<FichaRecaudo | null>(null)
 const cargandoFicha = ref(false)
 
 const medios = ['EFECTIVO', 'TRANSFERENCIA']
-const detallesPago = reactive<DetallePagoInput[]>([{ medioPago: 'EFECTIVO', monto: 0, referencia: '' }])
+const detallesPago = reactive<DetallePagoInput[]>([nuevaFilaDetalle()])
 const registrandoPago = ref(false)
 const ultimoRecibo = ref<ReciboCaja | null>(null)
 
@@ -201,7 +219,10 @@ async function seleccionarContrato(contrato: ContratoBusqueda) {
   busquedaRealizada.value = false
   error.value = ''
   errorFicha.value = ''
+  avisoRefresco.value = ''
   cargandoFicha.value = true
+  borradorPago.detectar()
+  borradorLiquidar.detectar()
   try {
     ficha.value = await useApiFetch<FichaRecaudo>(`/contratos/${contrato.id}/ficha-recaudo`)
   } catch (e: any) {
@@ -217,18 +238,33 @@ function recargarFicha() {
   if (contratoSeleccionado.value) seleccionarContrato(contratoSeleccionado.value)
 }
 
+// Refresco de pantalla DESPUÉS de una operación ya completada (pago, anulación, liquidación).
+// Su fallo no significa que la operación fallara — solo que la vista quedó desactualizada; se
+// avisa suave, nunca con la alerta roja de "no se pudo <operación>" que llevaría al cajero a
+// reintentar (riesgo de doble cobro).
+async function refrescarTrasOperacion() {
+  if (!contratoSeleccionado.value) return
+  try {
+    ficha.value = await useApiFetch<FichaRecaudo>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
+    await cargarDeudores()
+  } catch {
+    avisoRefresco.value = 'La operación quedó registrada. Recargá la pantalla para ver los saldos actualizados.'
+  }
+}
+
 // Vuelve al listado dejando el modo detalle en limpio, y refresca el listado.
 function volverAlListado() {
   contratoSeleccionado.value = null
   ficha.value = null
   errorFicha.value = ''
   error.value = ''
+  avisoRefresco.value = ''
   ultimoRecibo.value = null
   contratosEncontrados.value = []
   busquedaContrato.value = ''
   busquedaRealizada.value = false
   mostrarBuscadorLibre.value = false
-  detallesPago.splice(0, detallesPago.length, { medioPago: 'EFECTIVO', monto: 0, referencia: '' })
+  detallesPago.splice(0, detallesPago.length, nuevaFilaDetalle())
   dejarExcedenteComoSaldoFavor.value = false
   cargarDeudores()
 }
@@ -260,7 +296,7 @@ const carteraPendiente = computed(() =>
 )
 
 function agregarDetalle() {
-  detallesPago.push({ medioPago: 'EFECTIVO', monto: 0, referencia: '' })
+  detallesPago.push(nuevaFilaDetalle())
 }
 
 function quitarDetalle(i: number) {
@@ -272,6 +308,29 @@ const totalPago = computed(() => detallesPago.reduce((acc, d) => acc + Number(d.
 // RDN-01: por defecto el excedente se devuelve como cambio; solo si el cliente pide
 // expresamente dejarlo como abono adelantado se marca este flag.
 const dejarExcedenteComoSaldoFavor = ref(false)
+
+// Borrador del formulario de pago: si se cierra el navegador o se cae la red a mitad de
+// registrar un pago con varios medios, al volver al mismo contrato se ofrece recuperarlo.
+// Solo recupera — nunca envía nada solo. Declarado DESPUÉS de `dejarExcedenteComoSaldoFavor`:
+// `watch()` evalúa su getter una vez de forma síncrona al registrarse (no solo ante cambios
+// futuros), así que si este bloque fuera antes de esa declaración, `leer()` intentaría leer
+// `dejarExcedenteComoSaldoFavor.value` en su "temporal dead zone" y reventaría el SSR con
+// "Cannot access before initialization".
+const borradorPago = useBorrador(
+  () => 'borrador:pago:' + (contratoSeleccionado.value?.id ?? 'sin-contrato'),
+  () => ({ detallesPago: [...detallesPago], dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value }),
+  (datos) => {
+    const guardado = datos as { detallesPago: DetallePagoInput[]; dejarExcedenteComoSaldoFavor: boolean }
+    // Un borrador guardado ANTES de introducir `_key` (para el `TransitionGroup` del formulario)
+    // no la trae — se asigna una nueva al restaurar en vez de asumir que ya existe.
+    detallesPago.splice(
+      0,
+      detallesPago.length,
+      ...guardado.detallesPago.map((d) => ({ ...d, _key: d._key ?? siguienteKeyDetalle++ })),
+    )
+    dejarExcedenteComoSaldoFavor.value = guardado.dejarExcedenteComoSaldoFavor
+  },
+)
 
 // ---- Previsualización antes de confirmar (Recibos §2) ----
 // La previsualización NUNCA se calcula en el frontend: pide al backend `POST
@@ -292,7 +351,7 @@ async function abrirConfirmarPago() {
       method: 'POST',
       body: {
         contratoId: contratoSeleccionado.value.id,
-        detallesPago,
+        detallesPago: detallesPagoParaEnviar(detallesPago),
         dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value,
       },
     })
@@ -307,28 +366,31 @@ async function abrirConfirmarPago() {
 async function registrarPago() {
   if (!contratoSeleccionado.value || totalPago.value <= 0) return
   error.value = ''
+  avisoRefresco.value = ''
   registrandoPago.value = true
   try {
     const recibo = await useApiFetch<ReciboCaja>('/recaudo/pagos', {
       method: 'POST',
       body: {
         contratoId: contratoSeleccionado.value.id,
-        detallesPago,
+        detallesPago: detallesPagoParaEnviar(detallesPago),
         dejarExcedenteComoSaldoFavor: dejarExcedenteComoSaldoFavor.value,
       },
     })
+    // Pago registrado y recibo emitido: cerrar la operación (modal + formulario) ANTES de
+    // cualquier refetch, para que un fallo del refresco no se muestre como pago fallido.
     ultimoRecibo.value = recibo
     modalPrevisualizacion.value = false
-    // refrescar ficha tras el pago, y el listado de deudores en segundo plano
-    ficha.value = await useApiFetch<any>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
-    cargarDeudores()
-    detallesPago.splice(0, detallesPago.length, { medioPago: 'EFECTIVO', monto: 0, referencia: '' })
+    detallesPago.splice(0, detallesPago.length, nuevaFilaDetalle())
     dejarExcedenteComoSaldoFavor.value = false
+    borradorPago.limpiar()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible registrar el pago.'
+    return
   } finally {
     registrandoPago.value = false
   }
+  await refrescarTrasOperacion()
 }
 
 const descargando = ref(false)
@@ -365,6 +427,7 @@ function abrirAnularObligacion(o: any) {
 async function confirmarAnularObligacion() {
   if (!obligacionAnulando.value || !contratoSeleccionado.value) return
   error.value = ''
+  avisoRefresco.value = ''
   anulandoObligacion.value = true
   try {
     await useApiFetch(`/obligaciones/${obligacionAnulando.value.id}/anular`, {
@@ -372,38 +435,78 @@ async function confirmarAnularObligacion() {
       body: { motivo: formAnular.motivo },
     })
     modalAnularObligacion.value = false
-    ficha.value = await useApiFetch<any>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
-    cargarDeudores()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible anular la obligación.'
+    return
   } finally {
     anulandoObligacion.value = false
   }
+  await refrescarTrasOperacion()
 }
 
 // ---- Liquidación de depósito de garantía (contrato ya TERMINADO) ----
 const modalLiquidar = ref(false)
 const liquidando = ref(false)
-const descuentosDeposito = reactive([{ concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }])
+let siguienteKeyDescuento = 0
+function nuevoDescuento() {
+  return { _key: siguienteKeyDescuento++, concepto: '', valor: 0, tipo: 'GENERAL' as 'GENERAL' | 'DEUDA' }
+}
+const descuentosDeposito = reactive([nuevoDescuento()])
 const formLiquidar = reactive({ medioPago: 'EFECTIVO', referencia: '', observaciones: '' })
 
-const totalDescuentosDeposito = computed(() => descuentosDeposito.reduce((acc, d) => acc + Number(d.valor || 0), 0))
+// Borrador de la liquidación de depósito: mismo criterio que el de pago (solo recupera, nunca
+// auto-envía).
+const borradorLiquidar = useBorrador(
+  () => 'borrador:liquidar:' + (contratoSeleccionado.value?.id ?? 'sin-contrato'),
+  () => ({ descuentosDeposito: [...descuentosDeposito], formLiquidar: { ...formLiquidar } }),
+  (datos) => {
+    const guardado = datos as {
+      descuentosDeposito: Array<{ _key?: number; concepto: string; valor: number; tipo: 'GENERAL' | 'DEUDA' }>
+      formLiquidar: { medioPago: string; referencia: string; observaciones: string }
+    }
+    // Un borrador guardado ANTES de introducir `_key` (para el `TransitionGroup` del modal) no
+    // la trae — se asigna una nueva al restaurar en vez de asumir que ya existe.
+    descuentosDeposito.splice(
+      0,
+      descuentosDeposito.length,
+      ...guardado.descuentosDeposito.map((d) => ({ ...d, _key: d._key ?? siguienteKeyDescuento++ })),
+    )
+    Object.assign(formLiquidar, guardado.formLiquidar)
+  },
+)
+
+// Solo cuentan las filas que efectivamente se enviarán (mismo filtro que `confirmarLiquidarDeposito`):
+// una fila con valor pero sin concepto no viaja al backend y no debe restar del estimado.
+const totalDescuentosDeposito = computed(() =>
+  descuentosDeposito.filter((d) => d.concepto && Number(d.valor) > 0).reduce((acc, d) => acc + Number(d.valor), 0),
+)
+// Estimado: el neto real lo calcula el backend. Los descuentos tipo DEUDA solo restan de la
+// devolución lo que alcanzan a abonar a obligaciones reales (y si superan la deuda, la rechaza).
 const valorADevolver = computed(() =>
   Math.max(0, Number(ficha.value?.depositoGarantia || 0) - totalDescuentosDeposito.value),
 )
 
 function abrirLiquidarDeposito() {
   error.value = ''
-  descuentosDeposito.splice(0, descuentosDeposito.length, { concepto: '', valor: 0, tipo: 'GENERAL' })
+  descuentosDeposito.splice(0, descuentosDeposito.length, nuevoDescuento())
   formLiquidar.medioPago = 'EFECTIVO'
   formLiquidar.referencia = ''
   formLiquidar.observaciones = ''
+  borradorLiquidar.detectar()
+  modalLiquidar.value = true
+}
+
+// Recuperar el borrador abre el modal directamente con esos datos, sin pasar por el reset de
+// abrirLiquidarDeposito() (que los pisaría con los valores por defecto).
+function recuperarBorradorLiquidar() {
+  borradorLiquidar.restaurar()
   modalLiquidar.value = true
 }
 
 async function confirmarLiquidarDeposito() {
   if (!contratoSeleccionado.value) return
   error.value = ''
+  avisoRefresco.value = ''
   liquidando.value = true
   try {
     const descuentos = descuentosDeposito
@@ -419,12 +522,14 @@ async function confirmarLiquidarDeposito() {
       },
     })
     modalLiquidar.value = false
-    ficha.value = await useApiFetch<any>(`/contratos/${contratoSeleccionado.value.id}/ficha-recaudo`)
+    borradorLiquidar.limpiar()
   } catch (e: any) {
     error.value = e?.data?.message || 'No fue posible liquidar el depósito.'
+    return
   } finally {
     liquidando.value = false
   }
+  await refrescarTrasOperacion()
 }
 
 // Permite llegar directo a la ficha de un contrato desde otra pantalla (ej. "Ver ficha del
@@ -442,16 +547,22 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
 <template>
   <div class="space-y-4">
     <UAlert v-if="error" color="red" variant="subtle" :title="error" />
+    <UAlert
+      v-if="avisoRefresco"
+      color="amber"
+      variant="subtle"
+      icon="i-heroicons-information-circle"
+      :title="avisoRefresco"
+      :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'gray', variant: 'link' }"
+      @close="avisoRefresco = ''"
+    />
 
     <!-- ==================== MODO LISTA ==================== -->
     <template v-if="!enDetalle">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <p class="text-sm text-slate-500">
-          {{
-            cargandoDeudores
-              ? 'Cargando…'
-              : `${total} ${total === 1 ? 'contrato con cartera vencida' : 'contratos con cartera vencida'}`
-          }}
+        <SharedSkeletonText v-if="cargandoDeudores" width-class="w-40" />
+        <p v-else class="text-sm text-slate-500">
+          {{ total }} {{ total === 1 ? 'contrato con cartera vencida' : 'contratos con cartera vencida' }}
         </p>
         <UButton
           color="gray"
@@ -459,7 +570,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
           size="sm"
           icon="i-heroicons-arrow-path"
           :loading="generandoCanon"
-          @click="generarCanones"
+          @click="modalConfirmarCanon = true"
         >
           Generar canones
         </UButton>
@@ -615,7 +726,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
         </UButton>
       </div>
 
-      <div v-if="cargandoFicha" class="py-8 text-center text-sm text-slate-400">Cargando ficha de recaudo…</div>
+      <SharedSkeletonText v-if="cargandoFicha" :lines="4" class="py-4" />
 
       <SharedErrorState v-else-if="errorFicha" :message="errorFicha" :loading="cargandoFicha" @retry="recargarFicha" />
 
@@ -682,6 +793,12 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
             v-if="ficha.contrato?.estado === 'TERMINADO' && Number(ficha.depositoGarantia) > 0"
             class="mt-4 border-t border-slate-200 pt-3"
           >
+            <p v-if="borradorLiquidar.hayBorrador.value" class="mb-2 text-xs text-amber-700">
+              Tienes una liquidación de depósito a medio hacer guardada.
+              <button type="button" class="font-medium underline" @click="recuperarBorradorLiquidar">Recuperar</button>
+              ·
+              <button type="button" class="underline" @click="borradorLiquidar.limpiar()">Descartar</button>
+            </p>
             <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-banknotes" @click="abrirLiquidarDeposito">
               Liquidar depósito
             </UButton>
@@ -732,30 +849,52 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
         <UCard class="lg:col-span-2">
           <template #header><p class="font-semibold text-slate-900">Registrar pago (medios combinados)</p></template>
 
+          <UAlert
+            v-if="borradorPago.hayBorrador.value"
+            color="amber"
+            variant="subtle"
+            icon="i-heroicons-document-text"
+            title="Tienes un pago a medio registrar guardado"
+            class="mb-3"
+          >
+            <template #description>
+              <div class="mt-2 flex gap-2">
+                <UButton size="xs" color="amber" @click="borradorPago.restaurar()">Recuperar</UButton>
+                <UButton size="xs" color="gray" variant="ghost" @click="borradorPago.limpiar()">Descartar</UButton>
+              </div>
+            </template>
+          </UAlert>
+
           <div class="space-y-3">
-            <div v-for="(detalle, i) in detallesPago" :key="i" class="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div class="w-full sm:w-44">
-                <label class="mb-1 block text-xs text-slate-500 sm:hidden">Medio de pago</label>
-                <USelectMenu v-model="detalle.medioPago" :options="medios" class="w-full" />
+            <TransitionGroup name="fila" tag="div" class="space-y-3">
+              <div
+                v-for="(detalle, i) in detallesPago"
+                :key="detalle._key"
+                class="flex flex-col gap-2 sm:flex-row sm:items-end"
+              >
+                <div class="w-full sm:w-44">
+                  <label class="mb-1 block text-xs text-slate-500 sm:hidden">Medio de pago</label>
+                  <USelectMenu v-model="detalle.medioPago" :options="medios" class="w-full" />
+                </div>
+                <div class="w-full sm:w-40">
+                  <label class="mb-1 block text-xs text-slate-500 sm:hidden">Monto</label>
+                  <UiMoneyInput v-model="detalle.monto" placeholder="Monto" class="w-full" />
+                </div>
+                <div class="flex-1">
+                  <label class="mb-1 block text-xs text-slate-500 sm:hidden">Referencia</label>
+                  <UInput v-model="detalle.referencia" placeholder="Referencia (opcional)" class="w-full" />
+                </div>
+                <UButton
+                  v-if="detallesPago.length > 1"
+                  color="red"
+                  variant="ghost"
+                  icon="i-heroicons-trash"
+                  aria-label="Quitar medio de pago"
+                  class="self-end"
+                  @click="quitarDetalle(i)"
+                />
               </div>
-              <div class="w-full sm:w-40">
-                <label class="mb-1 block text-xs text-slate-500 sm:hidden">Monto</label>
-                <UiMoneyInput v-model="detalle.monto" placeholder="Monto" class="w-full" />
-              </div>
-              <div class="flex-1">
-                <label class="mb-1 block text-xs text-slate-500 sm:hidden">Referencia</label>
-                <UInput v-model="detalle.referencia" placeholder="Referencia (opcional)" class="w-full" />
-              </div>
-              <UButton
-                v-if="detallesPago.length > 1"
-                color="red"
-                variant="ghost"
-                icon="i-heroicons-trash"
-                aria-label="Quitar medio de pago"
-                class="self-end"
-                @click="quitarDetalle(i)"
-              />
-            </div>
+            </TransitionGroup>
 
             <UButton size="xs" variant="soft" icon="i-heroicons-plus" @click="agregarDetalle">
               Agregar medio de pago
@@ -857,5 +996,30 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
       :liquidando="liquidando"
       @confirmar="confirmarLiquidarDeposito"
     />
+
+    <UiConfirmModal
+      v-model="modalConfirmarCanon"
+      title="Generar cánones pendientes"
+      message="Se generará una obligación de canon para cada contrato activo dentro del horizonte configurado, para todos los meses que aún no tengan canon generado. Esta acción crea deuda cobrable de forma masiva. ¿Confirmas?"
+      confirm-label="Generar cánones"
+      color="amber"
+      :loading="generandoCanon"
+      @confirm="generarCanones"
+    />
   </div>
 </template>
+
+<style scoped>
+.fila-enter-active,
+.fila-leave-active {
+  transition: all 0.2s ease;
+}
+.fila-enter-from,
+.fila-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.fila-leave-active {
+  position: absolute;
+}
+</style>
