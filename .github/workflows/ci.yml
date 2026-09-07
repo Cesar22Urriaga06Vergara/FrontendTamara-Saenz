@@ -13,9 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node 24 (npm 11) a propósito, no 20 como el backend: el package-lock.json
+      # (lockfileVersion 3, generado con npm 11) resuelve limpio con `npm ci` bajo
+      # npm 11, pero npm 10 (Node 20) calcula un árbol ideal distinto y aborta con
+      # "Missing: pinia@4.0.3 from lock file". La higiene a fondo del árbol de
+      # dependencias del frontend es el plan FE-014.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Instalar dependencias
