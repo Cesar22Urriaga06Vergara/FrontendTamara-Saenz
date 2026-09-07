@@ -26,6 +26,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Genera `.nuxt/` (tipos, tsconfig y `.nuxt/eslint.config.mjs` que importa
+      # `eslint.config.mjs`). Sin esto, lint y typecheck fallan en un checkout limpio.
+      - name: Preparar Nuxt
+        run: npx nuxt prepare
+
       - name: Lint
         run: npm run lint
 
