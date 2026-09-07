@@ -52,10 +52,15 @@ solo seguridad/config, esfuerzo S–M, riesgo LOW–MED, **sin decisiones de neg
 
 | Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
 |------|--------|-----------|----------|--------|------------|--------|
-| — | **PASO 0** — Merge de las ramas de corrección a `main` (coordinado) | P0 | S | MED | — | ver `BackendTamara-Saenz/plans/012` (cross-repo) — **TODO** |
-| 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **TODO** |
+| — | **PASO 0** — Merge de las ramas de corrección a `main` (coordinado) | P0 | S | MED | — | **DONE** (merge `61505a8`; ver `BackendTamara-Saenz/plans/012`) |
+| 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **TODO** — ampliar: el `package-lock.json` no resuelve con `npm ci` bajo npm 10 (`Missing: pinia@4.0.3`); `vue-router` pide `pinia ^3\|\|^4` y el proyecto fija `^2`. Regenerar el lock en infra que iguale CI. |
 | 015 | `useApiFetch` no debe reintentar mutaciones no idempotentes ante fallo de red (S-6) | P1 | S–M | MED | 012 | **TODO** |
 | 016 | `pages/login.vue` sin fuga de credenciales por envío pre-hidratación (S-5) | P1 | S | LOW | 012 | **TODO** |
+
+> **CI del frontend añadido en el PASO 0** (`.github/workflows/ci.yml`, commits `c39f065`/
+> `9af3e09`/`72c1811`; hallazgo S-11 parcialmente cerrado). Corre `npm ci` + `nuxt prepare` +
+> lint + typecheck + build + test en push/PR a `main`, con **Node 24** (npm 11) porque el
+> lockfile no resuelve con npm 10. Primer run verde: `34077294907`.
 
 Hallazgos cubiertos: **S-6** doble cobro por reintento de POST · **S-5** credenciales en la URL
 por GET pre-hidratación · **S-4** 3 vulnerabilidades de deps · **A-5** `exceljs`/`file-saver`
