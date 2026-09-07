@@ -15,6 +15,14 @@ const cargando = ref(false)
 const error = ref('')
 const erroresCampo = reactive({ email: '', password: '' })
 
+// S-5: hasta que Vue hidrate la página, `@submit.prevent` no corre. Deshabilitar el submit
+// hasta `onMounted` evita que un Enter/clic pre-hidratación dispare el envío nativo del <form>
+// (que, aun siendo POST, recargaría la página sin sesión). Al montar, se habilita.
+const montado = ref(false)
+onMounted(() => {
+  montado.value = true
+})
+
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validar(): boolean {
@@ -123,7 +131,10 @@ async function ingresar() {
             <p class="mt-1 text-sm text-slate-600">Ingresa tus credenciales para continuar.</p>
           </div>
 
-          <form class="mt-7 space-y-4" novalidate @submit.prevent="ingresar">
+          <!-- method="post" es el fallback si el form se envía antes de hidratar (S-5): las
+               credenciales van en el cuerpo, nunca en la URL / logs / historial. El envío real
+               siempre es POST por JS desde `ingresar()`; `@submit.prevent` lo intercepta. -->
+          <form method="post" action="/login" class="mt-7 space-y-4" novalidate @submit.prevent="ingresar">
             <UFormGroup label="Correo electrónico" :error="erroresCampo.email">
               <UInput
                 v-model="email"
@@ -170,6 +181,7 @@ async function ingresar() {
               block
               size="lg"
               :loading="cargando"
+              :disabled="!montado || cargando"
               class="mt-2 !bg-marca-dorado hover:!bg-marca-dorado-oscuro !text-marca-antracita font-semibold shadow-sm focus-visible:!ring-2 focus-visible:!ring-marca-dorado focus-visible:!ring-offset-2"
             >
               Ingresar
