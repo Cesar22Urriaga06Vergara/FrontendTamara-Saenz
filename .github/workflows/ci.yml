@@ -1,0 +1,38 @@
+name: CI Frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # `vue-tsc` emite un warning conocido y no fatal al resolver el plugin
+      # `vue-router/volar/sfc-route-blocks` (desfase de versión con vue-router);
+      # sale con exit 0 y sí type-checkea el resto. Si algún día rompe el CI,
+      # cambiar a `npm run typecheck || true` con un issue para quitarlo.
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Tests
+        run: npm run test
