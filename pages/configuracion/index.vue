@@ -71,7 +71,10 @@ async function generarCanones() {
   resultadoCanon.value = null
   generandoCanon.value = true
   try {
-    resultadoCanon.value = await useApiFetch<{ generadas: number }>('/obligaciones/generar-canones', { method: 'POST' })
+    resultadoCanon.value = await useApiFetch<{ generadas: number }>('/obligaciones/generar-canones', {
+      method: 'POST',
+      idempotente: true, // el backend salta los cánones que ya existen (índice único por período)
+    })
     modalConfirmarCanon.value = false
   } catch (e: any) {
     errorEmpresa.value = e?.data?.message || 'No fue posible generar los cánones.'

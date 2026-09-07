@@ -54,8 +54,22 @@ solo seguridad/config, esfuerzo S–M, riesgo LOW–MED, **sin decisiones de neg
 |------|--------|-----------|----------|--------|------------|--------|
 | — | **PASO 0** — Merge de las ramas de corrección a `main` (coordinado) | P0 | S | MED | — | **DONE** (merge `61505a8`; ver `BackendTamara-Saenz/plans/012`) |
 | 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **TODO** — ampliar: el `package-lock.json` no resuelve con `npm ci` bajo npm 10 (`Missing: pinia@4.0.3`); `vue-router` pide `pinia ^3\|\|^4` y el proyecto fija `^2`. Regenerar el lock en infra que iguale CI. |
-| 015 | `useApiFetch` no debe reintentar mutaciones no idempotentes ante fallo de red (S-6) | P1 | S–M | MED | 012 | **TODO** |
-| 016 | `pages/login.vue` sin fuga de credenciales por envío pre-hidratación (S-5) | P1 | S | LOW | 012 | **TODO** |
+| 015 | `useApiFetch` no debe reintentar mutaciones no idempotentes ante fallo de red (S-6) | P1 | S–M | MED | 012 | **DONE** |
+| 016 | `pages/login.vue` sin fuga de credenciales por envío pre-hidratación (S-5) | P1 | S | LOW | 012 | **DONE** |
+
+### Ejecución de 015 y 016 (2026-09-07, rama `fe15-useapifetch-mutaciones`)
+
+**FE-015 (S-6 — doble cobro):** `useApiFetch` gana `esReintentable(options)`: ante un fallo de red
+solo reintenta GET/HEAD/OPTIONS o lo marcado `idempotente: true`. Una mutación no idempotente que
+falla por red lanza `ErrorMutacionIncierta` (exportada) sin reintentar. `/recaudo/pagos/simular` y
+`/obligaciones/generar-canones` (en `recaudo` y `configuracion`) marcados `idempotente: true`.
+`recaudo` (registrarPago, liquidarDeposito) y `contratos/nuevo` muestran "verificá antes de
+reintentar" (aviso ámbar, no error rojo) ante `esMutacionIncierta`. Nuevo `tests/use-api-fetch.spec.ts`
+(7 casos; `$fetch` se mockea con `mockNuxtImport`, no `stubGlobal`). El reintento tras 401 no cambia.
+
+**FE-016 (S-5 — credenciales en la URL):** `pages/login.vue` — el `<form>` gana `method="post"`
+(fallback antes de hidratar → POST, no GET con `?password=` en la URL) y el botón submit queda
+`:disabled="!montado"` hasta `onMounted`. `@submit.prevent` intacto para el flujo hidratado normal.
 
 > **CI del frontend añadido en el PASO 0** (`.github/workflows/ci.yml`, commits `c39f065`/
 > `9af3e09`/`72c1811`; hallazgo S-11 parcialmente cerrado). Corre `npm ci` + `nuxt prepare` +
