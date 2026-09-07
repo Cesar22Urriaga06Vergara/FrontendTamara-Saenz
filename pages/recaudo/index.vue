@@ -162,7 +162,10 @@ async function generarCanones() {
   resultadoCanon.value = null
   generandoCanon.value = true
   try {
-    resultadoCanon.value = await useApiFetch<{ generadas: number }>('/obligaciones/generar-canones', { method: 'POST' })
+    resultadoCanon.value = await useApiFetch<{ generadas: number }>('/obligaciones/generar-canones', {
+      method: 'POST',
+      idempotente: true, // el backend salta los cánones que ya existen (índice único por período)
+    })
     modalConfirmarCanon.value = false
     await cargarDeudores()
   } catch (e: any) {
@@ -349,6 +352,7 @@ async function abrirConfirmarPago() {
   try {
     previsualizacion.value = await useApiFetch<PrevisualizacionPago>('/recaudo/pagos/simular', {
       method: 'POST',
+      idempotente: true, // solo calcula la previsualización, no persiste nada: seguro de reintentar
       body: {
         contratoId: contratoSeleccionado.value.id,
         detallesPago: detallesPagoParaEnviar(detallesPago),
@@ -385,6 +389,12 @@ async function registrarPago() {
     dejarExcedenteComoSaldoFavor.value = false
     borradorPago.limpiar()
   } catch (e: any) {
+    if (e?.esMutacionIncierta) {
+      avisoRefresco.value =
+        'Se perdió la conexión al enviar el pago. NO lo vuelvas a registrar sin antes revisar la ' +
+        'lista de recibos y la ficha del contrato: puede que sí se haya guardado.'
+      return
+    }
     error.value = e?.data?.message || 'No fue posible registrar el pago.'
     return
   } finally {
@@ -524,6 +534,12 @@ async function confirmarLiquidarDeposito() {
     modalLiquidar.value = false
     borradorLiquidar.limpiar()
   } catch (e: any) {
+    if (e?.esMutacionIncierta) {
+      avisoRefresco.value =
+        'Se perdió la conexión al liquidar el depósito. NO lo vuelvas a intentar sin antes revisar ' +
+        'la ficha del contrato y los movimientos: puede que sí se haya registrado.'
+      return
+    }
     error.value = e?.data?.message || 'No fue posible liquidar el depósito.'
     return
   } finally {

@@ -152,7 +152,9 @@ async function crearContrato() {
     await navigateTo(`/contratos`)
   } catch (e: any) {
     modalConfirmar.value = false
-    error.value = e?.data?.message || 'No fue posible crear el contrato.'
+    error.value = e?.esMutacionIncierta
+      ? 'Se perdió la conexión al crear el contrato. Revisá la lista de contratos antes de reintentar: puede que sí se haya creado.'
+      : e?.data?.message || 'No fue posible crear el contrato.'
   } finally {
     creando.value = false
   }
