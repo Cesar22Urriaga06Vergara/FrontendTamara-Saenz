@@ -57,6 +57,36 @@ solo seguridad/config, esfuerzo S–M, riesgo LOW–MED, **sin decisiones de neg
 | 015 | `useApiFetch` no debe reintentar mutaciones no idempotentes ante fallo de red (S-6) | P1 | S–M | MED | 012 | **DONE** |
 | 016 | `pages/login.vue` sin fuga de credenciales por envío pre-hidratación (S-5) | P1 | S | LOW | 012 | **DONE** |
 
+---
+
+## Ronda 4 — Bloqueantes de producción (2026-09-08, stack: Railway + Cloudflare)
+
+Generados por `improve` (variante `plan`) a partir de `BackendTamara-Saenz/PRODUCCION.md`.
+**Planned against commit `45c4d2c`.** Deploy: frontend en **Cloudflare Pages** (SPA estática),
+backend + MySQL 8 en **Railway**.
+
+| Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
+|------|--------|-----------|----------|--------|------------|--------|
+| 017 | Configurar el despliegue en Cloudflare Pages (`ssr: false` + preset) + cabeceras de seguridad (`public/_headers`) | P1 | M | LOW-MED | — | **TODO** |
+| 018 | Error reporting con Sentry en el frontend | P1 | S | LOW | 017 (CSP `connect-src`) | **TODO** |
+| 019 | Eliminar el "dinero como string" del frontend (D-1) — quitar `Number()` disperso y uniones `number \| string` | P2 | M | LOW-MED | **plan 021 del repo backend** | **TODO** |
+
+### Orden y dependencias (ronda 4)
+
+- **017 primero** — deja la app desplegable a Cloudflare Pages y crea `public/_headers`.
+- **018** necesita que **017** ya haya creado `public/_headers` (para añadir el host de Sentry a `connect-src`).
+- **019** NO debe ejecutarse hasta que el **plan 021 del repo backend** (transformer `decimal ↔ number`)
+  esté mergeado y desplegado — antes de eso, el API devuelve montos como string y quitar los
+  `Number()` rompería las sumas. El Paso 0 del plan 019 lo verifica con `curl`.
+
+### Emparejamiento con el backend
+
+- **017** ↔ **plan 015 del backend** (Railway): `NUXT_PUBLIC_API_BASE_URL` = dominio de Railway;
+  `CORS_ORIGIN` del backend = dominio de Cloudflare Pages.
+- **017** (`_headers`) ↔ **plan 018 del backend** (CSP): misma tanda de hardening de cabeceras.
+- **018** (Sentry FE) ↔ **plan 019 del backend** (Sentry BE).
+- **019** ← **plan 021 del backend** (dependencia dura).
+
 ### Ejecución de 015 y 016 (2026-09-07, rama `fe15-useapifetch-mutaciones`)
 
 **FE-015 (S-6 — doble cobro):** `useApiFetch` gana `esReintentable(options)`: ante un fallo de red
