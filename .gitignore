@@ -33,21 +33,19 @@ POSIBLES VISTAS.png
 .claude/
 skills-lock.json
 
-# Bloquear reportes de diseño o UI generados por IA
-*auditoria*.md
-*plan*.md
-*fases*.md
-*bitacora*.md
-
 # Bloquear archivos de habilidades de diseño
 SKILL.md
 SKILL.MD
 *SKILL*.md
 
-# Forzar exclusión de otros .md en componentes o vistas
+# Por defecto NO versionar .md sueltos (borradores/reportes locales de IA)...
 **/*.md
 
-# EXCEPCIONES: Permitir siempre el README de desarrollo
+# ...salvo la documentación oficial del proyecto, que SÍ va en git (hallazgo S-12):
 !README.md
+!AGENTS.md
+!ARCHITECTURE_AND_AUDIT.md
+!ESPECIFICACION_UI_UX_PAGINA_POR_PAGINA.md
+!plans/**/*.md
 
 
