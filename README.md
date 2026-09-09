@@ -117,7 +117,8 @@ arrendamiento) y aplicó fixes contables. Sincronización de este frontend:
 ## Novedades de esta última entrega
 - `dashboard/index.vue` ahora consume `GET /dashboard` con datos reales.
 - `recaudo/index.vue`: búsqueda de contrato, ficha de recaudo, pago mixto y descarga de PDF.
-- `reportes/index.vue`: centro de exportación a Excel.
+- `reportes/index.vue`: centro de descarga de reportes .xlsx (los genera el backend con `ExcelJS`;
+  el frontend solo dispara la descarga del binario — `useExcelExport` → `useApiFetch<Blob>`).
 - `contratos/nuevo.vue`: creación de contrato 100% por búsqueda estricta (Cliente, Codeudores N:M, Inmueble disponible), sin captura de datos de personas inline.
 - `administracion/index.vue`: CRUD de Usuarios (RBAC). Los parámetros de Empresa se editan en `configuracion/index.vue`.
 - `clientes/index.vue`, `codeudores/index.vue`: directorios con búsqueda por cédula y alta rápida.
@@ -170,6 +171,19 @@ des-minificar los stack traces.
 `public/_redirects` (`/* /index.html 200`) hace que los deep links de la SPA (`/contratos/123`)
 sirvan el shell en vez de 404. `public/_headers` lleva CSP, HSTS, `X-Frame-Options: DENY`,
 `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
+
+## Vulnerabilidades de dependencias aceptadas (plan FE-014)
+
+- **`@nuxt/ui` < 4.8.1 (GHSA-gj2h-2fpw-fhv9, moderada)** — afecta a `UAuthForm` / `UForm`,
+  componentes que este proyecto **no usa** (solo `UFormGroup`, no afectado). Migrar a `@nuxt/ui`
+  v4 es un cambio mayor pospuesto (ver `ARCHITECTURE_AND_AUDIT.md` §4). El patrón subyacente
+  —`<form>` enviable por GET antes de hidratar— ya se corrigió en `pages/login.vue` (plan FE-016).
+  El CI audita con `--audit-level=high`, así que esta moderada no lo bloquea.
+
+Deps muertas `exceljs` / `file-saver` **eliminadas** (FE-014): los reportes .xlsx los genera el
+**backend** (`ExcelJS`); el frontend solo dispara la descarga del binario ya construido
+(`useExcelExport` → `useApiFetch<Blob>`). Los `js-yaml` / `svgo` vulnerables (deps de build) van
+por `overrides` en `package.json`.
 
 ## Notas de diseño
 - Colores: `amber-600` (primario/dorado), `slate-700` (estructural), `slate-900` (texto), `slate-50` (fondo).
