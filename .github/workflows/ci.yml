@@ -13,14 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node 24 (npm 11) a propósito, no 20 como el backend: el package-lock.json
-      # (lockfileVersion 3, generado con npm 11) resuelve limpio con `npm ci` bajo
-      # npm 11, pero npm 10 (Node 20) calcula un árbol ideal distinto y aborta con
-      # "Missing: pinia@4.0.3 from lock file". La higiene a fondo del árbol de
-      # dependencias del frontend es el plan FE-014.
+      # Node 22 LTS. Antes era 24 porque `npm ci` con npm 10 abortaba por el conflicto de
+      # peers de `pinia@2` vs `vue-router@5` (`Missing: pinia@4.0.3`). FE-014b subió
+      # `pinia` a `^4` → el árbol ideal de npm 10/11 coincide con el lockfile y se puede
+      # volver a una LTS.
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
 
       - name: Instalar dependencias
