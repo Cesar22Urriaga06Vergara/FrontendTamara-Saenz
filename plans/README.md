@@ -67,17 +67,37 @@ backend + MySQL 8 en **Railway**.
 
 | Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
 |------|--------|-----------|----------|--------|------------|--------|
-| 017 | Configurar el despliegue en Cloudflare Pages (`ssr: false` + preset) + cabeceras de seguridad (`public/_headers`) | P1 | M | LOW-MED | — | **TODO** |
+| 017 | Configurar el despliegue en Cloudflare Pages (`ssr: false` + preset) + cabeceras de seguridad (`public/_headers`) | P1 | M | LOW-MED | — | **DONE** (2026-09-09) — output `dist/`; `_redirects` SPA; `.nvmrc`=24 |
 | 018 | Error reporting con Sentry en el frontend | P1 | S | LOW | 017 (CSP `connect-src`) | **TODO** |
 | 019 | Eliminar el "dinero como string" del frontend (D-1) — quitar `Number()` disperso y uniones `number \| string` | P2 | M | LOW-MED | **plan 021 del repo backend** | **TODO** |
 
 ### Orden y dependencias (ronda 4)
 
-- **017 primero** — deja la app desplegable a Cloudflare Pages y crea `public/_headers`.
-- **018** necesita que **017** ya haya creado `public/_headers` (para añadir el host de Sentry a `connect-src`).
-- **019** NO debe ejecutarse hasta que el **plan 021 del repo backend** (transformer `decimal ↔ number`)
-  esté mergeado y desplegado — antes de eso, el API devuelve montos como string y quitar los
-  `Number()` rompería las sumas. El Paso 0 del plan 019 lo verifica con `curl`.
+- ~~**017**~~ **HECHO** (2026-09-09, PR — rama `deploy/017-cloudflare-headers`).
+- **018** necesita que **017** ya haya creado `public/_headers` (para añadir el host de Sentry a `connect-src`). ← siguiente.
+- **019** NO debe ejecutarse hasta que el **plan 021 del repo backend** (transformer `decimal ↔ number`,
+  ya MERGEADO 2026-09-09) esté **DESPLEGADO** — antes de eso, el API prod devuelve montos como string
+  y quitar los `Number()` rompería las sumas. El Paso 0 del plan 019 lo verifica con `curl`.
+  **Bloqueado hasta el primer deploy del backend.**
+
+### Ejecución de 017 (2026-09-09, rama `deploy/017-cloudflare-headers`)
+
+- `nuxt.config.ts`: `ssr: false` + `nitro.preset: 'cloudflare-pages'`.
+- **Nuxt 4 genera el output en `dist/`** (no `.output/public/` como asumía el plan). `npm run generate`
+  produce `dist/{index.html,200.html,404.html,_nuxt/,_headers,_redirects,_routes.json}`.
+- **`public/_redirects` = `/*  /index.html  200`** (nuevo): sin esto Nitro emite `/* /404.html 404`
+  y los deep links de la SPA (`/contratos/123`) devolvían 404. Verificado en navegador: `/contratos/nuevo`
+  entrado directo → sirve el shell y el router de Vue toma el control (redirige a login sin token). ✓
+- `public/_headers` (nuevo): CSP + HSTS + `X-Frame-Options: DENY` + `X-Content-Type-Options` +
+  `Referrer-Policy` + `Permissions-Policy`. `connect-src` con placeholders `.example` (comentario `#`
+  arriba + paso en el README) para el backend y Sentry. `script-src 'unsafe-inline'` = concesión
+  conocida (Nuxt inyecta el payload de hidratación inline; Pages estático no puede poner nonce).
+- `.nvmrc` = **`24`** (no `20`): el lockfile no resuelve con npm ≤ 10; mismo motivo que el CI.
+  `engines.node` = `>=20` (piso blando). FE-014 (regenerar lock) permitirá bajar.
+- `package.json` `engines`, README sección "Despliegue (Cloudflare Pages)".
+- Verificado: `npm ci` + `npm run lint` + `npm run typecheck` + `npm run test` (22) + `npm run generate`
+  + preview en navegador (login renderiza, `@nuxt/ui` OK, sin errores JS/hidratación; los
+  `ERR_CONNECTION_REFUSED` al API son esperados sin backend).
 
 ### Emparejamiento con el backend
 
