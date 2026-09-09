@@ -143,16 +143,15 @@ Todo el data-fetching ya es del lado cliente, así que no hay Workers ni runtime
 | Framework preset | Nuxt (o "None") |
 | Build command | `npm run generate` |
 | Build output directory | **`dist`** |
-| Node version | la de `.nvmrc` (hoy `24` — ver nota) |
+| Node version | la de `.nvmrc` (`22` LTS) |
 
 Variables de entorno de build:
 - `NUXT_PUBLIC_API_BASE_URL` = `https://<servicio-backend>.up.railway.app/api/v1`
 - `NUXT_PUBLIC_SENTRY_DSN` = *(DSN del proyecto Sentry frontend — plan FE-018; vacío = desactivado)*
 - `NUXT_PUBLIC_APP_NAME` / `NUXT_PUBLIC_APP_SLOGAN` (opcionales)
 
-> **Node 24 en `.nvmrc`**: el `package-lock.json` (lockfileVersion 3, npm 11) no resuelve con
-> `npm ci` bajo npm 10 (Node ≤ 22) — el mismo motivo por el que el CI usa Node 24. El plan
-> **FE-014** (regenerar el lockfile) permitirá bajar a una LTS.
+> **`.nvmrc` = Node 22 LTS.** FE-014b subió `pinia` a `^4` (`nuxt@4.5` trae `vue-router@5`, cuyo
+> peer opcional pedía `pinia 3||4`) — el árbol de `npm ci` ya coincide con el lockfile bajo npm 10.
 
 ### Antes del primer deploy
 1. En `public/_headers`, `connect-src`: reemplazar `https://BACKEND-DOMAIN.example` por el dominio

@@ -53,7 +53,8 @@ solo seguridad/config, esfuerzo S–M, riesgo LOW–MED, **sin decisiones de neg
 | Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
 |------|--------|-----------|----------|--------|------------|--------|
 | — | **PASO 0** — Merge de las ramas de corrección a `main` (coordinado) | P0 | S | MED | — | **DONE** (merge `61505a8`; ver `BackendTamara-Saenz/plans/012`) |
-| 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **DONE parcial** (2026-09-09) — deps muertas fuera + `overrides` js-yaml/svgo + `npm audit` en CI. **Pinia `^2`→`^4` (para `.nvmrc` LTS) queda para FE-014b.** |
+| 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **DONE** (2026-09-09) — deps muertas fuera + `overrides` js-yaml/svgo + `npm audit` en CI (PR #5) |
+| 014b | Subir `pinia ^2`→`^4` + `@pinia/nuxt ^1` para bajar `.nvmrc` a LTS | P2 | S | LOW | 014 | **DONE** (2026-09-09) — `pinia@4.0.3`, `vue@^3.5.11`, `.nvmrc`=22, CI Node 22. Store en Options API, sin cambios. 22 tests verde. |
 | 015 | `useApiFetch` no debe reintentar mutaciones no idempotentes ante fallo de red (S-6) | P1 | S–M | MED | 012 | **DONE** |
 | 016 | `pages/login.vue` sin fuga de credenciales por envío pre-hidratación (S-5) | P1 | S | LOW | 012 | **DONE** |
 
