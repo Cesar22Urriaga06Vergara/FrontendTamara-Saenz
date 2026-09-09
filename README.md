@@ -131,6 +131,38 @@ cp .env.example .env      # y apunta NUXT_PUBLIC_API_BASE_URL a tu backend
 npm run dev                # http://localhost:3011
 ```
 
+## Despliegue (Cloudflare Pages)
+
+App **SPA estática** (`ssr: false` + `nitro.preset: 'cloudflare-pages'`, ver `nuxt.config.ts`).
+Todo el data-fetching ya es del lado cliente, así que no hay Workers ni runtime de Node.
+
+### Configuración en el dashboard de Cloudflare Pages
+| Ajuste | Valor |
+|---|---|
+| Framework preset | Nuxt (o "None") |
+| Build command | `npm run generate` |
+| Build output directory | **`dist`** |
+| Node version | la de `.nvmrc` (hoy `24` — ver nota) |
+
+Variables de entorno de build:
+- `NUXT_PUBLIC_API_BASE_URL` = `https://<servicio-backend>.up.railway.app/api/v1`
+- `NUXT_PUBLIC_APP_NAME` / `NUXT_PUBLIC_APP_SLOGAN` (opcionales)
+
+> **Node 24 en `.nvmrc`**: el `package-lock.json` (lockfileVersion 3, npm 11) no resuelve con
+> `npm ci` bajo npm 10 (Node ≤ 22) — el mismo motivo por el que el CI usa Node 24. El plan
+> **FE-014** (regenerar el lockfile) permitirá bajar a una LTS.
+
+### Antes del primer deploy
+1. En `public/_headers`, reemplazar en `connect-src` los placeholders `https://BACKEND-DOMAIN.example`
+   (dominio real del backend en Railway) y `https://SENTRY-INGEST.example` (ingest de Sentry — plan
+   FE-018; si aún no hay Sentry, borrarlo).
+2. En el backend (Railway), `CORS_ORIGIN` = el dominio de Cloudflare Pages (sin barra final).
+3. Dominio propio en Cloudflare (DNS + Pages custom domain).
+
+`public/_redirects` (`/* /index.html 200`) hace que los deep links de la SPA (`/contratos/123`)
+sirvan el shell en vez de 404. `public/_headers` lleva CSP, HSTS, `X-Frame-Options: DENY`,
+`X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
+
 ## Notas de diseño
 - Colores: `amber-600` (primario/dorado), `slate-700` (estructural), `slate-900` (texto), `slate-50` (fondo).
 - Badges semánticos: `emerald-600` activo/disponible, `amber-600` terminado,

@@ -2,6 +2,14 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   devtools: { enabled: true },
 
+  // Despliegue: SPA estática en Cloudflare Pages (plan FE-017). Todo el data-fetching ya es del
+  // lado cliente (no hay `useAsyncData`), así que `ssr: false` + el preset `cloudflare-pages`
+  // produce `.output/public/` que Pages sirve desde su CDN, sin Workers ni APIs de Node en runtime.
+  ssr: false,
+  nitro: {
+    preset: 'cloudflare-pages',
+  },
+
   // @nuxt/ui v2 ya incluye y gestiona su propio pipeline de Tailwind (v3) internamente
   // via @nuxtjs/tailwindcss. Declarar ese módulo aparte aquí genera un conflicto de
   // resolución del import virtual '#tailwind-config/theme/colors' en tiempo de build.

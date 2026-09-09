@@ -1,0 +1,15 @@
+# Cabeceras de seguridad — Cloudflare Pages las aplica a cada respuesta (plan FE-017).
+#
+# ⚠️ ANTES DEL PRIMER DEPLOY: en `connect-src`, reemplaza los dos placeholders `.example`:
+#   - https://BACKEND-DOMAIN.example  -> el dominio real del backend en Railway
+#   - https://SENTRY-INGEST.example   -> el ingest del proyecto Sentry frontend (plan FE-018);
+#                                        si aún no hay Sentry, bórralo.
+# Si no los reemplazas, las llamadas al API fallan con un error de CSP claro en la consola.
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://BACKEND-DOMAIN.example https://SENTRY-INGEST.example; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
