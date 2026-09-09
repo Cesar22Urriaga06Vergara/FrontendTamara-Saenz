@@ -68,13 +68,12 @@ backend + MySQL 8 en **Railway**.
 | Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
 |------|--------|-----------|----------|--------|------------|--------|
 | 017 | Configurar el despliegue en Cloudflare Pages (`ssr: false` + preset) + cabeceras de seguridad (`public/_headers`) | P1 | M | LOW-MED | — | **DONE** (2026-09-09) — output `dist/`; `_redirects` SPA; `.nvmrc`=24 |
-| 018 | Error reporting con Sentry en el frontend | P1 | S | LOW | 017 (CSP `connect-src`) | **TODO** |
+| 018 | Error reporting con Sentry en el frontend | P1 | S | LOW | 017 (CSP `connect-src`) | **DONE** (2026-09-09) — `@sentry/vue` (no `@sentry/nuxt`, SPA); plugin `.client` gateado por DSN |
 | 019 | Eliminar el "dinero como string" del frontend (D-1) — quitar `Number()` disperso y uniones `number \| string` | P2 | M | LOW-MED | **plan 021 del repo backend** | **TODO** |
 
 ### Orden y dependencias (ronda 4)
 
-- ~~**017**~~ **HECHO** (2026-09-09, PR — rama `deploy/017-cloudflare-headers`).
-- **018** necesita que **017** ya haya creado `public/_headers` (para añadir el host de Sentry a `connect-src`). ← siguiente.
+- ~~**017**~~ · ~~**018**~~ **HECHOS** (2026-09-09).
 - **019** NO debe ejecutarse hasta que el **plan 021 del repo backend** (transformer `decimal ↔ number`,
   ya MERGEADO 2026-09-09) esté **DESPLEGADO** — antes de eso, el API prod devuelve montos como string
   y quitar los `Number()` rompería las sumas. El Paso 0 del plan 019 lo verifica con `curl`.
@@ -97,7 +96,25 @@ backend + MySQL 8 en **Railway**.
 - `package.json` `engines`, README sección "Despliegue (Cloudflare Pages)".
 - Verificado: `npm ci` + `npm run lint` + `npm run typecheck` + `npm run test` (22) + `npm run generate`
   + preview en navegador (login renderiza, `@nuxt/ui` OK, sin errores JS/hidratación; los
-  `ERR_CONNECTION_REFUSED` al API son esperados sin backend).
+  `ERR_CONNECTION_REFUSED` al API son esperados sin backend). Deep link con `serve -s` → 200.
+
+### Ejecución de 018 (2026-09-09, rama `feat/018-sentry-frontend`)
+
+- **`@sentry/vue` en vez de `@sentry/nuxt`**: `@sentry/nuxt` envuelve `@sentry/node` para el
+  servidor, que en una SPA estática (`ssr: false`) + preset `cloudflare-pages` no existe y choca.
+  `@sentry/vue` directo es el camino correcto para cliente-only.
+- **Versión pineada a `10.73.0`** (exacta, no `^`): `@sentry/nuxt`/`@sentry/vue` `10.74.0` está
+  **roto en el registro** (depende de `@sentry/browser@10.74.0`, que no está publicado). Matchea
+  `@sentry/nestjs@10.73.0` del backend.
+- `plugins/sentry.client.ts` (`.client` → nunca corre en SSR): `defineNuxtPlugin({ enforce: 'pre' })`,
+  `Sentry.init` **solo si `NUXT_PUBLIC_SENTRY_DSN`**. `app: nuxtApp.vueApp` + `browserTracingIntegration({ router })`.
+  `replaysSessionSampleRate: 0`, `sendDefaultPii: false`, `ignoreErrors: ['ErrorMutacionIncierta']`.
+- `nuxt.config.ts`: `runtimeConfig.public.sentryDsn`.
+- `public/_headers`: `connect-src` gana `https://*.ingest*.sentry.io` (+ regionales us/de) y
+  `worker-src 'self' blob:`.
+- **CI del frontend NO corre `npm audit`** — las 5 vulnerabilidades pre-existentes (`@nuxt/ui`
+  S-5, `exceljs`/`uuid` muertos, `js-yaml`, `svgo`) son de FE-014, no de este plan (Sentry añade 0).
+- Verificado: `npm ci` + lint + typecheck + test (22) + `npm run generate` (sin errores de Sentry).
 
 ### Emparejamiento con el backend
 

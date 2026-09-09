@@ -146,6 +146,7 @@ Todo el data-fetching ya es del lado cliente, así que no hay Workers ni runtime
 
 Variables de entorno de build:
 - `NUXT_PUBLIC_API_BASE_URL` = `https://<servicio-backend>.up.railway.app/api/v1`
+- `NUXT_PUBLIC_SENTRY_DSN` = *(DSN del proyecto Sentry frontend — plan FE-018; vacío = desactivado)*
 - `NUXT_PUBLIC_APP_NAME` / `NUXT_PUBLIC_APP_SLOGAN` (opcionales)
 
 > **Node 24 en `.nvmrc`**: el `package-lock.json` (lockfileVersion 3, npm 11) no resuelve con
@@ -153,11 +154,18 @@ Variables de entorno de build:
 > **FE-014** (regenerar el lockfile) permitirá bajar a una LTS.
 
 ### Antes del primer deploy
-1. En `public/_headers`, reemplazar en `connect-src` los placeholders `https://BACKEND-DOMAIN.example`
-   (dominio real del backend en Railway) y `https://SENTRY-INGEST.example` (ingest de Sentry — plan
-   FE-018; si aún no hay Sentry, borrarlo).
+1. En `public/_headers`, `connect-src`: reemplazar `https://BACKEND-DOMAIN.example` por el dominio
+   real del backend en Railway. Para Sentry están los comodines `*.ingest*.sentry.io` — idealmente
+   cámbialos por el host exacto de tu DSN; si no usas Sentry, bórralos (y el `worker-src`).
 2. En el backend (Railway), `CORS_ORIGIN` = el dominio de Cloudflare Pages (sin barra final).
 3. Dominio propio en Cloudflare (DNS + Pages custom domain).
+
+### Error reporting (Sentry — plan FE-018)
+`plugins/sentry.client.ts` inicializa `@sentry/vue` **solo si** `NUXT_PUBLIC_SENTRY_DSN` está
+definido. Sin DSN es inerte (dev/test). No graba sesiones (`replaysSessionSampleRate: 0`), no
+manda PII, e ignora `ErrorMutacionIncierta` (aviso al usuario, no bug).
+Follow-up: subir source maps a Sentry en el build de Cloudflare (`SENTRY_AUTH_TOKEN`) para
+des-minificar los stack traces.
 
 `public/_redirects` (`/* /index.html 200`) hace que los deep links de la SPA (`/contratos/123`)
 sirvan el shell en vez de 404. `public/_headers` lleva CSP, HSTS, `X-Frame-Options: DENY`,
