@@ -53,7 +53,7 @@ solo seguridad/config, esfuerzo S–M, riesgo LOW–MED, **sin decisiones de neg
 | Plan | Título | Prioridad | Esfuerzo | Riesgo | Depende de | Estado |
 |------|--------|-----------|----------|--------|------------|--------|
 | — | **PASO 0** — Merge de las ramas de corrección a `main` (coordinado) | P0 | S | MED | — | **DONE** (merge `61505a8`; ver `BackendTamara-Saenz/plans/012`) |
-| 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **TODO** — ampliar: el `package-lock.json` no resuelve con `npm ci` bajo npm 10 (`Missing: pinia@4.0.3`); `vue-router` pide `pinia ^3\|\|^4` y el proyecto fija `^2`. Regenerar el lock en infra que iguale CI. |
+| 014 | Remediación de dependencias vulnerables + eliminación de deps muertas `exceljs`/`file-saver` (S-4, A-5) | P2 | S | LOW | 012 | **DONE parcial** (2026-09-09) — deps muertas fuera + `overrides` js-yaml/svgo + `npm audit` en CI. **Pinia `^2`→`^4` (para `.nvmrc` LTS) queda para FE-014b.** |
 | 015 | `useApiFetch` no debe reintentar mutaciones no idempotentes ante fallo de red (S-6) | P1 | S–M | MED | 012 | **DONE** |
 | 016 | `pages/login.vue` sin fuga de credenciales por envío pre-hidratación (S-5) | P1 | S | LOW | 012 | **DONE** |
 
@@ -115,6 +115,22 @@ backend + MySQL 8 en **Railway**.
 - **CI del frontend NO corre `npm audit`** — las 5 vulnerabilidades pre-existentes (`@nuxt/ui`
   S-5, `exceljs`/`uuid` muertos, `js-yaml`, `svgo`) son de FE-014, no de este plan (Sentry añade 0).
 - Verificado: `npm ci` + lint + typecheck + test (22) + `npm run generate` (sin errores de Sentry).
+
+### Ejecución de 014 (2026-09-09, rama `chore/fe-014-deps`) — PARCIAL
+
+- **`exceljs` + `file-saver` eliminados** (dead deps confirmados: `grep` de imports → 0). Mata las
+  moderadas de `exceljs`/`uuid`.
+- **`overrides`** `js-yaml: ^4.3.2` (dev, vía `@nuxt/eslint`→typegen) y `svgo: ^4.1.0` (dev, vía
+  `nuxt`→vite-builder→cssnano). Ambos advisories `high` publicados hacia 2026-09-09 — deps de
+  build, no runtime-reachable. `npm audit` → **1 moderada** (`@nuxt/ui`, aceptada), 0 high/critical.
+- **`.github/workflows/ci.yml`**: paso `npm audit --audit-level=high` tras `npm ci`.
+- `@nuxt/ui` moderada documentada como aceptada en el README (no migrar a v4 ahora; `pages/login.vue`
+  ya cubrió el riesgo real en FE-016). README: reportes .xlsx los genera el backend.
+- Verificado: `npm ci` + lint + typecheck + build + test (22) + `npm audit --audit-level=high` (exit 0).
+- **NO hecho — FE-014b**: subir `pinia ^2` → `^4` + `@pinia/nuxt` `^0.5` → `^1` (el `nuxt@4.5`
+  bundlea `vue-router@5`, cuyo peer opcional pide `pinia 3||4`; por eso `npm ci` solo resuelve con
+  npm 11 / Node 24 y `.nvmrc` no puede bajar a LTS). Es un major de Pinia (1 solo store,
+  `auth.store.ts`, con test) — riesgo bajo pero es cambio de major: merece OK del dueño y su PR.
 
 ### Emparejamiento con el backend
 

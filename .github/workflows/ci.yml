@@ -26,6 +26,12 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Falla el CI ante una vulnerabilidad alta/crítica nueva. Nivel "high" (no "moderate")
+      # para no bloquear por la moderada aceptada de `@nuxt/ui` (ver README, "Vulnerabilidades
+      # de dependencias aceptadas"). Ver plan FE-014.
+      - name: Auditoría de dependencias
+        run: npm audit --audit-level=high
+
       # Genera `.nuxt/` (tipos, tsconfig y `.nuxt/eslint.config.mjs` que importa
       # `eslint.config.mjs`). Sin esto, lint y typecheck fallan en un checkout limpio.
       - name: Preparar Nuxt
