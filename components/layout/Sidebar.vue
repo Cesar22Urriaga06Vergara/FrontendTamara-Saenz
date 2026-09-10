@@ -70,8 +70,6 @@ const secciones = computed(() =>
 </script>
 
 <template>
-  <!-- Fondo del drawer: solo existe (y solo importa) por debajo de `lg`, donde el aside pasa
-       de estar fijo en el layout a superponerse como overlay. -->
   <div
     v-if="abierto"
     class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
@@ -80,50 +78,61 @@ const secciones = computed(() =>
   />
 
   <aside
-    class="fixed inset-y-0 left-0 z-40 h-screen w-64 shrink-0 bg-slate-700 text-white flex flex-col transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-40 flex h-screen w-72 shrink-0 flex-col border-r border-slate-700/80 bg-slate-950 text-slate-100 shadow-[0_30px_80px_-30px_rgba(2,6,23,0.9)] transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:translate-x-0"
     :class="abierto ? 'translate-x-0' : '-translate-x-full'"
   >
-    <div class="px-5 py-6 border-b border-slate-600/60 flex items-center gap-3">
-      <img
-        v-if="marca.logoSrc.value"
-        :src="marca.logoSrc.value"
-        alt="Logo"
-        class="h-9 w-9 object-contain rounded shrink-0"
-      />
-      <div class="min-w-0 flex-1">
-        <p class="font-bold text-lg leading-tight text-white truncate">{{ marca.nombre.value }}</p>
-        <p class="text-xs text-amber-500 italic mt-0.5 truncate">{{ marca.slogan.value }}</p>
+    <div class="border-b border-slate-700/80 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 px-5 py-5">
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10">
+          <img
+            v-if="marca.logoSrc.value"
+            :src="marca.logoSrc.value"
+            alt="Logo"
+            class="h-8 w-8 object-contain"
+          />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-base font-semibold tracking-tight text-white">{{ marca.nombre.value }}</p>
+          <p class="mt-0.5 truncate text-[11px] italic text-amber-400">{{ marca.slogan.value }}</p>
+        </div>
+        <UButton
+          icon="i-heroicons-x-mark"
+          color="gray"
+          variant="ghost"
+          size="sm"
+          class="shrink-0 lg:hidden"
+          aria-label="Cerrar menú"
+          @click="abierto = false"
+        />
       </div>
-      <UButton
-        icon="i-heroicons-x-mark"
-        color="gray"
-        variant="ghost"
-        size="sm"
-        class="lg:hidden shrink-0"
-        aria-label="Cerrar menú"
-        @click="abierto = false"
-      />
     </div>
 
-    <nav class="flex-1 overflow-y-auto py-4 space-y-6">
-      <div v-for="seccion in secciones" v-show="seccion.items.length" :key="seccion.titulo">
-        <p class="px-5 mb-2 text-[11px] font-semibold tracking-wider text-slate-400">{{ seccion.titulo }}</p>
-        <NuxtLink
-          v-for="item in seccion.items"
-          :key="item.to"
-          :to="item.to"
-          class="flex items-center gap-3 px-5 py-2.5 text-sm text-slate-100 hover:bg-slate-600/60 hover:text-amber-500 transition-colors"
-          active-class="bg-slate-900 text-amber-500 border-r-2 border-amber-600"
-        >
-          <UIcon :name="item.icon" class="w-5 h-5" />
-          {{ item.label }}
-        </NuxtLink>
+    <nav class="flex-1 space-y-5 overflow-y-auto py-4">
+      <div v-for="seccion in secciones" v-show="seccion.items.length" :key="seccion.titulo" class="px-2">
+        <p class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ seccion.titulo }}</p>
+        <div class="space-y-1">
+          <NuxtLink
+            v-for="item in seccion.items"
+            :key="item.to"
+            :to="item.to"
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 transition-all duration-200 hover:bg-slate-800/80 hover:text-amber-300"
+            active-class="bg-gradient-to-r from-amber-500/15 to-slate-800 text-amber-300 ring-1 ring-inset ring-amber-400/40"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/80 text-slate-300 transition group-hover:bg-amber-500/15 group-hover:text-amber-300">
+              <UIcon :name="item.icon" class="h-4 w-4 shrink-0" />
+            </span>
+            <span>{{ item.label }}</span>
+          </NuxtLink>
+        </div>
       </div>
     </nav>
 
-    <div class="px-5 py-4 border-t border-slate-600/60 text-xs text-slate-400">
-      <p class="text-slate-200 font-medium">{{ auth.usuario?.email }}</p>
-      <p>{{ auth.rol }}</p>
+    <div class="border-t border-slate-700/80 bg-slate-900/80 px-4 py-4">
+      <p class="truncate text-sm font-medium text-slate-100">{{ auth.usuario?.email }}</p>
+      <div class="mt-2 flex items-center justify-between gap-2">
+        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">{{ auth.rol }}</p>
+        <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]"></span>
+      </div>
     </div>
   </aside>
 </template>

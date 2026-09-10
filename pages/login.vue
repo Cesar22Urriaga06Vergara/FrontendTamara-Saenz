@@ -114,21 +114,20 @@ async function ingresar() {
 
     <!-- Tarjeta de acceso -->
     <div class="relative z-10 w-full max-w-md">
-      <div class="overflow-hidden rounded-2xl bg-white shadow-[0_24px_70px_-20px_rgba(0,0,0,0.6)] ring-1 ring-black/5">
-        <div class="h-1.5 w-full bg-gradient-to-r from-marca-dorado via-marca-dorado-oscuro to-marca-dorado"></div>
+      <div class="overflow-hidden rounded-[28px] bg-white shadow-[0_30px_80px_-24px_rgba(0,0,0,0.7)] ring-1 ring-slate-200/80">
+        <div class="h-1.5 w-full bg-gradient-to-r from-marca-dorado via-amber-400 to-marca-dorado-oscuro"></div>
 
         <div class="px-8 pb-9 pt-8 sm:px-10">
           <div class="flex flex-col items-center text-center">
-            <!-- El logo trae mucho margen en blanco; se recorta al alto útil del arte -->
-            <div class="flex h-24 w-full items-center justify-center overflow-hidden sm:h-28">
+            <div class="flex h-24 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200 sm:h-28">
               <img
                 :src="marca.logoSrc.value || '/Logo.png'"
                 :alt="marca.nombre.value"
-                class="h-56 w-auto max-w-none object-contain sm:h-64"
+                class="h-44 w-auto max-w-none object-contain sm:h-52"
               />
             </div>
-            <h1 class="mt-4 text-xl font-semibold tracking-tight text-slate-900">Iniciar sesión</h1>
-            <p class="mt-1 text-sm text-slate-600">Ingresa tus credenciales para continuar.</p>
+            <h1 class="mt-5 text-2xl font-semibold tracking-tight text-slate-900">Iniciar sesión</h1>
+            <p class="mt-1 text-sm text-slate-600">Accede al sistema operativo de gestión inmobiliaria.</p>
           </div>
 
           <!-- method="post" es el fallback si el form se envía antes de hidratar (S-5): las
@@ -174,7 +173,14 @@ async function ingresar() {
               </UInput>
             </UFormGroup>
 
-            <UAlert v-if="error" color="red" variant="subtle" :title="error" icon="i-heroicons-exclamation-triangle" />
+            <UAlert
+              v-if="error"
+              color="red"
+              variant="subtle"
+              :title="error"
+              icon="i-heroicons-exclamation-triangle"
+              class="rounded-xl"
+            />
 
             <UButton
               type="submit"
@@ -182,7 +188,7 @@ async function ingresar() {
               size="lg"
               :loading="cargando"
               :disabled="!montado || cargando"
-              class="mt-2 !bg-marca-dorado hover:!bg-marca-dorado-oscuro !text-marca-antracita font-semibold shadow-sm focus-visible:!ring-2 focus-visible:!ring-marca-dorado focus-visible:!ring-offset-2"
+              class="mt-2 !bg-gradient-to-r !from-marca-dorado !to-marca-dorado-oscuro !text-marca-antracita font-semibold shadow-[0_10px_24px_-12px_rgba(207,160,82,0.8)] focus-visible:!ring-2 focus-visible:!ring-marca-dorado focus-visible:!ring-offset-2"
             >
               Ingresar
             </UButton>

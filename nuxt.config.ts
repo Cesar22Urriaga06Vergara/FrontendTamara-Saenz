@@ -1,3 +1,11 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { resolverApiBaseUrl, validarHeadersProduccion } from './utils/resolver-api-base-url'
+
+if (process.env.NODE_ENV === 'production') {
+  validarHeadersProduccion(readFileSync(join(process.cwd(), 'public', '_headers'), 'utf8'))
+}
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   devtools: { enabled: true },
@@ -19,7 +27,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:3010/api/v1',
+      apiBaseUrl: resolverApiBaseUrl(process.env.NUXT_PUBLIC_API_BASE_URL),
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Inversiones Tamara & Saenz S. En C.',
       appSlogan: process.env.NUXT_PUBLIC_APP_SLOGAN || 'Resolvemos tu situacion',
       // Vacío = Sentry desactivado (dev/test). En prod: el DSN del proyecto Sentry frontend.

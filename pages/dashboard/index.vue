@@ -181,74 +181,96 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-6">
     <SharedErrorState v-if="error" :message="error" :loading="cargando" @retry="cargar" />
 
-    <!-- KPIs -->
+    <header class="surface-card overflow-hidden px-5 py-4 sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-600">Panel operativo</p>
+          <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h2>
+        </div>
+        <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+          <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          Sistema activo
+        </div>
+      </div>
+    </header>
+
     <div class="grid grid-cols-2 gap-3" :class="auth.esAdministrador ? 'lg:grid-cols-4' : 'sm:max-w-2xl'">
       <NuxtLink
         v-for="tile in tiles"
         :key="tile.label"
         :to="tile.to"
         :title="tile.ayuda"
-        class="flex items-center gap-3 rounded-lg bg-white px-4 py-3 ring-1 ring-slate-200 transition hover:shadow-sm hover:ring-marca-dorado"
+        class="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.6)] transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_20px_36px_-24px_rgba(217,119,6,0.45)]"
       >
-        <div class="shrink-0 rounded-lg p-2" :class="tile.chip">
-          <UIcon :name="tile.icon" class="h-5 w-5" />
+        <div class="flex items-center justify-between gap-3">
+          <div class="shrink-0 rounded-xl p-2.5" :class="tile.chip">
+            <UIcon :name="tile.icon" class="h-5 w-5" />
+          </div>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-500">
+            Módulo
+          </span>
         </div>
-        <div class="min-w-0">
-          <p class="text-xs text-slate-500">{{ tile.label }}</p>
-          <p class="text-xl font-bold leading-tight tabular-nums" :class="tile.valorClase">{{ tile.valor }}</p>
+        <div class="mt-4 min-w-0">
+          <p class="text-xs font-medium text-slate-500">{{ tile.label }}</p>
+          <p class="mt-1 text-xl font-bold leading-tight tabular-nums text-slate-900" :class="tile.valorClase">
+            {{ tile.valor }}
+          </p>
         </div>
       </NuxtLink>
     </div>
 
-    <!-- Accesos rápidos -->
-    <div class="flex flex-wrap items-center gap-2">
-      <span class="mr-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Accesos rápidos</span>
-      <UButton size="sm" color="amber" icon="i-heroicons-document-plus" to="/contratos/nuevo">Nuevo contrato</UButton>
-      <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-wrench-screwdriver" to="/novedades/nueva">
-        Registrar novedad
-      </UButton>
-      <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-user-plus" to="/clientes">Clientes</UButton>
-      <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-building-office-2" to="/inmuebles">
-        Inmuebles
-      </UButton>
-      <UButton
-        v-if="auth.esAdministrador"
-        size="sm"
-        color="gray"
-        variant="soft"
-        icon="i-heroicons-banknotes"
-        to="/recaudo"
-      >
-        Ir a Recaudo
-      </UButton>
+    <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_28px_-30px_rgba(15,23,42,0.75)]">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="mr-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Accesos rápidos</span>
+        <UButton size="sm" color="amber" icon="i-heroicons-document-plus" to="/contratos/nuevo" class="!rounded-xl">Nuevo contrato</UButton>
+        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-wrench-screwdriver" to="/novedades/nueva" class="!rounded-xl">
+          Registrar novedad
+        </UButton>
+        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-user-plus" to="/clientes" class="!rounded-xl">Clientes</UButton>
+        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-building-office-2" to="/inmuebles" class="!rounded-xl">
+          Inmuebles
+        </UButton>
+        <UButton
+          v-if="auth.esAdministrador"
+          size="sm"
+          color="gray"
+          variant="soft"
+          icon="i-heroicons-banknotes"
+          to="/recaudo"
+          class="!rounded-xl"
+        >
+          Recaudo
+        </UButton>
+      </div>
     </div>
 
-    <!-- Paneles -->
-    <div
-      class="grid grid-cols-1 gap-4"
-      :class="auth.esAdministrador ? 'lg:grid-cols-2 xl:grid-cols-3' : 'sm:max-w-2xl'"
-    >
-      <!-- Requiere tu atención -->
-      <UCard v-if="auth.esAdministrador" :ui="{ body: { padding: 'p-4 sm:p-4', base: 'lg:min-h-[12rem]' } }">
-        <template #header>
-          <p class="font-semibold text-slate-900">Requiere tu atención</p>
-        </template>
-        <ul class="divide-y divide-slate-100">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div v-if="auth.esAdministrador" class="surface-card p-4">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Requiere tu atención</p>
+            <p class="text-xs text-slate-500">Tareas con impacto operativo</p>
+          </div>
+          <span class="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+            {{ filasAtencion.filter((fila) => fila.n > 0).length }} pendientes
+          </span>
+        </div>
+        <ul class="space-y-2">
           <li v-for="fila in filasAtencion" :key="fila.label">
             <NuxtLink
               :to="fila.to"
-              class="-mx-2 flex items-center justify-between gap-3 rounded px-2 py-2 hover:bg-slate-50"
+              class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 transition hover:border-amber-200 hover:bg-amber-50/40"
             >
-              <span class="flex items-center gap-2 text-sm" :class="fila.n > 0 ? 'text-slate-900' : 'text-slate-400'">
+              <span class="flex items-center gap-2 text-sm text-slate-700" :class="fila.n > 0 ? 'text-slate-800' : 'text-slate-400'">
                 <UIcon :name="fila.icon" class="h-4 w-4 shrink-0" />
                 {{ fila.label }}
               </span>
               <span
                 v-if="fila.n > 0"
-                class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold tabular-nums text-amber-700"
+                class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold tabular-nums text-amber-800"
               >
                 {{ fila.n }}
               </span>
@@ -256,63 +278,63 @@ onMounted(() => {
             </NuxtLink>
           </li>
         </ul>
-      </UCard>
+      </div>
 
-      <!-- Novedades abiertas -->
-      <UCard :ui="{ body: { padding: 'p-4 sm:p-4', base: 'lg:min-h-[12rem]' } }">
-        <template #header>
-          <div class="flex items-center justify-between">
-            <p class="font-semibold text-slate-900">Novedades abiertas</p>
-            <NuxtLink to="/novedades" class="text-xs text-amber-600 hover:underline">Ver todas</NuxtLink>
+      <div class="surface-card p-4">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Novedades abiertas</p>
+            <p class="text-xs text-slate-500">Seguimiento de operación</p>
           </div>
-        </template>
-        <SharedSkeletonText v-if="cargandoNovedades" :lines="3" class="py-2" />
-        <div v-else-if="!novedadesRecientes.length" class="py-8 text-center text-sm text-slate-400">
-          <UIcon name="i-heroicons-check-circle" class="mx-auto mb-1 h-6 w-6 text-slate-300" />
-          No hay novedades abiertas pendientes de atención.
+          <NuxtLink to="/novedades" class="text-xs font-medium text-amber-600 hover:underline">Ver todas</NuxtLink>
         </div>
-        <ul v-else class="divide-y divide-slate-100">
-          <li v-for="n in novedadesRecientes" :key="n.id" class="py-2 first:pt-0 last:pb-0">
-            <div class="flex items-start justify-between gap-2">
-              <p class="text-sm text-slate-900">{{ n.descripcion }}</p>
+        <SharedSkeletonText v-if="cargandoNovedades" :lines="3" class="py-2" />
+        <div v-else-if="!novedadesRecientes.length" class="flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400">
+          <UIcon name="i-heroicons-check-circle" class="mb-2 h-6 w-6 text-slate-300" />
+          No hay novedades pendientes.
+        </div>
+        <ul v-else class="space-y-3">
+          <li v-for="n in novedadesRecientes" :key="n.id" class="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+            <div class="flex items-start justify-between gap-3">
+              <p class="text-sm font-medium text-slate-800">{{ n.descripcion }}</p>
               <SharedStatusBadge domain="novedad" :value="n.estado" size="xs" />
             </div>
-            <p class="mt-0.5 text-xs text-slate-500">
+            <p class="mt-2 text-xs text-slate-500">
               {{ n.inmueble?.direccion }}
               <span v-if="n.inmueble?.barrio" class="text-slate-400">· {{ n.inmueble.barrio }}</span>
               · {{ fecha(n.fecha) }}
             </p>
           </li>
         </ul>
-      </UCard>
+      </div>
 
-      <!-- Últimos recibos -->
-      <UCard v-if="auth.esAdministrador" :ui="{ body: { padding: 'p-4 sm:p-4', base: 'lg:min-h-[12rem]' } }">
-        <template #header>
-          <div class="flex items-center justify-between">
-            <p class="font-semibold text-slate-900">Últimos recibos</p>
-            <NuxtLink to="/recibos" class="text-xs text-amber-600 hover:underline">Ver todos</NuxtLink>
+      <div v-if="auth.esAdministrador" class="surface-card p-4">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Últimos recibos</p>
+            <p class="text-xs text-slate-500">Operaciones recientes</p>
           </div>
-        </template>
+          <NuxtLink to="/recibos" class="text-xs font-medium text-amber-600 hover:underline">Ver todos</NuxtLink>
+        </div>
         <SharedSkeletonText v-if="cargandoRecibos" :lines="3" class="py-2" />
-        <div v-else-if="!recibosRecientes.length" class="py-8 text-center text-sm text-slate-400">
+        <div v-else-if="!recibosRecientes.length" class="flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400">
           Sin recibos emitidos todavía.
         </div>
-        <ul v-else class="divide-y divide-slate-100">
+        <ul v-else class="space-y-2">
           <li v-for="r in recibosRecientes" :key="r.id">
             <NuxtLink
               :to="`/recibos/${r.id}`"
-              class="-mx-2 flex items-center justify-between gap-3 rounded px-2 py-2 hover:bg-slate-50"
+              class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 transition hover:border-slate-300 hover:bg-slate-100"
             >
               <span class="min-w-0">
-                <span class="block truncate text-sm text-slate-900">{{ r.contrato?.cliente?.nombreCompleto }}</span>
-                <span class="block text-xs text-slate-500">{{ r.consecutivo }} · {{ fecha(r.creadoEn) }}</span>
+                <span class="block truncate text-sm font-medium text-slate-800">{{ r.contrato?.cliente?.nombreCompleto }}</span>
+                <span class="mt-0.5 block text-xs text-slate-500">{{ r.consecutivo }} · {{ fecha(r.creadoEn) }}</span>
               </span>
               <span class="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{{ moneda(r.valorTotal) }}</span>
             </NuxtLink>
           </li>
         </ul>
-      </UCard>
+      </div>
     </div>
   </div>
 </template>

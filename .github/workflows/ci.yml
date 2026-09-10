@@ -12,6 +12,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Escaneo de secretos
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Node 22 LTS. Antes era 24 porque `npm ci` con npm 10 abortaba por el conflicto de
       # peers de `pinia@2` vs `vue-router@5` (`Missing: pinia@4.0.3`). FE-014b subió
@@ -46,8 +53,13 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
+      - name: Configuración de API para CI
+        run: sed -i 's#https://BACKEND-DOMAIN.example#https://api.example.test#g' public/_headers
+
       - name: Build
         run: npm run build
+        env:
+          NUXT_PUBLIC_API_BASE_URL: https://api.example.test/api/v1
 
       - name: Tests
         run: npm run test

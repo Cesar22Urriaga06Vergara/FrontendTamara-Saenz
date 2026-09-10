@@ -80,13 +80,27 @@ async function confirmar() {
 
 <template>
   <UModal :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
-    <UCard>
+    <UCard
+      :ui="{
+        root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+        body: { base: 'p-5 sm:p-6' },
+        header: { base: 'border-b border-slate-200 px-0 pb-4' },
+        footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+      }"
+    >
       <template #header>
-        <p class="font-semibold text-slate-900">Terminar contrato</p>
-        <p v-if="contrato" class="mt-0.5 text-sm text-slate-500">
-          {{ contrato.cliente?.nombreCompleto }}
-          <span v-if="contrato.inmueble?.direccion"> · {{ contrato.inmueble.direccion }}</span>
-        </p>
+        <div class="flex items-center gap-3">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+            <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-red-500" />
+          </span>
+          <div>
+            <p class="font-semibold text-slate-900">Terminar contrato</p>
+            <p v-if="contrato" class="mt-0.5 text-sm text-slate-500">
+              {{ contrato.cliente?.nombreCompleto }}
+              <span v-if="contrato.inmueble?.direccion"> · {{ contrato.inmueble.direccion }}</span>
+            </p>
+          </div>
+        </div>
       </template>
 
       <div class="space-y-4">
@@ -100,7 +114,7 @@ async function confirmar() {
 
         <div
           v-if="auth.esAdministrador"
-          class="space-y-1 rounded-md border border-slate-300 bg-slate-50 p-3 text-sm text-slate-700"
+          class="space-y-1 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
         >
           <Transition name="fade" mode="out-in">
             <SharedSkeletonText v-if="cargandoCartera" key="cargando" :lines="2" width-class="w-32" />

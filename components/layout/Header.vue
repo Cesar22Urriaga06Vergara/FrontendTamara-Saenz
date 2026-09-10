@@ -24,42 +24,48 @@ async function salir() {
 </script>
 
 <template>
-  <header
-    class="h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-10"
-  >
-    <div class="min-w-0 flex items-center gap-2">
-      <UButton
-        icon="i-heroicons-bars-3"
-        color="gray"
-        variant="ghost"
-        class="lg:hidden shrink-0"
-        aria-label="Abrir menú"
-        @click="sidebarAbierto = true"
-      />
-      <div class="min-w-0">
-        <nav v-if="breadcrumb.length" class="flex items-center gap-1 text-xs text-slate-500 truncate">
-          <template v-for="(item, i) in breadcrumb" :key="i">
-            <NuxtLink v-if="item.to" :to="item.to" class="hover:text-amber-600">{{ item.label }}</NuxtLink>
-            <span v-else>{{ item.label }}</span>
-            <UIcon name="i-heroicons-chevron-right" class="w-3 h-3 shrink-0" />
-          </template>
-        </nav>
-        <h1 class="text-lg font-semibold text-slate-900 truncate">{{ titulo }}</h1>
+  <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-6">
+    <div class="flex h-16 items-center justify-between gap-3">
+      <div class="flex min-w-0 items-center gap-2">
+        <UButton
+          icon="i-heroicons-bars-3"
+          color="gray"
+          variant="ghost"
+          class="shrink-0 lg:hidden"
+          aria-label="Abrir menú"
+          @click="sidebarAbierto = true"
+        />
+        <div class="min-w-0">
+          <nav v-if="breadcrumb.length" class="flex items-center gap-1 truncate text-[11px] font-medium text-slate-500">
+            <template v-for="(item, i) in breadcrumb" :key="i">
+              <NuxtLink v-if="item.to" :to="item.to" class="transition-colors hover:text-amber-600">{{ item.label }}</NuxtLink>
+              <span v-else>{{ item.label }}</span>
+              <UIcon name="i-heroicons-chevron-right" class="h-3 w-3 shrink-0" />
+            </template>
+          </nav>
+          <h1 class="truncate text-lg font-semibold tracking-tight text-slate-900">{{ titulo }}</h1>
+        </div>
       </div>
-    </div>
-    <div class="flex items-center gap-4">
-      <UBadge :color="auth.esAdministrador ? 'amber' : 'gray'" variant="subtle">
-        {{ auth.rol }}
-      </UBadge>
-      <UButton
-        color="gray"
-        variant="ghost"
-        icon="i-heroicons-arrow-right-on-rectangle"
-        :loading="cerrandoSesion"
-        @click="salir"
-      >
-        Salir
-      </UButton>
+
+      <div class="flex items-center gap-3">
+        <UBadge
+          :color="auth.esAdministrador ? 'amber' : 'gray'"
+          variant="subtle"
+          class="hidden sm:inline-flex"
+        >
+          {{ auth.rol }}
+        </UBadge>
+        <UButton
+          color="gray"
+          variant="ghost"
+          icon="i-heroicons-arrow-right-on-rectangle"
+          :loading="cerrandoSesion"
+          class="font-medium text-slate-700 hover:text-slate-900"
+          @click="salir"
+        >
+          Salir
+        </UButton>
+      </div>
     </div>
   </header>
 </template>

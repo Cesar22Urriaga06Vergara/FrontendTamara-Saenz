@@ -2,17 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-slate-50 text-slate-900;
+:root {
+  color-scheme: light;
+  --brand-gold: #cfa052;
+  --brand-gold-deep: #b98d42;
+  --brand-graphite: #4a4d52;
+  --brand-anthracite: #1a1a1a;
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-muted: #f3f4f6;
+  --border-soft: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --shadow-soft: 0 12px 32px -20px rgba(15, 23, 42, 0.45);
 }
 
-/* Badges semánticos según brand tokens */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+  background-image: radial-gradient(circle at top, rgba(207, 160, 82, 0.08), transparent 30%);
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.75);
+  border-radius: 9999px;
+}
+
+.surface-card {
+  @apply rounded-2xl border border-slate-200 bg-white/95 shadow-[0_18px_42px_-28px_rgba(15,23,42,0.6)];
+  backdrop-filter: blur(6px);
+}
+
+.surface-panel {
+  @apply rounded-2xl border border-slate-200 bg-slate-50/80;
+}
+
 .badge-activo { @apply bg-emerald-600 text-white; }
 .badge-suspendido { @apply bg-amber-600 text-white; }
 .badge-mantenimiento { @apply bg-orange-600 text-white; }
 .badge-inactivo { @apply bg-slate-400 text-white; }
 
-/* Transición de navegación entre páginas (nuxt.config.ts: app.pageTransition). */
 .page-enter-active,
 .page-leave-active {
   transition: opacity 0.15s ease;
@@ -21,3 +72,18 @@ body {
 .page-leave-to {
   opacity: 0;
 }
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-medium text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2;
+  }
+}
+

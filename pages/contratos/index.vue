@@ -93,20 +93,34 @@ onMounted(cargarBarrios)
 </script>
 
 <template>
-  <div>
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <SharedSkeletonText v-if="cargando" width-class="w-24" />
-      <p v-else class="text-sm text-slate-500">{{ total }} {{ total === 1 ? 'contrato' : 'contratos' }}</p>
-      <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo">Nuevo contrato</UButton>
-    </div>
+  <div class="space-y-5">
+    <header class="surface-card overflow-hidden px-5 py-4 sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Operación</p>
+          <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Contratos</h2>
+        </div>
 
-    <UCard class="mb-4" :ui="{ body: { padding: 'p-3' } }">
+        <div class="flex items-center gap-3">
+          <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+            <span v-if="cargando" class="inline-flex items-center gap-2">
+              <UIcon name="i-heroicons-arrow-path" class="h-4 w-4 animate-spin" />
+              Cargando…
+            </span>
+            <span v-else class="font-medium text-slate-700">{{ total }} {{ total === 1 ? 'contrato' : 'contratos' }}</span>
+          </div>
+          <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo" class="!rounded-xl">Nuevo contrato</UButton>
+        </div>
+      </div>
+    </header>
+
+    <div class="surface-card p-4 sm:p-5">
       <div class="flex flex-wrap items-end gap-3">
         <UInput
           v-model="busquedaInput"
           placeholder="Cédula o nombre del arrendatario…"
           icon="i-heroicons-magnifying-glass"
-          class="w-64"
+          class="w-full sm:w-64"
         />
         <USelectMenu
           v-model="filtros.barrio"
@@ -114,15 +128,15 @@ onMounted(cargarBarrios)
           value-attribute="value"
           option-attribute="label"
           placeholder="Barrio del inmueble"
-          class="w-52"
+          class="w-full sm:w-52"
         />
         <div>
-          <label class="mb-1 block text-xs text-slate-500">Inicio desde</label>
-          <UInput v-model="filtros.fechaDesde" type="date" class="w-40" />
+          <label class="mb-1 block text-xs font-medium text-slate-500">Inicio desde</label>
+          <UInput v-model="filtros.fechaDesde" type="date" class="w-full sm:w-40" />
         </div>
         <div>
-          <label class="mb-1 block text-xs text-slate-500">Inicio hasta</label>
-          <UInput v-model="filtros.fechaHasta" type="date" class="w-40" />
+          <label class="mb-1 block text-xs font-medium text-slate-500">Inicio hasta</label>
+          <UInput v-model="filtros.fechaHasta" type="date" class="w-full sm:w-40" />
         </div>
         <USelectMenu
           v-model="filtros.estado"
@@ -130,24 +144,30 @@ onMounted(cargarBarrios)
           value-attribute="value"
           option-attribute="label"
           placeholder="Estado"
-          class="w-44"
+          class="w-full sm:w-44"
         />
       </div>
-    </UCard>
+    </div>
 
     <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="cargar" />
 
-    <UCard>
+    <div class="surface-card overflow-hidden">
       <UTable
         :rows="contratos"
         :columns="columnas"
         :loading="cargando"
-        :ui="{ tr: { base: 'even:bg-slate-50', active: 'cursor-pointer hover:!bg-amber-100/70' } }"
+        :ui="{
+          base: 'min-w-full',
+          thead: 'bg-slate-50',
+          th: { base: 'text-slate-600 font-semibold uppercase tracking-[0.12em] text-[10px] px-4 py-3' },
+          td: { base: 'px-4 py-3 text-sm text-slate-700 border-b border-slate-100' },
+          tr: { base: 'even:bg-slate-50/70', active: 'cursor-pointer hover:!bg-amber-50/70' },
+        }"
         @select="verContrato"
       >
         <template #cliente-data="{ row }">
           <div>
-            <p class="font-medium text-slate-900">{{ row.cliente?.nombreCompleto }}</p>
+            <p class="font-semibold text-slate-900">{{ row.cliente?.nombreCompleto }}</p>
             <p class="text-xs text-slate-500">{{ row.cliente?.numeroDocumento }}</p>
           </div>
         </template>
@@ -177,7 +197,6 @@ onMounted(cargarBarrios)
             >
               Terminar
             </UButton>
-            <!-- Reactivar: exclusiva Administrador, solo desde TERMINADO (§6.6) -->
             <UButton
               v-if="auth.esAdministrador && row.estado === 'TERMINADO'"
               size="xs"
@@ -190,17 +209,17 @@ onMounted(cargarBarrios)
           </div>
         </template>
         <template #empty-state>
-          <div class="text-center py-10 text-slate-400">
-            <UIcon name="i-heroicons-document-text" class="w-10 h-10 mx-auto mb-2" />
+          <div class="py-12 text-center text-slate-400">
+            <UIcon name="i-heroicons-document-text" class="mx-auto mb-3 h-10 w-10 text-slate-300" />
             <p>No hay contratos que coincidan con los filtros.</p>
           </div>
         </template>
       </UTable>
 
-      <div v-if="total > limit" class="mt-4 flex justify-end">
+      <div v-if="total > limit" class="flex justify-end border-t border-slate-200 bg-slate-50/80 px-4 py-3">
         <UPagination v-model="page" :page-count="limit" :total="total" />
       </div>
-    </UCard>
+    </div>
 
     <ContratosModalTerminar v-model="modalTerminar" :contrato="contratoAccion" @terminado="cargar" />
     <ContratosModalReactivar v-model="modalReactivar" :contrato="contratoAccion" @reactivado="cargar" />

@@ -561,7 +561,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-5">
     <UAlert v-if="error" color="red" variant="subtle" :title="error" />
     <UAlert
       v-if="avisoRefresco"
@@ -575,22 +575,36 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
 
     <!-- ==================== MODO LISTA ==================== -->
     <template v-if="!enDetalle">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <SharedSkeletonText v-if="cargandoDeudores" width-class="w-40" />
-        <p v-else class="text-sm text-slate-500">
-          {{ total }} {{ total === 1 ? 'contrato con cartera vencida' : 'contratos con cartera vencida' }}
-        </p>
-        <UButton
-          color="gray"
-          variant="soft"
-          size="sm"
-          icon="i-heroicons-arrow-path"
-          :loading="generandoCanon"
-          @click="modalConfirmarCanon = true"
-        >
-          Generar canones
-        </UButton>
-      </div>
+      <header class="surface-card overflow-hidden px-5 py-4 sm:px-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Finanzas</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Recaudo</h2>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+              <span v-if="cargandoDeudores" class="inline-flex items-center gap-2">
+                <UIcon name="i-heroicons-arrow-path" class="h-4 w-4 animate-spin" />
+                Cargando…
+              </span>
+              <span v-else class="font-medium text-slate-700">
+                {{ total }} {{ total === 1 ? 'deuda' : 'deudas' }}
+              </span>
+            </div>
+            <UButton
+              color="gray"
+              variant="soft"
+              size="sm"
+              icon="i-heroicons-arrow-path"
+              :loading="generandoCanon"
+              @click="modalConfirmarCanon = true"
+            >
+              Generar canones
+            </UButton>
+          </div>
+        </div>
+      </header>
 
       <UAlert
         v-if="resultadoCanon"
@@ -604,36 +618,42 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
         "
       />
 
-      <UCard :ui="{ body: { padding: 'p-3' } }">
+      <div class="surface-card p-4 sm:p-5">
         <div class="flex flex-wrap items-end gap-3">
           <UInput
             v-model="busquedaInput"
             placeholder="Cédula o nombre del arrendatario…"
             icon="i-heroicons-magnifying-glass"
-            class="w-64"
+            class="w-full sm:w-64"
           />
           <USelectMenu
             v-model="filtros.orden"
             :options="opcionesOrden"
             value-attribute="value"
             option-attribute="label"
-            class="w-52"
+            class="w-full sm:w-52"
           />
         </div>
-      </UCard>
+      </div>
 
       <SharedErrorState v-if="errorDeudores" :message="errorDeudores" class="mb-0" @retry="cargarDeudores" />
 
-      <UCard>
+      <div class="surface-card overflow-hidden">
         <UTable
           :rows="deudores"
           :columns="columnasDeudores"
           :loading="cargandoDeudores"
-          :ui="{ tr: { base: 'even:bg-slate-50' } }"
+          :ui="{
+            base: 'min-w-full',
+            thead: 'bg-slate-50',
+            th: { base: 'text-slate-600 font-semibold uppercase tracking-[0.12em] text-[10px] px-4 py-3' },
+            td: { base: 'px-4 py-3 text-sm text-slate-700 border-b border-slate-100' },
+            tr: { base: 'even:bg-slate-50/70' },
+          }"
         >
           <template #cliente-data="{ row }">
             <div>
-              <p class="font-medium text-slate-900">{{ row.cliente?.nombreCompleto }}</p>
+              <p class="font-semibold text-slate-900">{{ row.cliente?.nombreCompleto }}</p>
               <p class="text-xs text-slate-500">{{ row.cliente?.numeroDocumento }}</p>
             </div>
           </template>
@@ -652,32 +672,31 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
             </UButton>
           </template>
           <template #empty-state>
-            <div class="py-10 text-center text-slate-400">
-              <UIcon name="i-heroicons-check-circle" class="mx-auto mb-2 h-10 w-10 text-slate-300" />
+            <div class="py-12 text-center text-slate-400">
+              <UIcon name="i-heroicons-check-circle" class="mx-auto mb-3 h-10 w-10 text-slate-300" />
               <p>No hay contratos con cartera vencida.</p>
             </div>
           </template>
         </UTable>
 
-        <div v-if="total > limit" class="mt-4 flex justify-end">
+        <div v-if="total > limit" class="flex justify-end border-t border-slate-200 bg-slate-50/80 px-4 py-3">
           <UPagination v-model="page" :page-count="limit" :total="total" />
         </div>
-      </UCard>
+      </div>
 
-      <!-- Cobrar a un contrato que no está en la lista (pago adelantado, contrato al día) -->
-      <UCard>
+      <div class="surface-card p-4 sm:p-5">
         <button
-          class="flex w-full items-center justify-between text-left"
+          class="flex w-full items-center justify-between gap-3 text-left"
           @click="mostrarBuscadorLibre = !mostrarBuscadorLibre"
         >
-          <span class="text-sm font-medium text-slate-900">¿Cobrar a un contrato que no está en la lista?</span>
+          <span class="text-sm font-semibold text-slate-900">¿Cobrar a un contrato que no está en la lista?</span>
           <UIcon
             :name="mostrarBuscadorLibre ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
             class="h-4 w-4 text-slate-500"
           />
         </button>
 
-        <div v-if="mostrarBuscadorLibre" class="mt-3">
+        <div v-if="mostrarBuscadorLibre" class="mt-4">
           <div class="flex flex-col gap-3 sm:flex-row">
             <UInput
               v-model="busquedaContrato"
@@ -692,15 +711,15 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
 
           <div
             v-if="contratosEncontrados.length"
-            class="mt-3 divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-300"
+            class="mt-3 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60"
           >
             <button
               v-for="c in contratosEncontrados"
               :key="c.id"
-              class="block w-full px-4 py-2.5 text-left transition hover:bg-slate-50"
+              class="block w-full px-4 py-2.5 text-left transition hover:bg-white"
               @click="seleccionarContrato(c)"
             >
-              <p class="text-sm font-medium text-slate-900">{{ c.cliente?.nombreCompleto }}</p>
+              <p class="text-sm font-semibold text-slate-900">{{ c.cliente?.nombreCompleto }}</p>
               <p class="text-xs text-slate-500">
                 {{ c.cliente?.numeroDocumento }}
                 <span v-if="c.inmueble?.direccion" class="text-slate-400">
@@ -714,14 +733,14 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
             No se encontraron contratos para “{{ busquedaContrato }}”.
           </p>
         </div>
-      </UCard>
+      </div>
     </template>
 
     <!-- ==================== MODO DETALLE ==================== -->
     <template v-else>
-      <div class="flex flex-col gap-3 rounded-lg bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="surface-card flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="min-w-0">
-          <p class="text-sm font-medium text-slate-900">
+          <p class="text-sm font-semibold text-slate-900">
             {{ nombreArrendatario || 'Contrato seleccionado' }}
             <span v-if="documentoArrendatario" class="text-slate-500">· {{ documentoArrendatario }}</span>
           </p>
@@ -735,7 +754,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
           variant="soft"
           size="xs"
           icon="i-heroicons-arrow-left"
-          class="shrink-0"
+          class="shrink-0 !rounded-xl"
           @click="volverAlListado"
         >
           Volver al listado
@@ -748,19 +767,17 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
 
       <div v-else-if="ficha" class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <!-- Ficha de recaudo -->
-        <UCard class="lg:col-span-1">
-          <template #header>
-            <div class="flex items-center justify-between gap-2">
-              <p class="font-semibold text-slate-900">Ficha de recaudo</p>
-              <NuxtLink
-                v-if="contratoSeleccionado?.id"
-                :to="`/contratos/${contratoSeleccionado.id}`"
-                class="shrink-0 text-xs text-amber-600 hover:underline"
-              >
-                Ver contrato
-              </NuxtLink>
-            </div>
-          </template>
+        <div class="surface-card lg:col-span-1 p-4">
+          <div class="mb-4 flex items-center justify-between gap-2">
+            <p class="font-semibold text-slate-900">Ficha de recaudo</p>
+            <NuxtLink
+              v-if="contratoSeleccionado?.id"
+              :to="`/contratos/${contratoSeleccionado.id}`"
+              class="shrink-0 text-xs text-amber-600 hover:underline"
+            >
+              Ver contrato
+            </NuxtLink>
+          </div>
 
           <dl class="grid grid-cols-2 gap-x-6 gap-y-3">
             <div class="col-span-2">
@@ -862,8 +879,8 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
         </UCard>
 
         <!-- Registro de pago mixto -->
-        <UCard class="lg:col-span-2">
-          <template #header><p class="font-semibold text-slate-900">Registrar pago (medios combinados)</p></template>
+        <div class="surface-card lg:col-span-2 p-4">
+          <p class="mb-4 font-semibold text-slate-900">Registrar pago (medios combinados)</p>
 
           <UAlert
             v-if="borradorPago.hayBorrador.value"

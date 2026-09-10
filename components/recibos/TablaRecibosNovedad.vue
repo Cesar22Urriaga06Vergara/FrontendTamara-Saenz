@@ -52,30 +52,56 @@ onMounted(cargarBarrios)
 </script>
 
 <template>
-  <div>
-    <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="cargar" />
+  <div class="space-y-4">
+    <div class="grid gap-3 sm:grid-cols-3">
+      <div class="surface-card p-4">
+        <p class="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Tipo</p>
+        <p class="mt-2 text-lg font-semibold text-slate-900">Novedades</p>
+      </div>
+      <div class="surface-card p-4">
+        <p class="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Resultado</p>
+        <p class="mt-2 text-lg font-semibold text-slate-900">{{ total || 0 }} registros</p>
+      </div>
+      <div class="surface-card p-4">
+        <p class="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Reporte</p>
+        <p class="mt-2 text-lg font-semibold text-slate-900">PDF</p>
+      </div>
+    </div>
 
-    <UCard class="mb-4">
+    <SharedErrorState v-if="error" :message="error" class="mb-0" @retry="cargar" />
+
+    <div class="surface-card p-4 sm:p-5">
       <div class="flex flex-wrap gap-3">
         <USelectMenu
           v-model="filtros.barrio"
           :options="['', ...barrios]"
           placeholder="Barrio del inmueble"
-          class="w-52"
+          class="w-full sm:w-52"
         />
         <USelectMenu
           v-model="filtros.estado"
           :options="['', 'ABIERTA', 'EN_SEGUIMIENTO', 'CERRADA', 'ANULADA']"
           placeholder="Estado"
-          class="w-48"
+          class="w-full sm:w-48"
         />
-        <UInput v-model="filtros.fechaDesde" type="date" class="w-40" />
-        <UInput v-model="filtros.fechaHasta" type="date" class="w-40" />
+        <UInput v-model="filtros.fechaDesde" type="date" class="w-full sm:w-40" />
+        <UInput v-model="filtros.fechaHasta" type="date" class="w-full sm:w-40" />
       </div>
-    </UCard>
+    </div>
 
-    <UCard>
-      <UTable :rows="novedades" :columns="columnas" :loading="cargando">
+    <div class="surface-card overflow-hidden">
+      <UTable
+        :rows="novedades"
+        :columns="columnas"
+        :loading="cargando"
+        :ui="{
+          base: 'min-w-full',
+          thead: 'bg-slate-50',
+          th: { base: 'text-slate-600 font-semibold uppercase tracking-[0.12em] text-[10px] px-4 py-3' },
+          td: { base: 'px-4 py-3 text-sm text-slate-700 border-b border-slate-100' },
+          tr: { base: 'even:bg-slate-50/70' },
+        }"
+      >
         <template #clienteNombre-data="{ row }">
           {{ row.contrato?.cliente?.nombreCompleto ?? '—' }}
         </template>
@@ -87,16 +113,16 @@ onMounted(cargarBarrios)
           <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" @click="verRecibo(row)"> Ver </UButton>
         </template>
         <template #empty-state>
-          <div class="text-center py-10 text-slate-400">
-            <UIcon name="i-heroicons-wrench-screwdriver" class="w-10 h-10 mx-auto mb-2" />
+          <div class="py-12 text-center text-slate-400">
+            <UIcon name="i-heroicons-wrench-screwdriver" class="mx-auto mb-3 h-10 w-10 text-slate-300" />
             <p>No hay recibos de novedad que coincidan con los filtros.</p>
           </div>
         </template>
       </UTable>
 
-      <div class="flex justify-end mt-4">
+      <div class="flex justify-end border-t border-slate-200 bg-slate-50/80 px-4 py-3">
         <UPagination v-model="page" :page-count="limit" :total="total" />
       </div>
-    </UCard>
+    </div>
   </div>
 </template>

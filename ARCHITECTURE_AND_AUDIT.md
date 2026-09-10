@@ -14,6 +14,13 @@ copia de auditorías previas. Donde el código contradice una auditoría anterio
 > Fe de erratas 2026-09-04: §3 (`/recibos/` con barra final, el listado no queda gateado admin-only),
 > §16 (`fecha()` verificada, sin bug de timezone), §22 (confirmado: sin CSP ni cabeceras de seguridad).
 
+> **Línea base verificada el 2026-09-10:** `npm test` pasa con **31 tests en 6 archivos**; `npm run
+> lint`, `npm run typecheck` y `npm run build` pasan. `vue-router` se declaró explícitamente como
+> dependencia de desarrollo para que `vue-tsc` pueda resolver su plugin Volar desde la raíz. La deuda de
+> tipado de respuestas API descrita más abajo continúa vigente. El build de producción ahora falla si
+> `NUXT_PUBLIC_API_BASE_URL` falta o no es una URL HTTPS de API, o si `public/_headers` conserva el
+> placeholder `BACKEND-DOMAIN.example`.
+
 ---
 
 ## 1. Resumen ejecutivo
@@ -39,10 +46,9 @@ cobertura de pruebas en una herramienta interna de un equipo pequeño.
 ## 2. Estado actual
 
 El proyecto compila (`nuxt build`/`nuxt dev` implícitos por la naturaleza de Nuxt 4) y tiene Vitest
-configurado y funcional (`"test": "vitest run"` en `package.json`), aunque con un solo spec real
-(`tests/depositos-liquidacion.spec.ts`). El 2026-09-01 se hizo una limpieza coordinada con el backend para
-retirar toda referencia visual a mora (ver README, sección "Retiro del costo de mora + alineación con el
-backend").
+configurado y funcional (`"test": "vitest run"` en `package.json`), con 5 archivos de prueba y 22 tests
+verificados el 2026-09-10. El 2026-09-01 se hizo una limpieza coordinada con el backend para retirar toda
+referencia visual a mora (ver README, sección "Retiro del costo de mora + alineación con el backend").
 
 ## 3. Arquitectura real
 

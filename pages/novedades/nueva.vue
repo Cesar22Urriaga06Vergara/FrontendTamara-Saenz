@@ -118,7 +118,14 @@ async function guardar() {
 </script>
 
 <template>
-  <div class="max-w-2xl">
+  <div class="max-w-3xl space-y-5">
+    <header class="surface-card px-5 py-4 sm:px-6">
+      <div>
+        <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Operación</p>
+        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Registrar novedad</h1>
+      </div>
+    </header>
+
     <UAlert v-if="error" color="red" variant="subtle" :title="error" class="mb-4" />
     <UAlert
       v-if="borradorNovedad.hayBorrador.value"
@@ -136,11 +143,11 @@ async function guardar() {
       </template>
     </UAlert>
 
-    <UCard>
-      <div class="space-y-4">
+    <div class="surface-card p-4 sm:p-5">
+      <div class="space-y-5">
         <div>
-          <p class="text-sm font-medium text-slate-700 mb-1">Inmueble</p>
-          <div v-if="!inmuebleSeleccionado" class="flex gap-2">
+          <p class="mb-2 text-sm font-medium text-slate-700">Inmueble</p>
+          <div v-if="!inmuebleSeleccionado" class="flex flex-col gap-2 sm:flex-row">
             <UInput
               v-model="busquedaInmueble"
               placeholder="Buscar por dirección o barrio…"
@@ -149,18 +156,18 @@ async function guardar() {
             />
             <UButton color="amber" :loading="buscando" @click="buscarInmueble">Buscar</UButton>
           </div>
-          <div v-else class="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+          <div v-else class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div>
               <p class="font-medium text-slate-900">{{ inmuebleSeleccionado.direccion }}</p>
               <p class="text-xs text-slate-500">{{ inmuebleSeleccionado.barrio }}</p>
             </div>
             <UButton size="xs" color="gray" variant="ghost" @click="quitarInmuebleSeleccionado">Cambiar</UButton>
           </div>
-          <div v-if="resultadosInmueble.length" class="mt-2 divide-y border rounded-lg">
+          <div v-if="resultadosInmueble.length" class="mt-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60">
             <button
               v-for="i in resultadosInmueble"
               :key="i.id"
-              class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+              class="block w-full px-4 py-2.5 text-left text-sm transition hover:bg-white"
               @click="seleccionarInmueble(i)"
             >
               {{ i.direccion }} — {{ i.barrio }}
@@ -183,7 +190,7 @@ async function guardar() {
           <UTextarea v-model="descripcion" placeholder="Describe la novedad observada…" />
         </UFormGroup>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <UFormGroup label="Fecha">
             <UInput v-model="fecha" type="date" />
           </UFormGroup>
@@ -196,19 +203,17 @@ async function guardar() {
           <UTextarea v-model="observaciones" />
         </UFormGroup>
 
-        <p class="text-xs text-slate-400">
+        <p class="text-xs text-slate-500">
           Este registro NO genera ningún impacto financiero. Solo el Administrador puede aprobar el cargo al
           arrendatario o el gasto de la inmobiliaria desde el tablero de novedades.
         </p>
       </div>
 
-      <template #footer>
-        <div class="flex justify-end">
-          <UButton color="amber" :disabled="!puedeGuardar" :loading="guardando" @click="guardar">
-            Registrar novedad
-          </UButton>
-        </div>
-      </template>
-    </UCard>
+      <div class="mt-5 flex justify-end">
+        <UButton color="amber" :disabled="!puedeGuardar" :loading="guardando" @click="guardar" class="!rounded-xl">
+          Registrar novedad
+        </UButton>
+      </div>
+    </div>
   </div>
 </template>

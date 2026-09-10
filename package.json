@@ -36,6 +36,7 @@
     "prettier": "^3.9.6",
     "typescript": "^5.4.0",
     "vitest": "^4.1.11",
+    "vue-router": "^5.2.0",
     "vue-tsc": "^3.3.10"
   },
   "overrides": {

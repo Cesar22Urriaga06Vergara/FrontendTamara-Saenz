@@ -255,32 +255,59 @@ onMounted(cargarBarrios)
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-end mb-4">
-      <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva"> Registrar novedad </UButton>
-    </div>
+  <div class="space-y-5">
+    <header class="surface-card overflow-hidden px-5 py-4 sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Operación</p>
+          <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Novedades</h2>
+        </div>
 
-    <UCard class="mb-4">
+        <div class="flex items-center gap-3">
+          <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+            <span class="font-medium text-slate-700">{{ total }} registros</span>
+          </div>
+          <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva" class="!rounded-xl">Registrar novedad</UButton>
+        </div>
+      </div>
+    </header>
+
+    <div class="surface-card p-4 sm:p-5">
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <p class="text-sm font-semibold text-slate-900">Filtros</p>
+        <p class="text-xs text-slate-500">Ajusta la operación del tablero</p>
+      </div>
       <div class="flex flex-wrap gap-3">
         <USelectMenu
           v-model="filtros.barrio"
           :options="['', ...barrios]"
           placeholder="Barrio del inmueble"
-          class="w-52"
+          class="w-full sm:w-52"
         />
         <USelectMenu
           v-model="filtros.estado"
           :options="['', 'ABIERTA', 'EN_SEGUIMIENTO', 'CERRADA', 'ANULADA']"
           placeholder="Estado"
-          class="w-48"
+          class="w-full sm:w-48"
         />
-        <UInput v-model="filtros.fechaDesde" type="date" class="w-40" />
-        <UInput v-model="filtros.fechaHasta" type="date" class="w-40" />
+        <UInput v-model="filtros.fechaDesde" type="date" class="w-full sm:w-40" />
+        <UInput v-model="filtros.fechaHasta" type="date" class="w-full sm:w-40" />
       </div>
-    </UCard>
+    </div>
 
-    <UCard>
-      <UTable :rows="novedades" :columns="columnas" :loading="cargando">
+    <div class="surface-card overflow-hidden">
+      <UTable
+        :rows="novedades"
+        :columns="columnas"
+        :loading="cargando"
+        :ui="{
+          base: 'min-w-full',
+          thead: 'bg-slate-50',
+          th: { base: 'text-slate-600 font-semibold uppercase tracking-[0.12em] text-[10px] px-4 py-3' },
+          td: { base: 'px-4 py-3 text-sm text-slate-700 border-b border-slate-100' },
+          tr: { base: 'even:bg-slate-50/70' },
+        }"
+      >
         <template #clienteNombre-data="{ row }">
           {{ row.contrato?.cliente?.nombreCompleto ?? '—' }}
         </template>
@@ -292,17 +319,18 @@ onMounted(cargarBarrios)
           <SharedStatusBadge domain="novedad" :value="row.estado" />
         </template>
         <template #impactoFinanciero-data="{ row }">
-          <SharedStatusBadge domain="impactoFinanciero" :value="row.impactoFinanciero" size="xs" />
-          <SharedStatusBadge
-            v-if="row.impactoFinanciero === 'GASTO_INMOBILIARIA'"
-            domain="gastoPagado"
-            :value="row.gastoPagado"
-            size="xs"
-            class="ml-1"
-          />
+          <div class="flex flex-wrap items-center gap-1.5">
+            <SharedStatusBadge domain="impactoFinanciero" :value="row.impactoFinanciero" size="xs" />
+            <SharedStatusBadge
+              v-if="row.impactoFinanciero === 'GASTO_INMOBILIARIA'"
+              domain="gastoPagado"
+              :value="row.gastoPagado"
+              size="xs"
+            />
+          </div>
         </template>
         <template #acciones-data="{ row }">
-          <div class="flex gap-1">
+          <div class="flex items-center gap-1.5">
             <UButton
               size="xs"
               color="gray"
@@ -325,35 +353,40 @@ onMounted(cargarBarrios)
           </div>
         </template>
         <template #empty-state>
-          <div class="text-center py-10 text-slate-400">
-            <UIcon name="i-heroicons-wrench-screwdriver" class="w-10 h-10 mx-auto mb-2" />
+          <div class="py-12 text-center text-slate-400">
+            <UIcon name="i-heroicons-wrench-screwdriver" class="mx-auto mb-3 h-10 w-10 text-slate-300" />
             <p>No hay novedades registradas con estos filtros.</p>
           </div>
         </template>
       </UTable>
 
-      <div class="flex justify-end mt-4">
+      <div class="flex justify-end border-t border-slate-200 bg-slate-50/80 px-4 py-3">
         <UPagination v-model="page" :page-count="limit" :total="total" />
       </div>
-    </UCard>
+    </div>
 
     <SharedErrorState v-if="error" :message="error" class="mt-4" @retry="cargar" />
 
     <!-- Modal de aprobación financiera — exclusivo Administrador -->
     <UModal v-model="modalAbierto">
-      <UCard>
+      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
         <template #header>
-          <p class="font-semibold text-slate-900">
-            {{
-              tipoAprobacion === 'CARGO_ARRENDATARIO'
-                ? 'Aprobar cargo a arrendatario'
-                : 'Aprobar gasto de la inmobiliaria'
-            }}
-          </p>
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+              <UIcon name="i-heroicons-document-currency-dollar" class="h-5 w-5 text-amber-600" />
+            </span>
+            <p class="font-semibold text-slate-900">
+              {{
+                tipoAprobacion === 'CARGO_ARRENDATARIO'
+                  ? 'Aprobar cargo a arrendatario'
+                  : 'Aprobar gasto de la inmobiliaria'
+              }}
+            </p>
+          </div>
         </template>
 
         <div class="space-y-3">
-          <p class="text-sm text-slate-500">
+          <p class="text-sm leading-6 text-slate-500">
             {{
               tipoAprobacion === 'CARGO_ARRENDATARIO'
                 ? 'Se generará una obligación tipo NOVEDAD, cobrable en el próximo recaudo del contrato.'
@@ -386,13 +419,18 @@ onMounted(cargarBarrios)
 
     <!-- Pago real de un gasto ya aprobado — exclusivo Administrador -->
     <UModal v-model="modalPago">
-      <UCard>
+      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
         <template #header>
-          <p class="font-semibold text-slate-900">Registrar pago del gasto</p>
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+              <UIcon name="i-heroicons-banknotes" class="h-5 w-5 text-red-600" />
+            </span>
+            <p class="font-semibold text-slate-900">Registrar pago del gasto</p>
+          </div>
         </template>
 
         <div class="space-y-3">
-          <p class="text-sm text-slate-500">
+          <p class="text-sm leading-6 text-slate-500">
             Se generará el movimiento de caja tipo EGRESO por
             <strong>{{ moneda(novedadPagando?.montoAprobado) }}</strong
             >. Este es el único paso que mueve dinero.
@@ -422,13 +460,18 @@ onMounted(cargarBarrios)
 
     <!-- Revertir una aprobación financiera aún no materializada en dinero — exclusivo Administrador -->
     <UModal v-model="modalRevertir">
-      <UCard>
+      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
         <template #header>
-          <p class="font-semibold text-slate-900">Revertir aprobación</p>
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+              <UIcon name="i-heroicons-arrow-uturn-left" class="h-5 w-5 text-slate-600" />
+            </span>
+            <p class="font-semibold text-slate-900">Revertir aprobación</p>
+          </div>
         </template>
 
         <div class="space-y-3">
-          <p class="text-sm text-slate-500">
+          <p class="text-sm leading-6 text-slate-500">
             La novedad vuelve a <strong>impacto financiero pendiente</strong> para poder re-emitir el cargo o el gasto
             correcto. Solo procede si aún no se materializó en dinero: si el cargo ya tiene pagos, revierte el pago
             desde Recaudo primero; si el gasto ya fue pagado, revierte el movimiento desde Movimientos.
@@ -451,9 +494,14 @@ onMounted(cargarBarrios)
 
     <!-- Cambiar estado del tablero -->
     <UModal v-model="modalEstado">
-      <UCard>
+      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
         <template #header>
-          <p class="font-semibold text-slate-900">Cambiar estado de la novedad</p>
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+              <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 text-amber-600" />
+            </span>
+            <p class="font-semibold text-slate-900">Cambiar estado de la novedad</p>
+          </div>
         </template>
 
         <div class="space-y-3">

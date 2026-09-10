@@ -19,6 +19,11 @@ const espera = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const METODOS_IDEMPOTENTES = new Set(['GET', 'HEAD', 'OPTIONS'])
 
+function nuevoRequestId(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID()
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+}
+
 /** Un fallo de red solo se reintenta si repetir la petición es seguro (GET, o `idempotente: true`). */
 function esReintentable(options: ApiFetchOptions): boolean {
   if (options.idempotente === true) return true
@@ -76,6 +81,8 @@ export async function useApiFetch<T = unknown>(path: string, options: ApiFetchOp
   const config = useRuntimeConfig()
   const auth = useAuthStore()
   const conexion = useEstadoConexion()
+  const requestId = options.headers?.['x-request-id'] ?? nuevoRequestId()
+  const { headers: headersPersonalizados, ...opcionesFetch } = options
   // Solo se registra en el contador global de `useEstadoConexion` la PRIMERA vez que esta
   // llamada concreta entra en su bucle de reintento — para no desbalancear iniciar/resolver.
   let registradaComoProblema = false
@@ -85,9 +92,10 @@ export async function useApiFetch<T = unknown>(path: string, options: ApiFetchOp
       baseURL: config.public.apiBaseUrl,
       headers: {
         ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {}),
-        ...(options.headers ?? {}),
+        'x-request-id': requestId,
+        ...(headersPersonalizados ?? {}),
       },
-      ...options,
+      ...opcionesFetch,
     })
 
   let intentosRed = 0

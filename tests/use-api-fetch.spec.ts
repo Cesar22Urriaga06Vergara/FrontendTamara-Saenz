@@ -36,6 +36,32 @@ beforeEach(() => {
 })
 
 describe('useApiFetch — reintento por idempotencia (S-6)', () => {
+  it('envía un x-request-id estable durante toda la operación y sus reintentos', async () => {
+    fetchMock.mockRejectedValueOnce(errorRed()).mockResolvedValueOnce({ ok: 1 })
+    vi.useFakeTimers()
+    const p = useApiFetch('/dashboard')
+    await vi.runAllTimersAsync()
+    await expect(p).resolves.toEqual({ ok: 1 })
+
+    const primeraPeticion = fetchMock.mock.calls[0]![1]
+    const segundaPeticion = fetchMock.mock.calls[1]![1]
+    const primerRequestId = primeraPeticion.headers['x-request-id']
+
+    expect(primerRequestId).toEqual(expect.any(String))
+    expect(primerRequestId).toBe(segundaPeticion.headers['x-request-id'])
+  })
+
+  it('combina headers personalizados con autenticación y correlación', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: 1 })
+
+    await expect(useApiFetch('/dashboard', { headers: { 'x-client': 'web' } })).resolves.toEqual({ ok: 1 })
+
+    const headers = fetchMock.mock.calls[0]![1].headers
+    expect(headers.Authorization).toBe('Bearer tok')
+    expect(headers['x-client']).toBe('web')
+    expect(headers['x-request-id']).toEqual(expect.any(String))
+  })
+
   it('GET: reintenta ante fallo de red y termina devolviendo el valor', async () => {
     fetchMock.mockRejectedValueOnce(errorRed()).mockRejectedValueOnce(errorRed()).mockResolvedValueOnce({ ok: 1 })
     vi.useFakeTimers()

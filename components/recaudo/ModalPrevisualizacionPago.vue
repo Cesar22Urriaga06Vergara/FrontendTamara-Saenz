@@ -34,16 +34,28 @@ const totales = computed(() => {
     :ui="{ width: 'sm:max-w-xl' }"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <UCard>
+    <UCard
+      :ui="{
+        root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+        body: { base: 'p-5 sm:p-6' },
+        header: { base: 'border-b border-slate-200 px-0 pb-4' },
+        footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+      }"
+    >
       <template #header>
-        <p class="font-semibold text-slate-900">Previsualización del recaudo</p>
+        <div class="flex items-center gap-3">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+            <UIcon name="i-heroicons-banknotes" class="h-5 w-5 text-amber-600" />
+          </span>
+          <p class="font-semibold text-slate-900">Previsualización del recaudo</p>
+        </div>
       </template>
 
       <Transition name="fade" mode="out-in">
-        <div v-if="cargando" key="cargando" class="text-center py-10 text-slate-500">Calculando aplicación…</div>
+        <div v-if="cargando" key="cargando" class="py-10 text-center text-slate-500">Calculando aplicación…</div>
 
         <div v-else-if="previsualizacion" key="resultado" class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+          <div class="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-sm sm:grid-cols-2">
             <p><span class="text-slate-500">Cliente:</span> {{ previsualizacion.contrato?.cliente?.nombreCompleto }}</p>
             <p><span class="text-slate-500">Inmueble:</span> {{ previsualizacion.contrato?.inmueble?.direccion }}</p>
             <p><span class="text-slate-500">Barrio:</span> {{ previsualizacion.contrato?.inmueble?.barrio || '—' }}</p>
@@ -64,28 +76,28 @@ const totales = computed(() => {
           </div>
 
           <div>
-            <p class="text-sm font-medium text-slate-900 mb-2">Aplicación del dinero (Canon → Novedad)</p>
+            <p class="mb-2 text-sm font-medium text-slate-900">Aplicación del dinero (Canon → Novedad)</p>
             <p v-if="!previsualizacion.aplicaciones.length" class="text-sm text-slate-400">
               El pago no alcanza a aplicarse a ninguna obligación pendiente.
             </p>
             <template v-else>
               <RecaudoResumenAplicaciones :totales="totales" class="mb-3" />
-              <div class="overflow-x-auto rounded-lg border border-slate-500">
+              <div class="overflow-x-auto rounded-xl border border-slate-200">
                 <table class="min-w-full border-collapse text-sm">
                   <thead>
-                    <tr class="text-slate-700">
-                      <th class="border border-slate-400 px-2 py-1.5 text-center">Concepto</th>
-                      <th class="border border-slate-400 px-2 py-1.5 text-center">Aplicado</th>
-                      <th class="border border-slate-400 px-2 py-1.5 text-center">Saldo posterior</th>
+                    <tr class="bg-slate-50 text-slate-700">
+                      <th class="border border-slate-200 px-2 py-1.5 text-center">Concepto</th>
+                      <th class="border border-slate-200 px-2 py-1.5 text-center">Aplicado</th>
+                      <th class="border border-slate-200 px-2 py-1.5 text-center">Saldo posterior</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(a, i) in previsualizacion.aplicaciones" :key="i" class="even:bg-slate-50">
-                      <td class="border border-slate-400 px-2 py-1.5 text-slate-700">{{ a.obligacion?.concepto }}</td>
-                      <td class="border border-slate-400 px-2 py-1.5 text-right tabular-nums text-slate-900">
+                    <tr v-for="(a, i) in previsualizacion.aplicaciones" :key="i" class="even:bg-slate-50/60">
+                      <td class="border border-slate-200 px-2 py-1.5 text-slate-700">{{ a.obligacion?.concepto }}</td>
+                      <td class="border border-slate-200 px-2 py-1.5 text-right tabular-nums text-slate-900">
                         {{ moneda(a.monto) }}
                       </td>
-                      <td class="border border-slate-400 px-2 py-1.5 text-right tabular-nums text-slate-600">
+                      <td class="border border-slate-200 px-2 py-1.5 text-right tabular-nums text-slate-600">
                         {{ moneda(a.saldoPosterior) }}
                       </td>
                     </tr>

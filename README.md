@@ -150,6 +150,11 @@ Variables de entorno de build:
 - `NUXT_PUBLIC_SENTRY_DSN` = *(DSN del proyecto Sentry frontend — plan FE-018; vacío = desactivado)*
 - `NUXT_PUBLIC_APP_NAME` / `NUXT_PUBLIC_APP_SLOGAN` (opcionales)
 
+El build de producción falla si `NUXT_PUBLIC_API_BASE_URL` falta, apunta a localhost, no usa HTTPS o
+no contiene una ruta `/api/...`. También falla mientras `public/_headers` conserve
+`BACKEND-DOMAIN.example`. Esto evita publicar una SPA que no pueda conectarse al backend real por API o
+por CSP.
+
 > **`.nvmrc` = Node 22 LTS.** FE-014b subió `pinia` a `^4` (`nuxt@4.5` trae `vue-router@5`, cuyo
 > peer opcional pedía `pinia 3||4`) — el árbol de `npm ci` ya coincide con el lockfile bajo npm 10.
 
@@ -166,6 +171,9 @@ definido. Sin DSN es inerte (dev/test). No graba sesiones (`replaysSessionSample
 manda PII, e ignora `ErrorMutacionIncierta` (aviso al usuario, no bug).
 Follow-up: subir source maps a Sentry en el build de Cloudflare (`SENTRY_AUTH_TOKEN`) para
 des-minificar los stack traces.
+
+Las peticiones incluyen un `x-request-id` estable por operación, reutilizado durante refresh de sesión
+y reintentos, para correlacionar los errores de Sentry con los logs JSON del backend.
 
 `public/_redirects` (`/* /index.html 200`) hace que los deep links de la SPA (`/contratos/123`)
 sirvan el shell en vez de 404. `public/_headers` lleva CSP, HSTS, `X-Frame-Options: DENY`,

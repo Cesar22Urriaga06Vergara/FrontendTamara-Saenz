@@ -206,7 +206,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-3xl">
+  <div class="max-w-4xl space-y-5">
+    <header class="surface-card overflow-hidden px-5 py-4 sm:px-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Contrato</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Nuevo contrato</h1>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-600">
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium">Paso 1</span>
+          <span class="text-slate-300">/</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium">Selección</span>
+        </div>
+      </div>
+    </header>
+
     <UAlert v-if="error" color="red" variant="subtle" :title="error" class="mb-4" />
     <UAlert
       v-if="borradorContrato.hayBorrador.value"
@@ -224,12 +238,14 @@ onMounted(() => {
       </template>
     </UAlert>
 
-    <div class="space-y-6">
-      <!-- Cliente -->
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">1. Arrendatario</p></template>
+    <div class="space-y-5">
+      <div class="surface-card p-4 sm:p-5">
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <p class="font-semibold text-slate-900">1. Arrendatario</p>
+          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Cliente</span>
+        </div>
 
-        <div v-if="!clienteSeleccionado" class="flex gap-2">
+        <div v-if="!clienteSeleccionado" class="flex flex-col gap-2 sm:flex-row">
           <UInput
             v-model="busquedaCliente"
             placeholder="Buscar por cédula o nombre…"
@@ -238,31 +254,33 @@ onMounted(() => {
           />
           <UButton color="amber" @click="buscarCliente">Buscar</UButton>
         </div>
-        <div v-else class="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+        <div v-else class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div>
-            <p class="font-medium text-slate-900">{{ clienteSeleccionado.nombreCompleto }}</p>
+            <p class="font-semibold text-slate-900">{{ clienteSeleccionado.nombreCompleto }}</p>
             <p class="text-xs text-slate-600">{{ clienteSeleccionado.numeroDocumento }}</p>
           </div>
           <UButton size="xs" color="gray" variant="ghost" @click="clienteSeleccionado = null">Cambiar</UButton>
         </div>
 
-        <div v-if="resultadosCliente.length" class="mt-3 divide-y border rounded-lg">
+        <div v-if="resultadosCliente.length" class="mt-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60">
           <button
             v-for="c in resultadosCliente"
             :key="c.id"
-            class="w-full text-left px-4 py-2 hover:bg-slate-50"
+            class="block w-full px-4 py-2.5 text-left transition hover:bg-white"
             @click="seleccionarCliente(c)"
           >
             {{ c.nombreCompleto }} — {{ c.numeroDocumento }}
           </button>
         </div>
-      </UCard>
+      </div>
 
-      <!-- Codeudores -->
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">2. Codeudor(es)</p></template>
+      <div class="surface-card p-4 sm:p-5">
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <p class="font-semibold text-slate-900">2. Codeudor(es)</p>
+          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Cobertura</span>
+        </div>
 
-        <div class="flex gap-2 mb-3">
+        <div class="mb-3 flex flex-col gap-2 sm:flex-row">
           <UInput
             v-model="busquedaCodeudor"
             placeholder="Buscar por cédula o nombre…"
@@ -272,11 +290,11 @@ onMounted(() => {
           <UButton color="amber" @click="buscarCodeudor">Buscar</UButton>
         </div>
 
-        <div v-if="resultadosCodeudor.length" class="mb-3 divide-y border rounded-lg">
+        <div v-if="resultadosCodeudor.length" class="mb-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60">
           <button
             v-for="c in resultadosCodeudor"
             :key="c.id"
-            class="w-full text-left px-4 py-2 hover:bg-slate-50"
+            class="block w-full px-4 py-2.5 text-left transition hover:bg-white"
             @click="agregarCodeudor(c)"
           >
             {{ c.nombreCompleto }} — {{ c.numeroDocumento }}
@@ -300,12 +318,14 @@ onMounted(() => {
             />
           </UBadge>
         </TransitionGroup>
-        <p v-else class="text-xs text-slate-600">Aún no hay codeudores seleccionados.</p>
-      </UCard>
+        <p v-else class="text-sm text-slate-600">Aún no hay codeudores seleccionados.</p>
+      </div>
 
-      <!-- Inmueble -->
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">3. Inmueble disponible</p></template>
+      <div class="surface-card p-4 sm:p-5">
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <p class="font-semibold text-slate-900">3. Inmueble disponible</p>
+          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Propiedad</span>
+        </div>
         <SharedErrorState
           v-if="errorInmuebles"
           :message="errorInmuebles"
@@ -324,25 +344,25 @@ onMounted(() => {
           </template>
         </USelectMenu>
 
-        <div v-if="inmuebleSeleccionado" class="flex flex-wrap gap-2 mt-3">
-          <UBadge color="amber" variant="subtle"
-            >Energía: {{ inmuebleSeleccionado.codigoEnergia || 'No registrado' }}</UBadge
-          >
+        <div v-if="inmuebleSeleccionado" class="mt-3 flex flex-wrap gap-2">
+          <UBadge color="amber" variant="subtle">Energía: {{ inmuebleSeleccionado.codigoEnergia || 'No registrado' }}</UBadge>
           <UBadge color="amber" variant="subtle">Agua: {{ inmuebleSeleccionado.codigoAgua || 'No registrado' }}</UBadge>
           <UBadge color="amber" variant="subtle">Gas: {{ inmuebleSeleccionado.codigoGas || 'No registrado' }}</UBadge>
         </div>
-      </UCard>
+      </div>
 
-      <!-- Datos del contrato -->
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">4. Datos del contrato</p></template>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="surface-card p-4 sm:p-5">
+        <div class="mb-4 flex items-center justify-between gap-2">
+          <p class="font-semibold text-slate-900">4. Datos del contrato</p>
+          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Configuración</span>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <UFormGroup label="Fecha de inicio">
             <UInput v-model="fechaInicio" type="date" />
           </UFormGroup>
           <UFormGroup label="Día de pago (1-31)">
             <UInput v-model.number="diaPago" type="number" min="1" max="31" @input="marcarDiaPagoManual" />
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="mt-1 text-xs text-slate-500">
               Se toma de la fecha de inicio por defecto; edítalo si el pago es en otro día.
             </p>
           </UFormGroup>
@@ -351,7 +371,7 @@ onMounted(() => {
           </UFormGroup>
         </div>
 
-        <div v-if="depositoGarantia > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+        <div v-if="depositoGarantia > 0" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <UFormGroup label="Medio de pago del depósito">
             <USelectMenu v-model="medioPagoDeposito" :options="mediosPago" />
           </UFormGroup>
@@ -360,21 +380,20 @@ onMounted(() => {
           </UFormGroup>
         </div>
 
-        <p class="text-xs text-slate-600 mt-2">
+        <p class="mt-3 text-xs text-slate-600">
           La fecha de fin queda en blanco: solo se define al terminar el contrato.
         </p>
-      </UCard>
+      </div>
 
       <div class="flex justify-end">
-        <UButton color="amber" size="lg" :disabled="!puedeCrear" @click="modalConfirmar = true">
+        <UButton color="amber" size="lg" :disabled="!puedeCrear" @click="modalConfirmar = true" class="!rounded-xl">
           Revisar y crear contrato
         </UButton>
       </div>
     </div>
 
-    <!-- Vista previa antes de confirmar: no llama al backend hasta que se confirme aquí. -->
     <UModal v-model="modalConfirmar">
-      <UCard>
+      <UCard class="overflow-hidden">
         <template #header>
           <p class="font-semibold text-slate-900">Confirmar nuevo contrato</p>
         </template>
@@ -398,7 +417,7 @@ onMounted(() => {
             </p>
             <p class="text-slate-600">Canon: {{ moneda(inmuebleSeleccionado?.canonValor) }}</p>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t">
+          <div class="grid grid-cols-1 gap-3 border-t border-slate-200 pt-2 sm:grid-cols-3">
             <div>
               <p class="text-slate-500">Fecha de inicio</p>
               <p class="font-medium text-slate-900">{{ fechaInicio ? fecha(fechaInicio) : '—' }}</p>
