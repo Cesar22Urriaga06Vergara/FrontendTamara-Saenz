@@ -54,12 +54,12 @@ jobs:
         run: npm run typecheck
 
       - name: Configuración de API para CI
-        run: sed -i 's#https://BACKEND-DOMAIN.example#https://api.example.test#g' public/_headers
+        run: grep -q 'https://backendtamara-saenz.onrender.com' public/_headers || sed -i 's#https://api.example.test#https://backendtamara-saenz.onrender.com#g' public/_headers
 
       - name: Build
         run: npm run build
         env:
-          NUXT_PUBLIC_API_BASE_URL: https://api.example.test/api/v1
+          NUXT_PUBLIC_API_BASE_URL: https://backendtamara-saenz.onrender.com/api/v1
 
       - name: Tests
         run: npm run test

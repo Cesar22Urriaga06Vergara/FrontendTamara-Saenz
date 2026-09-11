@@ -1,5 +1,10 @@
 const API_BASE_URL_LOCAL = 'http://localhost:3010/api/v1'
-const PLACEHOLDER_BACKEND = 'BACKEND-DOMAIN.example'
+const INVALID_PRODUCTION_HOSTS = [
+  /https?:\/\/localhost(?::\d+)?(?:\/|$)/i,
+  /https?:\/\/127\.0\.0\.1(?::\d+)?(?:\/|$)/i,
+  /https?:\/\/\[::1\](?::\d+)?(?:\/|$)/i,
+  /https?:\/\/(?:[a-z0-9-]+\.)?example\.test(?:\/|$)/i,
+]
 
 function validarUrlApiProduccion(valor: string): string {
   let url: URL
@@ -34,9 +39,9 @@ export function resolverApiBaseUrl(valor: string | undefined, entorno = process.
   return validarUrlApiProduccion(valor.trim())
 }
 
-/** Impide publicar la CSP de Cloudflare mientras conserve el dominio de documentación. */
+/** Impide publicar la CSP de Cloudflare con hosts de ejemplo o locales en producción. */
 export function validarHeadersProduccion(contenido: string): void {
-  if (contenido.includes(PLACEHOLDER_BACKEND)) {
-    throw new Error(`public/_headers conserva el placeholder ${PLACEHOLDER_BACKEND}.`)
+  if (INVALID_PRODUCTION_HOSTS.some((pattern) => pattern.test(contenido))) {
+    throw new Error('public/_headers conserva un host de backend no válido para producción.')
   }
 }

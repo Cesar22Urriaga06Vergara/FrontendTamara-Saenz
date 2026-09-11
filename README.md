@@ -146,23 +146,22 @@ Todo el data-fetching ya es del lado cliente, así que no hay Workers ni runtime
 | Node version | la de `.nvmrc` (`22` LTS) |
 
 Variables de entorno de build:
-- `NUXT_PUBLIC_API_BASE_URL` = `https://<servicio-backend>.up.railway.app/api/v1`
+- `NUXT_PUBLIC_API_BASE_URL` = `https://backendtamara-saenz.onrender.com/api/v1`
 - `NUXT_PUBLIC_SENTRY_DSN` = *(DSN del proyecto Sentry frontend — plan FE-018; vacío = desactivado)*
 - `NUXT_PUBLIC_APP_NAME` / `NUXT_PUBLIC_APP_SLOGAN` (opcionales)
 
 El build de producción falla si `NUXT_PUBLIC_API_BASE_URL` falta, apunta a localhost, no usa HTTPS o
-no contiene una ruta `/api/...`. También falla mientras `public/_headers` conserve
-`BACKEND-DOMAIN.example`. Esto evita publicar una SPA que no pueda conectarse al backend real por API o
-por CSP.
+no contiene una ruta `/api/...`. También falla mientras `public/_headers` conserve un host no válido
+para producción. Esto evita publicar una SPA que no pueda conectarse al backend real por API o por CSP.
 
 > **`.nvmrc` = Node 22 LTS.** FE-014b subió `pinia` a `^4` (`nuxt@4.5` trae `vue-router@5`, cuyo
 > peer opcional pedía `pinia 3||4`) — el árbol de `npm ci` ya coincide con el lockfile bajo npm 10.
 
 ### Antes del primer deploy
-1. En `public/_headers`, `connect-src`: reemplazar `https://BACKEND-DOMAIN.example` por el dominio
-   real del backend en Railway. Para Sentry están los comodines `*.ingest*.sentry.io` — idealmente
+1. En `public/_headers`, `connect-src`: usar `https://backendtamara-saenz.onrender.com` como dominio
+   real del backend en Render. Para Sentry están los comodines `*.ingest*.sentry.io` — idealmente
    cámbialos por el host exacto de tu DSN; si no usas Sentry, bórralos (y el `worker-src`).
-2. En el backend (Railway), `CORS_ORIGIN` = el dominio de Cloudflare Pages (sin barra final).
+2. En el backend (Render), `CORS_ORIGIN` = el dominio de Cloudflare Pages (sin barra final).
 3. Dominio propio en Cloudflare (DNS + Pages custom domain).
 
 ### Error reporting (Sentry — plan FE-018)

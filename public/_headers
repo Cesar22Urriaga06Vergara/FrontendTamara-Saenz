@@ -1,11 +1,7 @@
 # Cabeceras de seguridad — Cloudflare Pages las aplica a cada respuesta (plan FE-017).
 #
-# ⚠️ ANTES DEL PRIMER DEPLOY: en `connect-src`, reemplaza el placeholder del backend y ajusta el de Sentry:
-#   - https://BACKEND-DOMAIN.example  -> el dominio real del backend en Railway (sin esto, las
-#                                       llamadas al API fallan con un error de CSP claro en consola).
-#   - Sentry (plan FE-018): dejo los comodines `*.ingest*.sentry.io`. Si NO usas Sentry, borra
-#     esas entradas y el `worker-src`. Idealmente, cámbialas por el host EXACTO de tu DSN
-#     (p. ej. `https://o0000000.ingest.us.sentry.io`).
+# ⚠️ En `connect-src`, el backend real es Render y debe mantenerse explícito para evitar que
+# la API falle por CSP en producción. Si usas Sentry, conserva solo los hosts necesarios.
 
 /*
   X-Frame-Options: DENY

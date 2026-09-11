@@ -18,8 +18,8 @@ copia de auditorías previas. Donde el código contradice una auditoría anterio
 > lint`, `npm run typecheck` y `npm run build` pasan. `vue-router` se declaró explícitamente como
 > dependencia de desarrollo para que `vue-tsc` pueda resolver su plugin Volar desde la raíz. La deuda de
 > tipado de respuestas API descrita más abajo continúa vigente. El build de producción ahora falla si
-> `NUXT_PUBLIC_API_BASE_URL` falta o no es una URL HTTPS de API, o si `public/_headers` conserva el
-> placeholder `BACKEND-DOMAIN.example`.
+> `NUXT_PUBLIC_API_BASE_URL` falta o no es una URL HTTPS de API, o si `public/_headers` conserva un host
+> de backend no válido para producción.
 
 ---
 

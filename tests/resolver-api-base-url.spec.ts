@@ -22,13 +22,15 @@ describe('resolverApiBaseUrl', () => {
     expect(() => resolverApiBaseUrl(url, 'production')).toThrow()
   })
 
-  it('acepta cabeceras con un backend real', () => {
-    expect(() => validarHeadersProduccion('connect-src self https://api.tamarasaenz.com')).not.toThrow()
+  it('acepta cabeceras con el backend real de Render', () => {
+    expect(() =>
+      validarHeadersProduccion('connect-src self https://backendtamara-saenz.onrender.com'),
+    ).not.toThrow()
   })
 
-  it('rechaza cabeceras con el placeholder del backend', () => {
-    expect(() => validarHeadersProduccion('connect-src self https://BACKEND-DOMAIN.example')).toThrow(
-      /BACKEND-DOMAIN\.example/,
+  it('rechaza cabeceras con un host de ejemplo en producción', () => {
+    expect(() => validarHeadersProduccion('connect-src self https://api.example.test')).toThrow(
+      /host de backend no válido/i,
     )
   })
 })
