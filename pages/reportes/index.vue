@@ -50,6 +50,46 @@ const reportes = [
     path: '/documentos/reportes/inmuebles-por-barrio.xlsx',
     archivo: 'reporte-inmuebles-por-barrio.xlsx',
   },
+  {
+    clave: 'novedades',
+    titulo: 'Novedades',
+    descripcion: 'Estado del ciclo operativo y financiero de todas las novedades, con impacto y monto aprobado.',
+    icon: 'i-heroicons-exclamation-circle',
+    path: '/documentos/reportes/novedades.xlsx',
+    archivo: 'reporte-novedades.xlsx',
+  },
+  {
+    clave: 'novedades-por-inmueble',
+    titulo: 'Novedades por inmueble',
+    descripcion: 'Novedades agrupadas por inmueble, con cliente, responsable, estado y valor.',
+    icon: 'i-heroicons-home-modern',
+    path: '/documentos/reportes/novedades-por-inmueble.xlsx',
+    archivo: 'reporte-novedades-por-inmueble.xlsx',
+  },
+  {
+    clave: 'novedades-financiero',
+    titulo: 'Novedades financieras',
+    descripcion: 'Impactos financieros de cliente e inmobiliaria, con aprobación y fecha de pago.',
+    icon: 'i-heroicons-chart-bar-square',
+    path: '/documentos/reportes/novedades-financiero.xlsx',
+    archivo: 'reporte-novedades-financiero.xlsx',
+  },
+  {
+    clave: 'gastos-inmobiliaria',
+    titulo: 'Gastos de inmobiliaria',
+    descripcion: 'Gastos aprobados por período, medio de pago, referencia y estado.',
+    icon: 'i-heroicons-banknotes',
+    path: '/documentos/reportes/gastos-inmobiliaria.xlsx',
+    archivo: 'reporte-gastos-inmobiliaria.xlsx',
+  },
+  {
+    clave: 'novedades-pendientes',
+    titulo: 'Novedades pendientes',
+    descripcion: 'Novedades operativas pendientes de aprobación financiera y sus días de espera.',
+    icon: 'i-heroicons-clock',
+    path: '/documentos/reportes/novedades-pendientes.xlsx',
+    archivo: 'reporte-novedades-pendientes.xlsx',
+  },
 ]
 </script>
 
