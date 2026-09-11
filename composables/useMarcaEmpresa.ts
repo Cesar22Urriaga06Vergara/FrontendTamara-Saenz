@@ -14,11 +14,18 @@ export function useMarcaEmpresa() {
   onMounted(async () => {
     try {
       const data = await $fetch<any>('/empresa/publico', { baseURL: config.public.apiBaseUrl })
-      if (data?.nombre) nombre.value = data.nombre
-      if (data?.slogan) slogan.value = data.slogan
-      if (data?.logoUrl) {
+      const marca = {
+        nombre: data?.nombre || config.public.appName,
+        slogan: data?.slogan || config.public.appSlogan,
+        logoUrl: data?.logoUrl || null,
+      }
+
+      nombre.value = marca.nombre
+      slogan.value = marca.slogan
+
+      if (marca.logoUrl) {
         const origenApi = new URL(config.public.apiBaseUrl as string).origin
-        logoSrc.value = `${origenApi}${data.logoUrl}`
+        logoSrc.value = `${origenApi}${marca.logoUrl}`
       }
     } catch {
       // Sin marca configurada aún (o backend no disponible en este momento): se mantienen
