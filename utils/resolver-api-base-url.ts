@@ -15,10 +15,12 @@ function validarUrlApiProduccion(valor: string): string {
   }
 
   const hostnameLocal = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+  const pathnameValida = /^\/?(?:api(?:\/|$)|$)/.test(url.pathname)
+
   if (
     url.protocol !== 'https:' ||
     hostnameLocal ||
-    !/^\/api(?:\/|$)/.test(url.pathname) ||
+    !pathnameValida ||
     url.search ||
     url.hash ||
     url.username ||

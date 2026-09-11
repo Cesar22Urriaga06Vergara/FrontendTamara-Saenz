@@ -12,6 +12,12 @@ describe('resolverApiBaseUrl', () => {
     )
   })
 
+  it('acepta el dominio raíz de Render sin sufijo /api en producción', () => {
+    expect(resolverApiBaseUrl('https://backendtamara-saenz.onrender.com', 'production')).toBe(
+      'https://backendtamara-saenz.onrender.com',
+    )
+  })
+
   it.each([
     undefined,
     '',

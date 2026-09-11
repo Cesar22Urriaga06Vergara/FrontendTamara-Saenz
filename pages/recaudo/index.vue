@@ -876,7 +876,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
               </ul>
             </template>
           </div>
-        </UCard>
+        </div>
 
         <!-- Registro de pago mixto -->
         <div class="surface-card lg:col-span-2 p-4">
@@ -998,7 +998,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
               </template>
             </UAlert>
           </div>
-        </UCard>
+        </div>
       </div>
     </template>
 
