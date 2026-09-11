@@ -12,10 +12,8 @@ describe('resolverApiBaseUrl', () => {
     )
   })
 
-  it('acepta el dominio raíz de Render sin sufijo /api en producción', () => {
-    expect(resolverApiBaseUrl('https://backendtamara-saenz.onrender.com', 'production')).toBe(
-      'https://backendtamara-saenz.onrender.com',
-    )
+  it('rechaza el dominio raíz de Render sin /api/v1 en producción', () => {
+    expect(() => resolverApiBaseUrl('https://backendtamara-saenz.onrender.com', 'production')).toThrow()
   })
 
   it.each([
@@ -23,6 +21,7 @@ describe('resolverApiBaseUrl', () => {
     '',
     'http://localhost:3010/api/v1',
     'https://api.tamarasaenz.com',
+    'https://backendtamara-saenz.onrender.com/api',
     'https://api.tamarasaenz.com/api/v1?debug=true',
   ])('rechaza una URL de API inválida en producción: %s', (url) => {
     expect(() => resolverApiBaseUrl(url, 'production')).toThrow()

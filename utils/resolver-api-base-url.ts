@@ -15,7 +15,7 @@ function validarUrlApiProduccion(valor: string): string {
   }
 
   const hostnameLocal = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
-  const pathnameValida = /^\/?(?:api(?:\/|$)|$)/.test(url.pathname)
+  const pathnameValida = /^\/?api\/v1(?:\/)?$/.test(url.pathname)
 
   if (
     url.protocol !== 'https:' ||
@@ -26,7 +26,7 @@ function validarUrlApiProduccion(valor: string): string {
     url.username ||
     url.password
   ) {
-    throw new Error('NUXT_PUBLIC_API_BASE_URL debe ser una URL HTTPS de API sin query ni credenciales.')
+    throw new Error('NUXT_PUBLIC_API_BASE_URL debe apuntar a https://<backend>/api/v1 sin query ni credenciales.')
   }
 
   return valor
