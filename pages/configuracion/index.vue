@@ -10,6 +10,13 @@ interface EmpresaConfig {
   logoUrl?: string | null
 }
 
+interface ConsecutivoConfig {
+  id?: string
+  tipo: string
+  prefijo: string
+  ultimoNumero: number
+}
+
 /**
  * Configuración global de la empresa — EXCLUSIVO Administrador.
  * Separa lo que antes vivía embebido en /administracion: datos corporativos,
@@ -19,9 +26,12 @@ const config = useRuntimeConfig()
 const origenApi = computed(() => new URL(config.public.apiBaseUrl).origin)
 
 const empresa = ref<EmpresaConfig | null>(null)
+const consecutivos = ref<ConsecutivoConfig[]>([])
 const cargandoEmpresa = ref(true)
 const guardandoEmpresa = ref(false)
+const guardandoConsecutivo = ref(false)
 const errorEmpresa = ref('')
+const nuevoConsecutivo = ref<ConsecutivoConfig>({ tipo: 'RECIBO_CAJA', prefijo: 'REC-', ultimoNumero: 0 })
 
 async function cargarEmpresa() {
   cargandoEmpresa.value = true
@@ -132,7 +142,56 @@ async function subirLogo() {
   }
 }
 
-onMounted(cargarEmpresa)
+async function cargarConsecutivos() {
+  try {
+    consecutivos.value = await useApiFetch<ConsecutivoConfig[]>('/empresa/consecutivos')
+  } catch (e: any) {
+    errorEmpresa.value = e?.data?.message || 'No fue posible cargar los consecutivos.'
+  }
+}
+
+async function guardarConsecutivo() {
+  if (!nuevoConsecutivo.value.tipo.trim()) {
+    errorEmpresa.value = 'Debe indicar el tipo de consecutivo.'
+    return
+  }
+
+  errorEmpresa.value = ''
+  guardandoConsecutivo.value = true
+
+  try {
+    const guardado = await useApiFetch<ConsecutivoConfig>('/empresa/consecutivos', {
+      method: 'POST',
+      body: {
+        tipo: nuevoConsecutivo.value.tipo.trim(),
+        prefijo: nuevoConsecutivo.value.prefijo ?? '',
+        ultimoNumero: Number(nuevoConsecutivo.value.ultimoNumero ?? 0),
+      },
+    })
+
+    const existente = consecutivos.value.find((item) => item.tipo === guardado.tipo)
+    if (existente) {
+      Object.assign(existente, guardado)
+    } else {
+      consecutivos.value.push(guardado)
+    }
+
+    nuevoConsecutivo.value = {
+      tipo: guardado.tipo,
+      prefijo: guardado.prefijo || '',
+      ultimoNumero: guardado.ultimoNumero ?? 0,
+    }
+  } catch (e: any) {
+    errorEmpresa.value = e?.data?.message || 'No fue posible guardar el consecutivo.'
+  } finally {
+    guardandoConsecutivo.value = false
+  }
+}
+
+onMounted(async () => {
+  await cargarEmpresa()
+  await cargarConsecutivos()
+})
 onBeforeUnmount(() => {
   if (previewLogoLocal.value) URL.revokeObjectURL(previewLogoLocal.value)
 })
@@ -185,6 +244,54 @@ onBeforeUnmount(() => {
             <UButton color="amber" :loading="guardandoEmpresa" @click="guardarEmpresa">Guardar cambios</UButton>
           </div>
         </template>
+      </UCard>
+
+      <!-- Consecutivos -->
+      <UCard>
+        <template #header>
+          <p class="font-semibold text-slate-900">Consecutivos</p>
+        </template>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <UFormGroup label="Tipo">
+              <UInput v-model="nuevoConsecutivo.tipo" placeholder="RECIBO_CAJA" />
+            </UFormGroup>
+            <UFormGroup label="Prefijo">
+              <UInput v-model="nuevoConsecutivo.prefijo" placeholder="REC-" />
+            </UFormGroup>
+            <UFormGroup label="Último número">
+              <UInput v-model.number="nuevoConsecutivo.ultimoNumero" type="number" min="0" />
+            </UFormGroup>
+          </div>
+
+          <div class="flex justify-end">
+            <UButton color="amber" :loading="guardandoConsecutivo" @click="guardarConsecutivo">
+              Guardar consecutivo
+            </UButton>
+          </div>
+
+          <div v-if="consecutivos.length" class="overflow-hidden rounded border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium text-slate-700">Tipo</th>
+                  <th class="px-3 py-2 text-left font-medium text-slate-700">Prefijo</th>
+                  <th class="px-3 py-2 text-left font-medium text-slate-700">Último número</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                <tr v-for="item in consecutivos" :key="item.tipo">
+                  <td class="px-3 py-2 text-slate-900">{{ item.tipo }}</td>
+                  <td class="px-3 py-2 text-slate-900">{{ item.prefijo || '—' }}</td>
+                  <td class="px-3 py-2 text-slate-900">{{ item.ultimoNumero }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p v-else class="text-sm text-slate-500">Aún no hay consecutivos configurados.</p>
+        </div>
       </UCard>
 
       <!-- Generación manual de canon -->
