@@ -62,7 +62,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Tamara & Saenz | ERP Inmobiliario',
-      link: [{ rel: 'icon', type: 'image/png', href: '/favicon.png' }],
+      link: [{ rel: 'icon', type: 'image/png', href: '/Logo.png' }],
     },
     // Fade corto (150ms): es un ERP de uso operativo diario (cajero/recepción) — una
     // transición larga se sentiría lenta en el uso repetitivo. `out-in` evita que la

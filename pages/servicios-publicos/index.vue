@@ -3,6 +3,7 @@ import { useAuthStore } from '~/stores/auth.store'
 
 const auth = useAuthStore()
 const { moneda } = useFormatoCO()
+const route = useRoute()
 
 const columnas = [
   { key: 'tipoServicio', label: 'Servicio' },
@@ -63,13 +64,18 @@ const {
   lista: servicios,
   cargando,
   cargar,
-} = useListadoPaginado<ServicioPublico, { tipoServicio: string }>(
+} = useListadoPaginado<ServicioPublico, { tipoServicio: string; inmuebleId: string }>(
   ({ page, limit, filtros }) =>
     useApiFetch<{ data: ServicioPublico[]; total: number }>('/servicios-publicos', {
-      params: { page, limit, tipoServicio: filtros.tipoServicio || undefined },
+      params: {
+        page,
+        limit,
+        tipoServicio: filtros.tipoServicio || undefined,
+        inmuebleId: filtros.inmuebleId || undefined,
+      },
     }).then((res) => ({ data: res.data, total: res.total })),
   {
-    filtrosIniciales: { tipoServicio: '' },
+    filtrosIniciales: { tipoServicio: '', inmuebleId: String(route.query.inmuebleId || '') },
     limiteInicial: 10,
     mensajeError: 'No fue posible cargar los servicios públicos.',
   },
@@ -84,7 +90,7 @@ async function cargarInmuebles() {
 
 function resetearFormulario() {
   Object.assign(formulario, {
-    inmuebleId: '',
+    inmuebleId: String(route.query.inmuebleId || ''),
     tipoServicio: 'LUZ',
     periodo: '',
     numeroFactura: '',
@@ -97,6 +103,10 @@ function resetearFormulario() {
 
 async function guardar() {
   error.value = ''
+  if (!formulario.inmuebleId) {
+    error.value = 'Selecciona el inmueble al que pertenece el recibo.'
+    return
+  }
   guardando.value = true
   try {
     await useApiFetch('/servicios-publicos', {
@@ -221,6 +231,9 @@ onMounted(async () => {
             <USelectMenu
               v-model="formulario.inmuebleId"
               :options="inmuebles.map((i) => ({ label: `${i.direccion} · ${i.barrio}`, value: i.id }))"
+              value-attribute="value"
+              option-attribute="label"
+              placeholder="Selecciona un inmueble"
             />
           </UFormGroup>
           <UFormGroup label="Servicio">
