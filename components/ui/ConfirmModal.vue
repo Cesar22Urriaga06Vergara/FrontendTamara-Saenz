@@ -44,10 +44,10 @@ function cancelar() {
   <UModal :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <UCard
       :ui="{
-        root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+        root: 'overflow-hidden rounded-2xl border border-[#d9b86d] bg-[#fffdf7] shadow-[0_28px_60px_-32px_rgba(120,82,25,0.55)]',
         body: { base: 'p-5 sm:p-6' },
-        header: { base: 'border-b border-slate-200 px-0 pb-4' },
-        footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+        header: { base: 'border-b border-[#ead9ad] px-0 pb-4' },
+        footer: { base: 'border-t border-[#ead9ad] px-0 pt-4' },
       }"
     >
       <template #header>
