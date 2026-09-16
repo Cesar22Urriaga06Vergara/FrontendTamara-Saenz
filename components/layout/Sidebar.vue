@@ -35,7 +35,6 @@ const secciones = computed(() => {
       titulo: 'OPERACIÓN',
       items: [
         { label: 'Contratos', icon: 'i-heroicons-document-text', to: '/contratos' },
-        { label: 'Servicios públicos', icon: 'i-heroicons-light-bulb', to: '/servicios-publicos', soloAdmin: true },
         { label: 'Recaudo', icon: 'i-heroicons-banknotes', to: '/recaudo', soloAdminOContador: true },
         { label: 'Novedades', icon: 'i-heroicons-wrench-screwdriver', to: '/novedades' },
       ],

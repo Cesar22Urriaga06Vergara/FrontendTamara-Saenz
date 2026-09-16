@@ -216,14 +216,6 @@ onMounted(cargarBarrios)
               aria-label="Editar inmueble"
               @click="abrirEdicion(row)"
             />
-            <UButton
-              icon="i-heroicons-bolt"
-              color="amber"
-              variant="ghost"
-              size="sm"
-              aria-label="Ver servicios públicos del inmueble"
-              :to="`/servicios-publicos?inmuebleId=${row.id}`"
-            />
           </div>
         </template>
         <template #empty-state>
