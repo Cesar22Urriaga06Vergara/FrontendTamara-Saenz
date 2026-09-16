@@ -207,6 +207,18 @@ const recibosColumnas = [
             <dd class="mt-1 text-sm text-slate-900">{{ contrato.inmueble?.barrio || '—' }}</dd>
           </div>
           <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Código energía</dt>
+            <dd class="mt-1 text-sm text-slate-900">{{ contrato.inmueble?.codigoEnergia || 'No registrado' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Código agua</dt>
+            <dd class="mt-1 text-sm text-slate-900">{{ contrato.inmueble?.codigoAgua || 'No registrado' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Código gas</dt>
+            <dd class="mt-1 text-sm text-slate-900">{{ contrato.inmueble?.codigoGas || 'No registrado' }}</dd>
+          </div>
+          <div>
             <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Fecha de fin</dt>
             <dd class="mt-1 text-sm text-slate-900">{{ contrato.fechaFin ? fecha(contrato.fechaFin) : '—' }}</dd>
           </div>

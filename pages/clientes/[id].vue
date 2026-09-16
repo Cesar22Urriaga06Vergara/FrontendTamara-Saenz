@@ -124,51 +124,57 @@ async function reactivar() {
 </script>
 
 <template>
-  <div class="max-w-3xl">
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-      <div class="flex items-center gap-3">
-        <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/clientes">Volver</UButton>
-        <!-- No es <h1>: el título real de la página ya lo fija definirTituloDinamico() y lo
-             muestra Header.vue — este texto es solo contexto inline junto al botón Volver. -->
-        <p class="text-xl font-semibold text-slate-900">{{ cliente?.nombreCompleto || 'Cliente' }}</p>
-        <SharedStatusBadge v-if="cliente" domain="activo" :value="cliente.activo" />
+  <div class="max-w-5xl space-y-5">
+    <header class="surface-card px-5 py-4 sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-start gap-3">
+          <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/clientes">Volver</UButton>
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Arrendatario</p>
+            <div class="mt-2 flex items-center gap-2">
+              <p class="text-xl font-semibold text-slate-900">{{ cliente?.nombreCompleto || 'Cliente' }}</p>
+              <SharedStatusBadge v-if="cliente" domain="activo" :value="cliente.activo" />
+            </div>
+          </div>
+        </div>
+
+        <div v-if="cliente && auth.esAdministrador" class="flex gap-2">
+          <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-pencil-square" @click="abrirEdicion">
+            Editar
+          </UButton>
+          <UButton
+            v-if="cliente.activo"
+            size="sm"
+            color="red"
+            variant="soft"
+            icon="i-heroicons-trash"
+            @click="modalBaja = true"
+          >
+            Dar de baja
+          </UButton>
+          <UButton
+            v-else
+            size="sm"
+            color="emerald"
+            variant="soft"
+            icon="i-heroicons-arrow-path"
+            :loading="reactivando"
+            @click="reactivar"
+          >
+            Reactivar
+          </UButton>
+        </div>
       </div>
-      <div v-if="cliente && auth.esAdministrador" class="flex gap-2">
-        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-pencil-square" @click="abrirEdicion">
-          Editar
-        </UButton>
-        <UButton
-          v-if="cliente.activo"
-          size="sm"
-          color="red"
-          variant="soft"
-          icon="i-heroicons-trash"
-          @click="modalBaja = true"
-        >
-          Dar de baja
-        </UButton>
-        <UButton
-          v-else
-          size="sm"
-          color="emerald"
-          variant="soft"
-          icon="i-heroicons-arrow-path"
-          :loading="reactivando"
-          @click="reactivar"
-        >
-          Reactivar
-        </UButton>
-      </div>
-    </div>
+    </header>
 
     <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="cargar" />
 
     <div v-if="cargando" class="text-center py-16 text-slate-500">Cargando cliente…</div>
 
-    <div v-else-if="cliente" class="space-y-4">
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">Datos de contacto</p></template>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+    <div v-else-if="cliente" class="space-y-5">
+      <div class="surface-card p-4 sm:p-5">
+        <p class="mb-4 font-semibold text-slate-900">Datos de contacto</p>
+        <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <p>
             <span class="text-slate-500">Documento:</span> {{ cliente.tipoDocumento }} {{ cliente.numeroDocumento }}
           </p>
@@ -176,38 +182,42 @@ async function reactivar() {
           <p><span class="text-slate-500">Correo:</span> {{ cliente.email || '—' }}</p>
           <p><span class="text-slate-500">Dirección:</span> {{ cliente.direccion || '—' }}</p>
         </div>
-      </UCard>
+      </div>
 
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">Contratos</p></template>
-        <UTable
-          :rows="contratos"
-          :columns="[
-            { key: 'inmueble.direccion', label: 'Dirección' },
-            { key: 'inmueble.barrio', label: 'Barrio' },
-            { key: 'fechaInicio', label: 'Fecha inicio' },
-            { key: 'estado', label: 'Estado' },
-            { key: 'acciones', label: 'Acciones' },
-          ]"
-          :loading="cargandoContratos"
-        >
-          <template #fechaInicio-data="{ row }">{{ fecha(row.fechaInicio) }}</template>
-          <template #estado-data="{ row }">
-            <SharedStatusBadge domain="contrato" :value="row.estado" />
-          </template>
-          <template #acciones-data="{ row }">
-            <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/contratos/${row.id}`">
-              Ver
-            </UButton>
-          </template>
-          <template #empty-state>
-            <p class="text-center py-6 text-sm text-slate-400">Sin contratos registrados.</p>
-          </template>
-        </UTable>
-        <div v-if="totalContratos > limitContratos" class="flex justify-end mt-4">
-          <UPagination v-model="pageContratos" :page-count="limitContratos" :total="totalContratos" />
+      <div class="surface-card overflow-hidden">
+        <div class="border-b border-slate-200 px-4 py-3 sm:px-5">
+          <p class="font-semibold text-slate-900">Contratos</p>
         </div>
-      </UCard>
+        <div class="p-4 sm:p-5">
+          <UTable
+            :rows="contratos"
+            :columns="[
+              { key: 'inmueble.direccion', label: 'Dirección' },
+              { key: 'inmueble.barrio', label: 'Barrio' },
+              { key: 'fechaInicio', label: 'Fecha inicio' },
+              { key: 'estado', label: 'Estado' },
+              { key: 'acciones', label: 'Acciones' },
+            ]"
+            :loading="cargandoContratos"
+          >
+            <template #fechaInicio-data="{ row }">{{ fecha(row.fechaInicio) }}</template>
+            <template #estado-data="{ row }">
+              <SharedStatusBadge domain="contrato" :value="row.estado" />
+            </template>
+            <template #acciones-data="{ row }">
+              <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/contratos/${row.id}`">
+                Ver
+              </UButton>
+            </template>
+            <template #empty-state>
+              <p class="text-center py-6 text-sm text-slate-400">Sin contratos registrados.</p>
+            </template>
+          </UTable>
+          <div v-if="totalContratos > limitContratos" class="flex justify-end mt-4">
+            <UPagination v-model="pageContratos" :page-count="limitContratos" :total="totalContratos" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <PersonasFormularioPersona

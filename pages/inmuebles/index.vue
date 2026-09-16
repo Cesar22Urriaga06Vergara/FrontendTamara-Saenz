@@ -24,6 +24,7 @@ const columnas = [
   { key: 'consecutivo', label: 'No.' },
   { key: 'direccion', label: 'Dirección' },
   { key: 'barrio', label: 'Barrio' },
+  { key: 'servicios', label: 'Códigos de servicios' },
   { key: 'canonValor', label: 'Canon' },
   { key: 'depositoValor', label: 'Depósito' },
   { key: 'estado', label: 'Estado' },
@@ -191,6 +192,13 @@ onMounted(cargarBarrios)
     <UCard>
       <UTable :rows="inmuebles" :columns="columnas" :loading="cargando">
         <template #consecutivo-data="{ row }">{{ row.consecutivo || '—' }}</template>
+        <template #servicios-data="{ row }">
+          <div class="flex max-w-56 flex-wrap gap-1">
+            <UBadge color="amber" variant="subtle" size="xs">Energía: {{ row.codigoEnergia || '—' }}</UBadge>
+            <UBadge color="sky" variant="subtle" size="xs">Agua: {{ row.codigoAgua || '—' }}</UBadge>
+            <UBadge color="orange" variant="subtle" size="xs">Gas: {{ row.codigoGas || '—' }}</UBadge>
+          </div>
+        </template>
         <template #canonValor-data="{ row }">{{ moneda(row.canonValor) }}</template>
         <template #depositoValor-data="{ row }">{{
           row.depositoValor != null ? moneda(row.depositoValor) : '—'

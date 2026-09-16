@@ -115,32 +115,40 @@ async function guardar() {
 </script>
 
 <template>
-  <div class="max-w-3xl">
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-      <div class="flex items-center gap-3">
-        <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/inmuebles">Volver</UButton>
-        <h1 class="text-xl font-semibold text-slate-900">{{ inmueble?.direccion || 'Inmueble' }}</h1>
-        <SharedStatusBadge v-if="inmueble" domain="inmueble" :value="inmueble.estado" />
+  <div class="max-w-5xl space-y-5">
+    <header class="surface-card px-5 py-4 sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-start gap-3">
+          <UButton color="gray" variant="ghost" icon="i-heroicons-arrow-left" to="/inmuebles">Volver</UButton>
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600">Inmueble</p>
+            <div class="mt-2 flex items-center gap-2">
+              <h1 class="text-xl font-semibold text-slate-900">{{ inmueble?.direccion || 'Inmueble' }}</h1>
+              <SharedStatusBadge v-if="inmueble" domain="inmueble" :value="inmueble.estado" />
+            </div>
+          </div>
+        </div>
+
+        <UButton
+          v-if="inmueble"
+          size="sm"
+          color="gray"
+          variant="soft"
+          icon="i-heroicons-pencil-square"
+          @click="abrirEdicion"
+        >
+          Editar
+        </UButton>
       </div>
-      <UButton
-        v-if="inmueble"
-        size="sm"
-        color="gray"
-        variant="soft"
-        icon="i-heroicons-pencil-square"
-        @click="abrirEdicion"
-      >
-        Editar
-      </UButton>
-    </div>
+    </header>
 
     <SharedErrorState v-if="error" :message="error" class="mb-4" @retry="cargar" />
 
     <div v-if="cargando" class="text-center py-16 text-slate-500">Cargando inmueble…</div>
 
-    <div v-else-if="inmueble" class="space-y-4">
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">Datos del inmueble</p></template>
+    <div v-else-if="inmueble" class="space-y-5">
+      <div class="surface-card p-4 sm:p-5">
+        <p class="mb-4 font-semibold text-slate-900">Datos del inmueble</p>
         <div class="grid grid-cols-2 gap-3 text-sm">
           <p><span class="text-slate-500">Barrio:</span> {{ inmueble.barrio }}</p>
           <p><span class="text-slate-500">Consecutivo:</span> {{ inmueble.consecutivo || '—' }}</p>
@@ -156,38 +164,42 @@ async function guardar() {
             <span class="text-slate-500">Observaciones:</span> {{ inmueble.observaciones }}
           </p>
         </div>
-      </UCard>
+      </div>
 
-      <UCard>
-        <template #header><p class="font-semibold text-slate-900">Historial de contratos</p></template>
-        <UTable
-          :rows="contratos"
-          :columns="[
-            { key: 'cliente', label: 'Arrendatario' },
-            { key: 'fechaInicio', label: 'Fecha inicio' },
-            { key: 'estado', label: 'Estado' },
-            { key: 'acciones', label: '' },
-          ]"
-          :loading="cargandoContratos"
-        >
-          <template #cliente-data="{ row }">{{ row.cliente?.nombreCompleto }}</template>
-          <template #fechaInicio-data="{ row }">{{ fecha(row.fechaInicio) }}</template>
-          <template #estado-data="{ row }">
-            <SharedStatusBadge domain="contrato" :value="row.estado" />
-          </template>
-          <template #acciones-data="{ row }">
-            <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/contratos/${row.id}`">
-              Ver
-            </UButton>
-          </template>
-          <template #empty-state>
-            <p class="text-center py-6 text-sm text-slate-400">Sin contratos registrados sobre este inmueble.</p>
-          </template>
-        </UTable>
-        <div v-if="totalContratos > limitContratos" class="flex justify-end mt-4">
-          <UPagination v-model="pageContratos" :page-count="limitContratos" :total="totalContratos" />
+      <div class="surface-card overflow-hidden">
+        <div class="border-b border-slate-200 px-4 py-3 sm:px-5">
+          <p class="font-semibold text-slate-900">Historial de contratos</p>
         </div>
-      </UCard>
+        <div class="p-4 sm:p-5">
+          <UTable
+            :rows="contratos"
+            :columns="[
+              { key: 'cliente', label: 'Arrendatario' },
+              { key: 'fechaInicio', label: 'Fecha inicio' },
+              { key: 'estado', label: 'Estado' },
+              { key: 'acciones', label: '' },
+            ]"
+            :loading="cargandoContratos"
+          >
+            <template #cliente-data="{ row }">{{ row.cliente?.nombreCompleto }}</template>
+            <template #fechaInicio-data="{ row }">{{ fecha(row.fechaInicio) }}</template>
+            <template #estado-data="{ row }">
+              <SharedStatusBadge domain="contrato" :value="row.estado" />
+            </template>
+            <template #acciones-data="{ row }">
+              <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-eye" :to="`/contratos/${row.id}`">
+                Ver
+              </UButton>
+            </template>
+            <template #empty-state>
+              <p class="text-center py-6 text-sm text-slate-400">Sin contratos registrados sobre este inmueble.</p>
+            </template>
+          </UTable>
+          <div v-if="totalContratos > limitContratos" class="flex justify-end mt-4">
+            <UPagination v-model="pageContratos" :page-count="limitContratos" :total="totalContratos" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <UModal v-model="modalEditar">

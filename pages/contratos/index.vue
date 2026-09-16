@@ -47,8 +47,7 @@ onBeforeUnmount(() => clearTimeout(debounceBusqueda))
 
 const columnas = [
   { key: 'cliente', label: 'Arrendatario', class: 'w-[18%]' },
-  { key: 'inmueble.direccion', label: 'Dirección', class: 'w-[22%]' },
-  { key: 'inmueble.barrio', label: 'Barrio', class: 'w-[12%]' },
+  { key: 'inmueble', label: 'Inmueble', class: 'w-[34%]' },
   {
     key: 'canonValor',
     label: 'Canon',
@@ -173,6 +172,16 @@ onMounted(cargarBarrios)
           <div>
             <p class="font-semibold text-slate-900">{{ row.cliente?.nombreCompleto }}</p>
             <p class="text-xs text-slate-500">{{ row.cliente?.numeroDocumento }}</p>
+          </div>
+        </template>
+        <template #inmueble-data="{ row }">
+          <div>
+            <p class="font-medium text-slate-900">{{ row.inmueble?.direccion || '—' }}</p>
+            <p class="text-xs text-slate-500">{{ row.inmueble?.barrio || '—' }}</p>
+            <p class="mt-1 text-[11px] leading-4 text-slate-500">
+              Energía: {{ row.inmueble?.codigoEnergia || '—' }} · Agua: {{ row.inmueble?.codigoAgua || '—' }} · Gas:
+              {{ row.inmueble?.codigoGas || '—' }}
+            </p>
           </div>
         </template>
         <template #canonValor-data="{ row }">{{ moneda(row.canonValor) }}</template>

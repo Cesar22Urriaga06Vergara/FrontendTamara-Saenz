@@ -257,12 +257,18 @@ onMounted(() => {
           />
           <UButton color="amber" @click="buscarCliente">Buscar</UButton>
         </div>
-        <div v-else class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div>
-            <p class="font-semibold text-slate-900">{{ clienteSeleccionado.nombreCompleto }}</p>
-            <p class="text-xs text-slate-600">{{ clienteSeleccionado.numeroDocumento }}</p>
+
+        <div
+          v-else
+          class="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-white p-3 shadow-sm"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-base font-semibold text-slate-900">{{ clienteSeleccionado.nombreCompleto }}</p>
+              <p class="mt-1 text-sm text-slate-600">{{ clienteSeleccionado.numeroDocumento }}</p>
+            </div>
+            <UButton size="xs" color="gray" variant="ghost" @click="clienteSeleccionado = null">Cambiar</UButton>
           </div>
-          <UButton size="xs" color="gray" variant="ghost" @click="clienteSeleccionado = null">Cambiar</UButton>
         </div>
 
         <div
@@ -289,7 +295,7 @@ onMounted(() => {
           >
         </div>
 
-        <div class="mb-3 flex flex-col gap-2 sm:flex-row">
+        <div v-if="!codeudoresSeleccionados.length" class="mb-3 flex flex-col gap-2 sm:flex-row">
           <UInput
             v-model="busquedaCodeudor"
             placeholder="Buscar por cédula o nombre…"
@@ -313,23 +319,32 @@ onMounted(() => {
           </button>
         </div>
 
-        <TransitionGroup v-if="codeudoresSeleccionados.length" tag="div" name="chip" class="flex flex-wrap gap-2">
-          <UBadge
-            v-for="c in codeudoresSeleccionados"
-            :key="c.id"
-            color="amber"
-            variant="subtle"
-            class="flex items-center gap-1"
-          >
-            {{ c.nombreCompleto }}
-            <UIcon
-              name="i-heroicons-x-mark"
-              class="cursor-pointer"
-              aria-label="Quitar codeudor"
-              @click="quitarCodeudor(c.id)"
-            />
-          </UBadge>
-        </TransitionGroup>
+        <div
+          v-if="codeudoresSeleccionados.length"
+          class="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-white p-3 shadow-sm"
+        >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex-1">
+              <div
+                v-for="c in codeudoresSeleccionados"
+                :key="c.id"
+                class="flex items-center justify-between gap-3 py-1"
+              >
+                <div>
+                  <p class="text-base font-semibold text-slate-900">{{ c.nombreCompleto }}</p>
+                  <p class="mt-1 text-sm text-slate-600">{{ c.numeroDocumento }}</p>
+                </div>
+                <UIcon
+                  name="i-heroicons-x-mark"
+                  class="cursor-pointer text-slate-500"
+                  aria-label="Quitar codeudor"
+                  @click="quitarCodeudor(c.id)"
+                />
+              </div>
+            </div>
+            <UButton size="xs" color="gray" variant="ghost" @click="codeudoresSeleccionados = []">Cambiar</UButton>
+          </div>
+        </div>
         <p v-else class="text-sm text-slate-600">Aún no hay codeudores seleccionados.</p>
       </div>
 
@@ -347,24 +362,48 @@ onMounted(() => {
           :loading="cargandoInmuebles"
           @retry="cargarInmuebles"
         />
-        <USelectMenu
-          v-else
-          v-model="inmuebleSeleccionado"
-          :options="inmueblesDisponibles"
-          option-attribute="direccion"
-          placeholder="Selecciona un inmueble disponible"
-        >
-          <template #option="{ option }">
-            <span>{{ option.direccion }} — {{ option.barrio }} ({{ moneda(option.canonValor) }})</span>
-          </template>
-        </USelectMenu>
-
-        <div v-if="inmuebleSeleccionado" class="mt-3 flex flex-wrap gap-2">
-          <UBadge color="amber" variant="subtle"
-            >Energía: {{ inmuebleSeleccionado.codigoEnergia || 'No registrado' }}</UBadge
+        <div v-else-if="!inmuebleSeleccionado" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-2.5">
+          <USelectMenu
+            v-model="inmuebleSeleccionado"
+            :options="inmueblesDisponibles"
+            option-attribute="direccion"
+            placeholder="Selecciona un inmueble disponible"
+            class="w-full"
           >
-          <UBadge color="amber" variant="subtle">Agua: {{ inmuebleSeleccionado.codigoAgua || 'No registrado' }}</UBadge>
-          <UBadge color="amber" variant="subtle">Gas: {{ inmuebleSeleccionado.codigoGas || 'No registrado' }}</UBadge>
+            <template #option="{ option }">
+              <span>{{ option.direccion }} — {{ option.barrio }} ({{ moneda(option.canonValor) }})</span>
+            </template>
+          </USelectMenu>
+        </div>
+
+        <div
+          v-else
+          class="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-white p-3 shadow-sm"
+        >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-base font-semibold text-slate-900">{{ inmuebleSeleccionado.direccion }}</p>
+              <p class="text-sm text-slate-600">{{ inmuebleSeleccionado.barrio }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+              >
+                Canon {{ moneda(inmuebleSeleccionado.canonValor) }}
+              </span>
+              <UButton size="xs" color="gray" variant="ghost" @click="inmuebleSeleccionado = null">Cambiar</UButton>
+            </div>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-2">
+            <UBadge color="amber" variant="subtle"
+              >Energía: {{ inmuebleSeleccionado.codigoEnergia || 'No registrado' }}</UBadge
+            >
+            <UBadge color="amber" variant="subtle"
+              >Agua: {{ inmuebleSeleccionado.codigoAgua || 'No registrado' }}</UBadge
+            >
+            <UBadge color="amber" variant="subtle">Gas: {{ inmuebleSeleccionado.codigoGas || 'No registrado' }}</UBadge>
+          </div>
         </div>
       </div>
 
