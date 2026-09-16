@@ -179,7 +179,17 @@ const {
   error,
   cargar,
 } = useListadoPaginado<any, { barrio: string; estado: string; fechaDesde: string; fechaHasta: string }>(
-  ({ page, limit, filtros }) => useApiFetch<any>('/novedades', { params: { ...filtros, page, limit } }),
+  ({ page, limit, filtros }) =>
+    useApiFetch<any>('/novedades', {
+      params: {
+        page,
+        limit,
+        barrio: filtros.barrio || undefined,
+        estado: filtros.estado || undefined,
+        fechaDesde: filtros.fechaDesde || undefined,
+        fechaHasta: filtros.fechaHasta || undefined,
+      },
+    }),
   {
     filtrosIniciales: { barrio: '', estado: '', fechaDesde: '', fechaHasta: '' },
     mensajeError: 'No fue posible cargar las novedades.',
