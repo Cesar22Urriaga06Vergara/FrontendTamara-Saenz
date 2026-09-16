@@ -7,7 +7,6 @@ interface EmpresaConfig {
   telefono: string
   horizonteMesesCanon: number
   saldoInicialCaja: number
-  logoUrl?: string | null
 }
 
 interface ConsecutivoConfig {
@@ -20,11 +19,8 @@ interface ConsecutivoConfig {
 /**
  * Configuración global de la empresa — EXCLUSIVO Administrador.
  * Separa lo que antes vivía embebido en /administracion: datos corporativos,
- * horizonte de cánones, saldo inicial de caja y logo (subida de archivo real vía POST /empresa/logo).
+ * horizonte de cánones y saldo inicial de caja.
  */
-const config = useRuntimeConfig()
-const origenApi = computed(() => new URL(config.public.apiBaseUrl).origin)
-
 const empresa = ref<EmpresaConfig | null>(null)
 const consecutivos = ref<ConsecutivoConfig[]>([])
 const cargandoEmpresa = ref(true)
@@ -93,55 +89,6 @@ async function generarCanones() {
   }
 }
 
-// ---- Logo ----
-const inputLogoRef = ref<HTMLInputElement | null>(null)
-const archivoLogo = ref<File | null>(null)
-const previewLogoLocal = ref<string | null>(null)
-const subiendoLogo = ref(false)
-
-const logoPreviewSrc = computed(() => {
-  if (previewLogoLocal.value) return previewLogoLocal.value
-  if (empresa.value?.logoUrl) return `${origenApi.value}${empresa.value.logoUrl}`
-  return null
-})
-
-function abrirSelectorLogo() {
-  inputLogoRef.value?.click()
-}
-
-function seleccionarLogo(evento: Event) {
-  const input = evento.target as HTMLInputElement
-  const archivo = input.files?.[0]
-  if (!archivo) return
-
-  if (previewLogoLocal.value) URL.revokeObjectURL(previewLogoLocal.value)
-  archivoLogo.value = archivo
-  previewLogoLocal.value = URL.createObjectURL(archivo)
-}
-
-function cancelarLogo() {
-  if (previewLogoLocal.value) URL.revokeObjectURL(previewLogoLocal.value)
-  archivoLogo.value = null
-  previewLogoLocal.value = null
-  if (inputLogoRef.value) inputLogoRef.value.value = ''
-}
-
-async function subirLogo() {
-  if (!archivoLogo.value) return
-  errorEmpresa.value = ''
-  subiendoLogo.value = true
-  try {
-    const formData = new FormData()
-    formData.append('archivo', archivoLogo.value)
-    empresa.value = await useApiFetch<any>('/empresa/logo', { method: 'POST', body: formData })
-    cancelarLogo()
-  } catch (e: any) {
-    errorEmpresa.value = e?.data?.message || 'No fue posible subir el logo.'
-  } finally {
-    subiendoLogo.value = false
-  }
-}
-
 async function cargarConsecutivos() {
   try {
     consecutivos.value = await useApiFetch<ConsecutivoConfig[]>('/empresa/consecutivos')
@@ -191,9 +138,6 @@ async function guardarConsecutivo() {
 onMounted(async () => {
   await cargarEmpresa()
   await cargarConsecutivos()
-})
-onBeforeUnmount(() => {
-  if (previewLogoLocal.value) URL.revokeObjectURL(previewLogoLocal.value)
 })
 </script>
 
@@ -319,57 +263,6 @@ onBeforeUnmount(() => {
             </UButton>
           </div>
         </template>
-      </UCard>
-
-      <!-- Logo -->
-      <UCard>
-        <template #header>
-          <p class="font-semibold text-slate-900">Logo</p>
-        </template>
-
-        <div class="flex items-center gap-6">
-          <div
-            class="w-24 h-24 rounded-lg border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0"
-          >
-            <img
-              v-if="logoPreviewSrc"
-              :src="logoPreviewSrc"
-              alt="Logo de la empresa"
-              class="w-full h-full object-contain"
-            />
-            <UIcon v-else name="i-heroicons-building-office-2" class="w-8 h-8 text-slate-300" />
-          </div>
-
-          <div class="space-y-2">
-            <input
-              ref="inputLogoRef"
-              type="file"
-              accept="image/png,image/jpeg"
-              class="hidden"
-              @change="seleccionarLogo"
-            />
-            <div class="flex gap-2">
-              <UButton color="gray" variant="soft" size="sm" @click="abrirSelectorLogo">
-                {{ archivoLogo ? 'Cambiar selección' : 'Seleccionar imagen' }}
-              </UButton>
-              <UButton v-if="archivoLogo" color="amber" size="sm" :loading="subiendoLogo" @click="subirLogo">
-                Subir logo
-              </UButton>
-              <UButton
-                v-if="archivoLogo"
-                color="gray"
-                variant="ghost"
-                size="sm"
-                :disabled="subiendoLogo"
-                @click="cancelarLogo"
-              >
-                Cancelar
-              </UButton>
-            </div>
-            <p class="text-xs text-slate-400">PNG o JPG. Máximo 2 MB.</p>
-            <p v-if="archivoLogo" class="text-xs text-slate-500">{{ archivoLogo.name }}</p>
-          </div>
-        </div>
       </UCard>
     </template>
 

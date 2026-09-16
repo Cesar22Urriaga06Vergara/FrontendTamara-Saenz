@@ -144,7 +144,13 @@ const recibosColumnas = [
           >
             Ir a Recaudo
           </UButton>
-          <UButton v-if="contrato.estado === 'ACTIVO'" size="sm" color="red" variant="soft" @click="modalTerminar = true">
+          <UButton
+            v-if="contrato.estado === 'ACTIVO'"
+            size="sm"
+            color="red"
+            variant="soft"
+            @click="modalTerminar = true"
+          >
             Terminar
           </UButton>
           <UButton
@@ -231,7 +237,9 @@ const recibosColumnas = [
               <dl class="grid grid-cols-2 gap-x-6 gap-y-3">
                 <div>
                   <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Saldo a favor</dt>
-                  <dd class="mt-1 text-sm font-semibold tabular-nums text-emerald-600">{{ moneda(ficha.saldoAFavor) }}</dd>
+                  <dd class="mt-1 text-sm font-semibold tabular-nums text-emerald-600">
+                    {{ moneda(ficha.saldoAFavor) }}
+                  </dd>
                 </div>
                 <div>
                   <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Depósito</dt>
@@ -249,7 +257,9 @@ const recibosColumnas = [
               </dl>
               <div>
                 <p class="mb-2 text-sm font-medium text-slate-900">Obligaciones pendientes</p>
-                <p v-if="!ficha.obligacionesPendientes?.length" class="text-sm text-slate-400">Sin obligaciones pendientes.</p>
+                <p v-if="!ficha.obligacionesPendientes?.length" class="text-sm text-slate-400">
+                  Sin obligaciones pendientes.
+                </p>
                 <ul v-else class="space-y-2">
                   <li
                     v-for="o in ficha.obligacionesPendientes"

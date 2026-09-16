@@ -55,7 +55,9 @@ const totales = computed(() => {
         <div v-if="cargando" key="cargando" class="py-10 text-center text-slate-500">Calculando aplicación…</div>
 
         <div v-else-if="previsualizacion" key="resultado" class="space-y-4">
-          <div class="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-sm sm:grid-cols-2">
+          <div
+            class="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-sm sm:grid-cols-2"
+          >
             <p><span class="text-slate-500">Cliente:</span> {{ previsualizacion.contrato?.cliente?.nombreCompleto }}</p>
             <p><span class="text-slate-500">Inmueble:</span> {{ previsualizacion.contrato?.inmueble?.direccion }}</p>
             <p><span class="text-slate-500">Barrio:</span> {{ previsualizacion.contrato?.inmueble?.barrio || '—' }}</p>

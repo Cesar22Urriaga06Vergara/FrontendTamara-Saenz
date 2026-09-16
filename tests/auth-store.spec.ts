@@ -36,6 +36,21 @@ describe('auth.store — restaurar()', () => {
     expect(auth.esAdministrador).toBe(true)
   })
 
+  it('reconoce un usuario con rol CONTADOR', () => {
+    stubLocalStorage({
+      tamara_saenz_sesion: JSON.stringify({
+        accessToken: 't',
+        refreshToken: 'r',
+        usuario: { id: '2', email: 'contador@tamarasaenz.com', rol: 'CONTADOR' },
+      }),
+    })
+    const auth = useAuthStore()
+    auth.restaurar()
+    expect(auth.rol).toBe('CONTADOR')
+    expect(auth.esContador).toBe(true)
+    expect(auth.esAdministrador).toBe(false)
+  })
+
   it('no revienta y limpia la clave si el JSON está corrupto', () => {
     const store = stubLocalStorage({ tamara_saenz_sesion: '{ esto no es json' })
     const auth = useAuthStore()

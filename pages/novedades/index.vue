@@ -267,7 +267,9 @@ onMounted(cargarBarrios)
           <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
             <span class="font-medium text-slate-700">{{ total }} registros</span>
           </div>
-          <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva" class="!rounded-xl">Registrar novedad</UButton>
+          <UButton color="amber" icon="i-heroicons-plus" to="/novedades/nueva" class="!rounded-xl"
+            >Registrar novedad</UButton
+          >
         </div>
       </div>
     </header>
@@ -369,7 +371,14 @@ onMounted(cargarBarrios)
 
     <!-- Modal de aprobación financiera — exclusivo Administrador -->
     <UModal v-model="modalAbierto">
-      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
+      <UCard
+        :ui="{
+          root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+          body: { base: 'p-5 sm:p-6' },
+          header: { base: 'border-b border-slate-200 px-0 pb-4' },
+          footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+        }"
+      >
         <template #header>
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
@@ -419,7 +428,14 @@ onMounted(cargarBarrios)
 
     <!-- Pago real de un gasto ya aprobado — exclusivo Administrador -->
     <UModal v-model="modalPago">
-      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
+      <UCard
+        :ui="{
+          root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+          body: { base: 'p-5 sm:p-6' },
+          header: { base: 'border-b border-slate-200 px-0 pb-4' },
+          footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+        }"
+      >
         <template #header>
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
@@ -460,7 +476,14 @@ onMounted(cargarBarrios)
 
     <!-- Revertir una aprobación financiera aún no materializada en dinero — exclusivo Administrador -->
     <UModal v-model="modalRevertir">
-      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
+      <UCard
+        :ui="{
+          root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+          body: { base: 'p-5 sm:p-6' },
+          header: { base: 'border-b border-slate-200 px-0 pb-4' },
+          footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+        }"
+      >
         <template #header>
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
@@ -494,7 +517,14 @@ onMounted(cargarBarrios)
 
     <!-- Cambiar estado del tablero -->
     <UModal v-model="modalEstado">
-      <UCard :ui="{ root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]', body: { base: 'p-5 sm:p-6' }, header: { base: 'border-b border-slate-200 px-0 pb-4' }, footer: { base: 'border-t border-slate-200 px-0 pt-4' } }">
+      <UCard
+        :ui="{
+          root: 'overflow-hidden rounded-2xl border border-slate-200 shadow-[0_28px_60px_-32px_rgba(15,23,42,0.7)]',
+          body: { base: 'p-5 sm:p-6' },
+          header: { base: 'border-b border-slate-200 px-0 pb-4' },
+          footer: { base: 'border-t border-slate-200 px-0 pt-4' },
+        }"
+      >
         <template #header>
           <div class="flex items-center gap-3">
             <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">

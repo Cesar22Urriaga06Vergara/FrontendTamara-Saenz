@@ -28,9 +28,7 @@ describe('resolverApiBaseUrl', () => {
   })
 
   it('acepta cabeceras con el backend real de Render', () => {
-    expect(() =>
-      validarHeadersProduccion('connect-src self https://backendtamara-saenz.onrender.com'),
-    ).not.toThrow()
+    expect(() => validarHeadersProduccion('connect-src self https://backendtamara-saenz.onrender.com')).not.toThrow()
   })
 
   it('rechaza cabeceras con un host de ejemplo en producción', () => {

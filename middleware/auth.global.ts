@@ -26,22 +26,26 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/dashboard')
   }
 
-  const rutasSoloAdmin = [
+  const rutasSoloAdmin = ['/administracion', '/configuracion', '/usuarios', '/auditoria']
+  const rutasLecturaFinanciera = [
     '/recaudo',
     '/reportes',
-    '/administracion',
-    '/configuracion',
     '/movimientos',
-    '/auditoria',
-    '/recibos/',
+    '/recibos',
     '/caja',
     '/cartera',
     '/gastos',
     '/depositos',
     '/transferencias',
   ]
+
   const esRutaAdmin = rutasSoloAdmin.some((r) => to.path.startsWith(r))
   if (esRutaAdmin && auth.rol !== 'ADMINISTRADOR') {
+    return navigateTo('/dashboard')
+  }
+
+  const esRutaLecturaFinanciera = rutasLecturaFinanciera.some((r) => to.path.startsWith(r))
+  if (esRutaLecturaFinanciera && !['ADMINISTRADOR', 'CONTADOR'].includes(auth.rol ?? '')) {
     return navigateTo('/dashboard')
   }
 })

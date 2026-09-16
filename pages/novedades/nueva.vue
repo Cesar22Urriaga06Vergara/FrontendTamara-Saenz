@@ -156,14 +156,20 @@ async function guardar() {
             />
             <UButton color="amber" :loading="buscando" @click="buscarInmueble">Buscar</UButton>
           </div>
-          <div v-else class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div
+            v-else
+            class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+          >
             <div>
               <p class="font-medium text-slate-900">{{ inmuebleSeleccionado.direccion }}</p>
               <p class="text-xs text-slate-500">{{ inmuebleSeleccionado.barrio }}</p>
             </div>
             <UButton size="xs" color="gray" variant="ghost" @click="quitarInmuebleSeleccionado">Cambiar</UButton>
           </div>
-          <div v-if="resultadosInmueble.length" class="mt-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60">
+          <div
+            v-if="resultadosInmueble.length"
+            class="mt-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60"
+          >
             <button
               v-for="i in resultadosInmueble"
               :key="i.id"
@@ -210,7 +216,7 @@ async function guardar() {
       </div>
 
       <div class="mt-5 flex justify-end">
-        <UButton color="amber" :disabled="!puedeGuardar" :loading="guardando" @click="guardar" class="!rounded-xl">
+        <UButton color="amber" :disabled="!puedeGuardar" :loading="guardando" class="!rounded-xl" @click="guardar">
           Registrar novedad
         </UButton>
       </div>

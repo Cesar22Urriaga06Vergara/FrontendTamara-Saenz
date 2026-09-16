@@ -6,7 +6,7 @@
  * No introduce estados nuevos: solo documenta en un solo lugar los que cada
  * página ya usaba.
  */
-export type ColorEstado = 'emerald' | 'amber' | 'orange' | 'red' | 'gray'
+export type ColorEstado = 'emerald' | 'amber' | 'orange' | 'red' | 'gray' | 'sky'
 
 export interface EntradaEstado {
   color: ColorEstado
@@ -43,6 +43,12 @@ export const ESTADOS: Record<string, Record<string, EntradaEstado>> = {
     EMITIDO: { color: 'emerald', label: 'EMITIDO' },
     ANULADO: { color: 'red', label: 'ANULADO' },
   },
+  servicioPublicoEstado: {
+    PENDIENTE: { color: 'amber', label: 'PENDIENTE' },
+    PAGADO: { color: 'emerald', label: 'PAGADO' },
+    VENCIDO: { color: 'red', label: 'VENCIDO' },
+    ANULADO: { color: 'gray', label: 'ANULADO' },
+  },
   obligacion: {
     PENDIENTE: { color: 'amber', label: 'PENDIENTE' },
     PARCIAL: { color: 'orange', label: 'PARCIAL' },
@@ -60,6 +66,7 @@ export const ESTADOS: Record<string, Record<string, EntradaEstado>> = {
   rol: {
     ADMINISTRADOR: { color: 'amber', label: 'ADMINISTRADOR' },
     RECEPCIONISTA: { color: 'gray', label: 'RECEPCIONISTA' },
+    CONTADOR: { color: 'sky', label: 'CONTADOR' },
   },
 }
 

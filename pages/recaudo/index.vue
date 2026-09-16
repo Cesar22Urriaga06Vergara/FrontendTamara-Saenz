@@ -83,6 +83,7 @@ interface ReciboCaja {
  */
 const route = useRoute()
 const { moneda, fecha } = useFormatoCO()
+const auth = useAuthStore()
 
 // `error` = fallos de acción (simular/pagar/pdf/anular/liquidar), se muestran como alerta
 // compacta arriba. `errorFicha` = fallo de CARGA de la ficha, va con estado "Reintentar".
@@ -593,6 +594,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
               </span>
             </div>
             <UButton
+              v-if="auth.esAdministrador"
               color="gray"
               variant="soft"
               size="sm"
@@ -663,6 +665,7 @@ const enDetalle = computed(() => !!contratoSeleccionado.value || cargandoFicha.v
           </template>
           <template #acciones-data="{ row }">
             <UButton
+              v-if="auth.esAdministrador"
               size="xs"
               color="amber"
               icon="i-heroicons-banknotes"

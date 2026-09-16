@@ -6,6 +6,7 @@
  * es la misma fuente que usa Recaudo. Sin costo de mora (retirado el 2026-09-01).
  */
 const { moneda, fecha } = useFormatoCO()
+const auth = useAuthStore()
 
 const {
   page,
@@ -60,7 +61,7 @@ const totalPagina = computed(() =>
           </span>
         </template>
         <template #acciones-data="{ row }">
-          <div class="flex flex-nowrap items-center justify-center gap-2">
+          <div v-if="auth.esAdministrador" class="flex flex-nowrap items-center justify-center gap-2">
             <UButton
               size="xs"
               color="amber"

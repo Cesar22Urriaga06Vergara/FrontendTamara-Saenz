@@ -25,9 +25,9 @@ async function cargar() {
     const operativas = await useApiFetch<any>('/dashboard')
     metricas.value = { ...metricas.value, ...operativas }
 
-    // Las cifras de dinero viven en un endpoint separado, protegido con @Roles(ADMINISTRADOR)
-    // en el backend — solo se consulta si el usuario es Administrador.
-    if (auth.esAdministrador) {
+    // Las cifras de dinero viven en un endpoint separado, protegido con @Roles(ADMINISTRADOR, CONTADOR)
+    // en el backend — solo se consultan si el usuario puede ver finanzas de lectura.
+    if (auth.puedeVerFinanzas) {
       const financieras = await useApiFetch<any>('/dashboard/financiero')
       metricas.value = { ...metricas.value, ...financieras }
     }
@@ -59,7 +59,7 @@ const tiles = computed(() => {
       to: '/contratos',
     },
   ]
-  if (auth.esAdministrador) {
+  if (auth.puedeVerFinanzas) {
     t.push(
       {
         label: 'Cartera total',
@@ -190,7 +190,9 @@ onMounted(() => {
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-600">Panel operativo</p>
           <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h2>
         </div>
-        <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+        <div
+          class="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600"
+        >
           <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
           Sistema activo
         </div>
@@ -209,7 +211,9 @@ onMounted(() => {
           <div class="shrink-0 rounded-xl p-2.5" :class="tile.chip">
             <UIcon :name="tile.icon" class="h-5 w-5" />
           </div>
-          <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-500">
+          <span
+            class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-500"
+          >
             Módulo
           </span>
         </div>
@@ -225,12 +229,30 @@ onMounted(() => {
     <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_28px_-30px_rgba(15,23,42,0.75)]">
       <div class="flex flex-wrap items-center gap-2">
         <span class="mr-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Accesos rápidos</span>
-        <UButton size="sm" color="amber" icon="i-heroicons-document-plus" to="/contratos/nuevo" class="!rounded-xl">Nuevo contrato</UButton>
-        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-wrench-screwdriver" to="/novedades/nueva" class="!rounded-xl">
+        <UButton size="sm" color="amber" icon="i-heroicons-document-plus" to="/contratos/nuevo" class="!rounded-xl"
+          >Nuevo contrato</UButton
+        >
+        <UButton
+          size="sm"
+          color="gray"
+          variant="soft"
+          icon="i-heroicons-wrench-screwdriver"
+          to="/novedades/nueva"
+          class="!rounded-xl"
+        >
           Registrar novedad
         </UButton>
-        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-user-plus" to="/clientes" class="!rounded-xl">Clientes</UButton>
-        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-building-office-2" to="/inmuebles" class="!rounded-xl">
+        <UButton size="sm" color="gray" variant="soft" icon="i-heroicons-user-plus" to="/clientes" class="!rounded-xl"
+          >Clientes</UButton
+        >
+        <UButton
+          size="sm"
+          color="gray"
+          variant="soft"
+          icon="i-heroicons-building-office-2"
+          to="/inmuebles"
+          class="!rounded-xl"
+        >
           Inmuebles
         </UButton>
         <UButton
@@ -254,7 +276,9 @@ onMounted(() => {
             <p class="text-sm font-semibold text-slate-900">Requiere tu atención</p>
             <p class="text-xs text-slate-500">Tareas con impacto operativo</p>
           </div>
-          <span class="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+          <span
+            class="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700"
+          >
             {{ filasAtencion.filter((fila) => fila.n > 0).length }} pendientes
           </span>
         </div>
@@ -264,7 +288,10 @@ onMounted(() => {
               :to="fila.to"
               class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 transition hover:border-amber-200 hover:bg-amber-50/40"
             >
-              <span class="flex items-center gap-2 text-sm text-slate-700" :class="fila.n > 0 ? 'text-slate-800' : 'text-slate-400'">
+              <span
+                class="flex items-center gap-2 text-sm text-slate-700"
+                :class="fila.n > 0 ? 'text-slate-800' : 'text-slate-400'"
+              >
                 <UIcon :name="fila.icon" class="h-4 w-4 shrink-0" />
                 {{ fila.label }}
               </span>
@@ -289,7 +316,10 @@ onMounted(() => {
           <NuxtLink to="/novedades" class="text-xs font-medium text-amber-600 hover:underline">Ver todas</NuxtLink>
         </div>
         <SharedSkeletonText v-if="cargandoNovedades" :lines="3" class="py-2" />
-        <div v-else-if="!novedadesRecientes.length" class="flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400">
+        <div
+          v-else-if="!novedadesRecientes.length"
+          class="flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400"
+        >
           <UIcon name="i-heroicons-check-circle" class="mb-2 h-6 w-6 text-slate-300" />
           No hay novedades pendientes.
         </div>
@@ -317,7 +347,10 @@ onMounted(() => {
           <NuxtLink to="/recibos" class="text-xs font-medium text-amber-600 hover:underline">Ver todos</NuxtLink>
         </div>
         <SharedSkeletonText v-if="cargandoRecibos" :lines="3" class="py-2" />
-        <div v-else-if="!recibosRecientes.length" class="flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400">
+        <div
+          v-else-if="!recibosRecientes.length"
+          class="flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-400"
+        >
           Sin recibos emitidos todavía.
         </div>
         <ul v-else class="space-y-2">
@@ -327,7 +360,9 @@ onMounted(() => {
               class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 transition hover:border-slate-300 hover:bg-slate-100"
             >
               <span class="min-w-0">
-                <span class="block truncate text-sm font-medium text-slate-800">{{ r.contrato?.cliente?.nombreCompleto }}</span>
+                <span class="block truncate text-sm font-medium text-slate-800">{{
+                  r.contrato?.cliente?.nombreCompleto
+                }}</span>
                 <span class="mt-0.5 block text-xs text-slate-500">{{ r.consecutivo }} · {{ fecha(r.creadoEn) }}</span>
               </span>
               <span class="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{{ moneda(r.valorTotal) }}</span>

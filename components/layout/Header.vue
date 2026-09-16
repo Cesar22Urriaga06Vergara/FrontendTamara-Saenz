@@ -24,7 +24,9 @@ async function salir() {
 </script>
 
 <template>
-  <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-6">
+  <header
+    class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-4 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-6"
+  >
     <div class="flex h-16 items-center justify-between gap-3">
       <div class="flex min-w-0 items-center gap-2">
         <UButton
@@ -38,7 +40,9 @@ async function salir() {
         <div class="min-w-0">
           <nav v-if="breadcrumb.length" class="flex items-center gap-1 truncate text-[11px] font-medium text-slate-500">
             <template v-for="(item, i) in breadcrumb" :key="i">
-              <NuxtLink v-if="item.to" :to="item.to" class="transition-colors hover:text-amber-600">{{ item.label }}</NuxtLink>
+              <NuxtLink v-if="item.to" :to="item.to" class="transition-colors hover:text-amber-600">{{
+                item.label
+              }}</NuxtLink>
               <span v-else>{{ item.label }}</span>
               <UIcon name="i-heroicons-chevron-right" class="h-3 w-3 shrink-0" />
             </template>
@@ -48,11 +52,7 @@ async function salir() {
       </div>
 
       <div class="flex items-center gap-3">
-        <UBadge
-          :color="auth.esAdministrador ? 'amber' : 'gray'"
-          variant="subtle"
-          class="hidden sm:inline-flex"
-        >
+        <UBadge :color="auth.esAdministrador ? 'amber' : 'gray'" variant="subtle" class="hidden sm:inline-flex">
           {{ auth.rol }}
         </UBadge>
         <UButton

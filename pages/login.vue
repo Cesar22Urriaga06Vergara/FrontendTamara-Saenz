@@ -114,14 +114,18 @@ async function ingresar() {
 
     <!-- Tarjeta de acceso -->
     <div class="relative z-10 w-full max-w-md">
-      <div class="overflow-hidden rounded-[28px] bg-white shadow-[0_30px_80px_-24px_rgba(0,0,0,0.7)] ring-1 ring-slate-200/80">
+      <div
+        class="overflow-hidden rounded-[28px] bg-white shadow-[0_30px_80px_-24px_rgba(0,0,0,0.7)] ring-1 ring-slate-200/80"
+      >
         <div class="h-1.5 w-full bg-gradient-to-r from-marca-dorado via-amber-400 to-marca-dorado-oscuro"></div>
 
         <div class="px-8 pb-9 pt-8 sm:px-10">
           <div class="flex flex-col items-center text-center">
-            <div class="flex h-24 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200 sm:h-28">
+            <div
+              class="flex h-24 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200 sm:h-28"
+            >
               <img
-                :src="marca.logoSrc.value || '/Logo.png'"
+                :src="marca.logoSrc"
                 :alt="marca.nombre.value"
                 class="h-44 w-auto max-w-none object-contain sm:h-52"
               />

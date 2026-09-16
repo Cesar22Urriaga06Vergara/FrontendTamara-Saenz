@@ -242,7 +242,10 @@ onMounted(() => {
       <div class="surface-card p-4 sm:p-5">
         <div class="mb-3 flex items-center justify-between gap-2">
           <p class="font-semibold text-slate-900">1. Arrendatario</p>
-          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Cliente</span>
+          <span
+            class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >Cliente</span
+          >
         </div>
 
         <div v-if="!clienteSeleccionado" class="flex flex-col gap-2 sm:flex-row">
@@ -262,7 +265,10 @@ onMounted(() => {
           <UButton size="xs" color="gray" variant="ghost" @click="clienteSeleccionado = null">Cambiar</UButton>
         </div>
 
-        <div v-if="resultadosCliente.length" class="mt-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60">
+        <div
+          v-if="resultadosCliente.length"
+          class="mt-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60"
+        >
           <button
             v-for="c in resultadosCliente"
             :key="c.id"
@@ -277,7 +283,10 @@ onMounted(() => {
       <div class="surface-card p-4 sm:p-5">
         <div class="mb-3 flex items-center justify-between gap-2">
           <p class="font-semibold text-slate-900">2. Codeudor(es)</p>
-          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Cobertura</span>
+          <span
+            class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >Cobertura</span
+          >
         </div>
 
         <div class="mb-3 flex flex-col gap-2 sm:flex-row">
@@ -290,7 +299,10 @@ onMounted(() => {
           <UButton color="amber" @click="buscarCodeudor">Buscar</UButton>
         </div>
 
-        <div v-if="resultadosCodeudor.length" class="mb-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60">
+        <div
+          v-if="resultadosCodeudor.length"
+          class="mb-3 divide-y overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60"
+        >
           <button
             v-for="c in resultadosCodeudor"
             :key="c.id"
@@ -324,7 +336,10 @@ onMounted(() => {
       <div class="surface-card p-4 sm:p-5">
         <div class="mb-3 flex items-center justify-between gap-2">
           <p class="font-semibold text-slate-900">3. Inmueble disponible</p>
-          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Propiedad</span>
+          <span
+            class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >Propiedad</span
+          >
         </div>
         <SharedErrorState
           v-if="errorInmuebles"
@@ -345,7 +360,9 @@ onMounted(() => {
         </USelectMenu>
 
         <div v-if="inmuebleSeleccionado" class="mt-3 flex flex-wrap gap-2">
-          <UBadge color="amber" variant="subtle">Energía: {{ inmuebleSeleccionado.codigoEnergia || 'No registrado' }}</UBadge>
+          <UBadge color="amber" variant="subtle"
+            >Energía: {{ inmuebleSeleccionado.codigoEnergia || 'No registrado' }}</UBadge
+          >
           <UBadge color="amber" variant="subtle">Agua: {{ inmuebleSeleccionado.codigoAgua || 'No registrado' }}</UBadge>
           <UBadge color="amber" variant="subtle">Gas: {{ inmuebleSeleccionado.codigoGas || 'No registrado' }}</UBadge>
         </div>
@@ -354,7 +371,10 @@ onMounted(() => {
       <div class="surface-card p-4 sm:p-5">
         <div class="mb-4 flex items-center justify-between gap-2">
           <p class="font-semibold text-slate-900">4. Datos del contrato</p>
-          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Configuración</span>
+          <span
+            class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+            >Configuración</span
+          >
         </div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <UFormGroup label="Fecha de inicio">
@@ -386,7 +406,7 @@ onMounted(() => {
       </div>
 
       <div class="flex justify-end">
-        <UButton color="amber" size="lg" :disabled="!puedeCrear" @click="modalConfirmar = true" class="!rounded-xl">
+        <UButton color="amber" size="lg" :disabled="!puedeCrear" class="!rounded-xl" @click="modalConfirmar = true">
           Revisar y crear contrato
         </UButton>
       </div>

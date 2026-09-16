@@ -107,9 +107,13 @@ onMounted(cargarBarrios)
               <UIcon name="i-heroicons-arrow-path" class="h-4 w-4 animate-spin" />
               Cargando…
             </span>
-            <span v-else class="font-medium text-slate-700">{{ total }} {{ total === 1 ? 'contrato' : 'contratos' }}</span>
+            <span v-else class="font-medium text-slate-700"
+              >{{ total }} {{ total === 1 ? 'contrato' : 'contratos' }}</span
+            >
           </div>
-          <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo" class="!rounded-xl">Nuevo contrato</UButton>
+          <UButton color="amber" icon="i-heroicons-plus" to="/contratos/nuevo" class="!rounded-xl"
+            >Nuevo contrato</UButton
+          >
         </div>
       </div>
     </header>

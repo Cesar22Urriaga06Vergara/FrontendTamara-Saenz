@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 interface UsuarioSesion {
   id: string
   email: string
-  rol: 'ADMINISTRADOR' | 'RECEPCIONISTA'
+  rol: 'ADMINISTRADOR' | 'RECEPCIONISTA' | 'CONTADOR'
 }
 
 interface LoginResponse {
@@ -44,6 +44,8 @@ export const useAuthStore = defineStore('auth', {
     rol: (state) => state.usuario?.rol ?? null,
     esAdministrador: (state) => state.usuario?.rol === 'ADMINISTRADOR',
     esRecepcionista: (state) => state.usuario?.rol === 'RECEPCIONISTA',
+    esContador: (state) => state.usuario?.rol === 'CONTADOR',
+    puedeVerFinanzas: (state) => ['ADMINISTRADOR', 'CONTADOR'].includes(state.usuario?.rol ?? ''),
   },
 
   actions: {

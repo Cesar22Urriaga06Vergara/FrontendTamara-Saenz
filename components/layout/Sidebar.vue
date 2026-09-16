@@ -17,8 +17,16 @@ watch(
  * CONSULTA Y CONTROL, ADMINISTRACIÓN. Los ítems marcados soloAdmin se ocultan
  * completamente para el rol Recepcionista (no solo se deshabilitan).
  */
-const secciones = computed(() =>
-  [
+const secciones = computed(() => {
+  type MenuItem = {
+    label: string
+    icon: string
+    to: string
+    soloAdmin?: boolean
+    soloAdminOContador?: boolean
+  }
+
+  return [
     {
       titulo: 'GENERAL',
       items: [{ label: 'Dashboard', icon: 'i-heroicons-squares-2x2', to: '/dashboard' }],
@@ -27,7 +35,8 @@ const secciones = computed(() =>
       titulo: 'OPERACIÓN',
       items: [
         { label: 'Contratos', icon: 'i-heroicons-document-text', to: '/contratos' },
-        { label: 'Recaudo', icon: 'i-heroicons-banknotes', to: '/recaudo', soloAdmin: true },
+        { label: 'Servicios públicos', icon: 'i-heroicons-light-bulb', to: '/servicios-publicos', soloAdmin: true },
+        { label: 'Recaudo', icon: 'i-heroicons-banknotes', to: '/recaudo', soloAdminOContador: true },
         { label: 'Novedades', icon: 'i-heroicons-wrench-screwdriver', to: '/novedades' },
       ],
     },
@@ -42,19 +51,24 @@ const secciones = computed(() =>
     {
       titulo: 'FINANZAS',
       items: [
-        { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos' },
+        { label: 'Recibos', icon: 'i-heroicons-receipt-percent', to: '/recibos', soloAdminOContador: true },
         { label: 'Caja', icon: 'i-heroicons-calculator', to: '/caja', soloAdmin: true },
-        { label: 'Cartera', icon: 'i-heroicons-banknotes', to: '/cartera', soloAdmin: true },
-        { label: 'Gastos', icon: 'i-heroicons-receipt-refund', to: '/gastos', soloAdmin: true },
-        { label: 'Depósitos', icon: 'i-heroicons-lock-closed', to: '/depositos', soloAdmin: true },
+        { label: 'Cartera', icon: 'i-heroicons-banknotes', to: '/cartera', soloAdminOContador: true },
+        { label: 'Gastos', icon: 'i-heroicons-receipt-refund', to: '/gastos', soloAdminOContador: true },
+        { label: 'Depósitos', icon: 'i-heroicons-lock-closed', to: '/depositos', soloAdminOContador: true },
       ],
     },
     {
       titulo: 'CONSULTA Y CONTROL',
       items: [
-        { label: 'Movimientos', icon: 'i-heroicons-arrows-right-left', to: '/movimientos', soloAdmin: true },
-        { label: 'Transferencias', icon: 'i-heroicons-building-library', to: '/transferencias', soloAdmin: true },
-        { label: 'Reportes', icon: 'i-heroicons-chart-bar', to: '/reportes', soloAdmin: true },
+        { label: 'Movimientos', icon: 'i-heroicons-arrows-right-left', to: '/movimientos', soloAdminOContador: true },
+        {
+          label: 'Transferencias',
+          icon: 'i-heroicons-building-library',
+          to: '/transferencias',
+          soloAdminOContador: true,
+        },
+        { label: 'Reportes', icon: 'i-heroicons-chart-bar', to: '/reportes', soloAdminOContador: true },
         { label: 'Auditoría', icon: 'i-heroicons-shield-check', to: '/auditoria', soloAdmin: true },
       ],
     },
@@ -65,8 +79,16 @@ const secciones = computed(() =>
         { label: 'Configuración', icon: 'i-heroicons-cog-6-tooth', to: '/configuracion', soloAdmin: true },
       ],
     },
-  ].map((s) => ({ ...s, items: s.items.filter((i) => !i.soloAdmin || auth.esAdministrador) })),
-)
+  ].map((s) => ({
+    ...s,
+    items: (s.items as MenuItem[]).filter((i) => {
+      const soloAdmin = Boolean(i.soloAdmin)
+      const soloAdminOContador = Boolean(i.soloAdminOContador)
+
+      return (!soloAdmin && !soloAdminOContador) || auth.esAdministrador || (soloAdminOContador && auth.esContador)
+    }),
+  }))
+})
 </script>
 
 <template>
@@ -83,13 +105,10 @@ const secciones = computed(() =>
   >
     <div class="border-b border-slate-700/80 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 px-5 py-5">
       <div class="flex items-center gap-3">
-        <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10">
-          <img
-            v-if="marca.logoSrc.value"
-            :src="marca.logoSrc.value"
-            alt="Logo"
-            class="h-8 w-8 object-contain"
-          />
+        <div
+          class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10"
+        >
+          <img :src="marca.logoSrc" alt="Logo" class="h-8 w-8 object-contain" />
         </div>
         <div class="min-w-0 flex-1">
           <p class="truncate text-base font-semibold tracking-tight text-white">{{ marca.nombre.value }}</p>
@@ -109,7 +128,9 @@ const secciones = computed(() =>
 
     <nav class="flex-1 space-y-5 overflow-y-auto py-4">
       <div v-for="seccion in secciones" v-show="seccion.items.length" :key="seccion.titulo" class="px-2">
-        <p class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ seccion.titulo }}</p>
+        <p class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          {{ seccion.titulo }}
+        </p>
         <div class="space-y-1">
           <NuxtLink
             v-for="item in seccion.items"
@@ -118,7 +139,9 @@ const secciones = computed(() =>
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 transition-all duration-200 hover:bg-slate-800/80 hover:text-amber-300"
             active-class="bg-gradient-to-r from-amber-500/15 to-slate-800 text-amber-300 ring-1 ring-inset ring-amber-400/40"
           >
-            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/80 text-slate-300 transition group-hover:bg-amber-500/15 group-hover:text-amber-300">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/80 text-slate-300 transition group-hover:bg-amber-500/15 group-hover:text-amber-300"
+            >
               <UIcon :name="item.icon" class="h-4 w-4 shrink-0" />
             </span>
             <span>{{ item.label }}</span>

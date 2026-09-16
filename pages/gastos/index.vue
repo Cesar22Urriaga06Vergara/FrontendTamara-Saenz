@@ -7,6 +7,7 @@
  * EXCLUSIVO Administrador.
  */
 const { moneda, fecha } = useFormatoCO()
+const auth = useAuthStore()
 
 const {
   filtros,
@@ -19,9 +20,8 @@ const {
   cargar,
 } = useListadoPaginado<any, { gastoPagado: string }>(
   ({ page, limit, filtros }) =>
-    useApiFetch<any>('/novedades', {
+    useApiFetch<any>('/novedades/financiero/gastos', {
       params: {
-        impactoFinanciero: 'GASTO_INMOBILIARIA',
         gastoPagado: filtros.gastoPagado || undefined,
         page,
         limit,
@@ -108,7 +108,7 @@ async function confirmarPago() {
         </template>
         <template #acciones-data="{ row }">
           <UButton
-            v-if="!row.gastoPagado"
+            v-if="auth.esAdministrador && !row.gastoPagado"
             size="xs"
             color="red"
             variant="soft"
@@ -131,7 +131,7 @@ async function confirmarPago() {
       </div>
     </UCard>
 
-    <UModal v-model="modalPago">
+    <UModal v-if="auth.esAdministrador" v-model="modalPago">
       <UCard>
         <template #header>
           <p class="font-semibold text-slate-900">Registrar pago del gasto</p>

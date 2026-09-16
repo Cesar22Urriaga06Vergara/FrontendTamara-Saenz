@@ -6,6 +6,7 @@
  * EXCLUSIVO Administrador.
  */
 const { moneda, fecha } = useFormatoCO()
+const auth = useAuthStore()
 
 const seccion = ref<'pendientes' | 'liquidados'>('pendientes')
 
@@ -129,7 +130,14 @@ async function confirmarLiquidar() {
             <span class="font-semibold text-slate-900">{{ moneda(row.depositoGarantia) }}</span>
           </template>
           <template #acciones-data="{ row }">
-            <UButton size="xs" color="amber" variant="soft" icon="i-heroicons-banknotes" @click="abrirLiquidar(row)">
+            <UButton
+              v-if="auth.esAdministrador"
+              size="xs"
+              color="amber"
+              variant="soft"
+              icon="i-heroicons-banknotes"
+              @click="abrirLiquidar(row)"
+            >
               Liquidar
             </UButton>
           </template>
@@ -184,6 +192,7 @@ async function confirmarLiquidar() {
     </template>
 
     <RecaudoModalLiquidarDeposito
+      v-if="auth.esAdministrador"
       v-model="modalLiquidar"
       :deposito-garantia="Number(contratoLiquidando?.depositoGarantia || 0)"
       :valor-a-devolver="valorADevolver"

@@ -7,7 +7,7 @@
  */
 export function useMarcaEmpresa() {
   const config = useRuntimeConfig()
-  const logoSrc = ref<string | null>(null)
+  const logoSrc = '/Logo.png'
   const nombre = ref<string>(config.public.appName as string)
   const slogan = ref<string>(config.public.appSlogan as string)
 
@@ -17,16 +17,10 @@ export function useMarcaEmpresa() {
       const marca = {
         nombre: data?.nombre || config.public.appName,
         slogan: data?.slogan || config.public.appSlogan,
-        logoUrl: data?.logoUrl || null,
       }
 
       nombre.value = marca.nombre
       slogan.value = marca.slogan
-
-      if (marca.logoUrl) {
-        const origenApi = new URL(config.public.apiBaseUrl as string).origin
-        logoSrc.value = `${origenApi}${marca.logoUrl}`
-      }
     } catch {
       // Sin marca configurada aún (o backend no disponible en este momento): se mantienen
       // los valores por defecto de runtimeConfig y logoSrc queda en null.

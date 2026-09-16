@@ -78,7 +78,9 @@ async function descargar(row: any, formato: 'CARTA' | 'MEDIA_CARTA') {
           <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Recibos</h1>
         </div>
         <div class="flex items-center gap-2 text-sm text-slate-600">
-          <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium">{{ auth.esAdministrador ? 'Administración' : 'Consulta' }}</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium">{{
+            auth.esAdministrador ? 'Administración' : 'Consulta'
+          }}</span>
         </div>
       </div>
     </header>
@@ -150,7 +152,9 @@ async function descargar(row: any, formato: 'CARTA' | 'MEDIA_CARTA') {
                 <p class="text-xs text-slate-500">{{ row.contrato?.cliente?.numeroDocumento }}</p>
               </div>
             </template>
-            <template #valorTotal-data="{ row }"><span class="font-semibold tabular-nums text-slate-900">{{ moneda(row.valorTotal) }}</span></template>
+            <template #valorTotal-data="{ row }"
+              ><span class="font-semibold tabular-nums text-slate-900">{{ moneda(row.valorTotal) }}</span></template
+            >
             <template #medioPago-data="{ row }">{{ mediosDePago(row) }}</template>
             <template #estado-data="{ row }">
               <SharedStatusBadge domain="recibo" :value="row.estado" />
